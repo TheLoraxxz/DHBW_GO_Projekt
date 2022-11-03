@@ -19,31 +19,31 @@ const (
 )
 
 type Termin struct {
-	title       string
-	description string
-	recurring   repeat
-	date        time.Time
-	endDate     time.Time
+	Title       string
+	Description string
+	Recurring   repeat
+	Date        time.Time
+	EndDate     time.Time
 }
 
 func setTitle(t *Termin, newTitle string) {
-	t.title = newTitle
+	t.Title = newTitle
 }
 
 func setDescription(t *Termin, newDescription string) {
-	t.description = newDescription
+	t.Description = newDescription
 }
 
 func setRecurring(t *Termin, newRecurring repeat) {
-	t.recurring = newRecurring
+	t.Recurring = newRecurring
 }
 
 func setDate(t *Termin, newDate string) {
 	d, _ := time.Parse(dateLayoutISO, newDate)
-	t.date = d
+	t.Date = d
 }
 
 func setEndeDate(t *Termin, newDate string) {
 	d, _ := time.Parse(dateLayoutISO, newDate)
-	t.endDate = d
+	t.EndDate = d
 }
