@@ -1,12 +1,13 @@
 package dateisystem
 
+//Mat-Nr. 8689159
 import (
 	"fmt"
 	"testing"
 	"time"
 )
 
-func newTermin(title string) *Termin {
+func newTermin(title string) *Termin { //erzeugt Pointer auf dummy Termin
 	t := Termin{Title: title}
 	t.Description = "test"
 	t.Recurring = repeat(niemals)
@@ -15,15 +16,15 @@ func newTermin(title string) *Termin {
 	return &t
 }
 
-func updateTermin(termin *Termin) {
-	setTitle(termin, "testo")
-	setDescription(termin, "testo")
+func updateTermin(termin *Termin) { //führt die setter aus
+	setTitle(termin, "testj")
+	setDescription(termin, "testo yeet")
 	setRecurring(termin, repeat(woechentlich))
 	setDate(termin, "2007-03-02T14:02:05 UTC")
 	setEndeDate(termin, "2007-03-02T15:02:05 UTC")
 }
 
-func TestTermin(t *testing.T) {
+func TestTermin(t *testing.T) { //prüft ob der dummy Termin nicht Leer ist
 	termin := newTermin("test")
 
 	if termin.Title == "" {
@@ -44,9 +45,9 @@ func TestTermin(t *testing.T) {
 	}
 }
 
-func TestTerminUpdate(t *testing.T) {
+func TestTerminUpdate(t *testing.T) { // prüft ob die updates durchgeführt werden
 	termin := newTermin("test")
-	updateTermin(termin)
+	updateTermin(termin) //ruft die setter auf
 
 	if termin.Title == "test" {
 		fmt.Println(termin.Title)

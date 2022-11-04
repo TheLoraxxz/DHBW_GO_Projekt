@@ -1,12 +1,13 @@
 package dateisystem
 
+//Mat-Nr. 8689159
 import (
-	time "time"
+	"time"
 )
 
 type repeat int
 
-const (
+const ( //"enum" um Wiederholung anzuzeigen
 	taeglich repeat = iota
 	woechentlich
 	monatlich
@@ -14,16 +15,16 @@ const (
 	niemals
 )
 
-const (
+const ( //genutzt zum Formatieren von time.Date() Objekten
 	dateLayoutISO = "2006-01-02T15:04:05 UTC"
 )
 
 type Termin struct {
-	Title       string
-	Description string
-	Recurring   repeat
-	Date        time.Time
-	EndDate     time.Time
+	Title       string    `json:"Title"`
+	Description string    `json:"Description"`
+	Recurring   repeat    `json:"Recurring"`
+	Date        time.Time `json:"Date"`
+	EndDate     time.Time `json:"EndDate"`
 }
 
 func setTitle(t *Termin, newTitle string) {
