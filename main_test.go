@@ -1,10 +1,7 @@
 package main
 
-import (
-	"github.com/stretchr/testify/assert"
-	"testing"
-)
+import "testing"
 
-func TestFunctionMain(t *testing.T) {
-	assert.Equal(t, 1, 1)
+func TestWebServerStart(t *testing.T) {
+
 }
