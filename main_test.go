@@ -12,9 +12,8 @@ func TestWebServerStart(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	RootHandler{}.ServeHTTP(recorder, req)
 	resp := recorder.Result()
-	assert.Equal(t, 200, resp.StatusCode)
-	out, err := io.ReadAll(resp.Body)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, "Hello!", string(out))
+	assert.Equal(t, 200, resp.StatusCode, "the Server doesn't return an answer")
+	_, err := io.ReadAll(resp.Body)
+	assert.Equal(t, err, nil, "No Error in the Body")
 
 }
