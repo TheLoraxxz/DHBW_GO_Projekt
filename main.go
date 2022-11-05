@@ -9,17 +9,19 @@ import (
 type RootHandler struct {
 }
 
+var Server = http.Server{
+	Addr: ":80",
+}
+
 func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, "Hello!")
 }
 
 func main() {
 	root := RootHandler{}
-	server := http.Server{
-		Addr: ":80",
-	}
 	http.Handle("/", &root)
-	if err := server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
+	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
 	}
+
 }
