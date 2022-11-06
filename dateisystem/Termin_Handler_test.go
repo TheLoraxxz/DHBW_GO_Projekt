@@ -1,61 +1,51 @@
 package dateisystem
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestNewTerminObj(t *testing.T) { //prüft das erstellen transistiver Termine
+func TestNewTerminObj(t *testing.T) { //prüft das erstellen transitiver Termine
 
-	termin := newTerminObj("test", "test", repeat(woechentlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC") //erzeugt dummy Termin
+	termin := NewTerminObj("test", "test", repeat(woechentlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC") //erzeugt dummy Termin
 
-	if termin.Title == "" {
-		t.Errorf("Titel nicht hinterlegt")
-	}
-	if termin.Description == "" {
-		t.Errorf("Beschreibung nicht hinterlegt")
-	}
-	if termin.Recurring != 1 {
-		t.Errorf("Wiederholung nicht hinterlegt")
-	}
-	if termin.Date.String() == "" {
-		t.Errorf("Datum nicht hinterlegt")
-	}
-
-	if termin.EndDate.String() != "2007-03-02 15:02:05 +0000 UTC" {
-		t.Errorf("End-Datum nicht hinterlegt")
-	}
+	assert.NotEqual(t, "", termin.Title)
+	assert.NotEqual(t, "", termin.Description)
+	assert.NotEqual(t, repeat(niemals), termin.Recurring)
+	assert.NotEqual(t, "", termin.Date)
+	assert.Equal(t, "2007-03-02 15:02:05 +0000 UTC", termin.EndDate.String())
 }
 
-func TestStoreTermin(t *testing.T) {
-	termin := loadTermin("test", "mik")
-	updateTermin(&termin)
-	storeTerminObj(termin, "mik")
+func TestLoadTermin(t *testing.T) { //prüft das Laden von Objekten
+	termin := CreateNewTermin("test", "test", repeat(woechentlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "Mik")
+	terminLoaded := LoadTermin("test", "mik")
+
+	assert.Equal(t, termin, terminLoaded)
 }
 
-func TestLoadTermin(t *testing.T) {
-	termin := loadTermin("test", "mik")
-	if termin != createNewTermin("test", "test", repeat(woechentlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "Mik") {
-		t.Errorf("Objekte passen nicht zusammen")
-	}
+func TestGetTermine(t *testing.T) { //prüft ob das erzeugte Slice die korrekten Objekte geladen hat
+	CreateNewTermin("testo", "test", repeat(woechentlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "Mik")
+	i := CreateNewTermin("testu", "test", repeat(jaehrlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "Mik")
+	k := GetTermine("Mik")
+
+	assert.Equal(t, i, k[2])
+}
+
+func TestAddToCache(t *testing.T) {
+	k := GetTermine("Mik")
+	ter := NewTerminObj("testa", "test", repeat(jaehrlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC")
+
+	k = AddToCache(ter, k)
+
+	assert.Equal(t, ter, k[3])
 }
 
 func TestDeleteTermin(t *testing.T) {
-	createNewTermin("testo", "test", repeat(woechentlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "Mik")
-	deleteTermin("testo", "Mik")
-}
+	DeleteTermin("test", "mik")
+	DeleteTermin("testo", "mik")
+	DeleteTermin("testu", "mik")
+	DeleteTermin("testa", "mik")
 
-func TestGetTermine(t *testing.T) {
-	createNewTermin("testo", "test", repeat(woechentlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "Mik")
-	i := createNewTermin("testu", "test", repeat(jaehrlich), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "Mik")
-	k := getTermine("Mik")
-
-	if k[3] != i {
-		t.Errorf("Laden fehlgeschlagen")
-	}
-
-	for i := 0; i < len(k); i++ {
-		fmt.Println(k[i])
-	}
-
+	k := GetTermine("mik")
+	assert.Equal(t, []Termin(nil), k)
 }

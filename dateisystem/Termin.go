@@ -27,24 +27,24 @@ type Termin struct {
 	EndDate     time.Time `json:"EndDate"`
 }
 
-func setTitle(t *Termin, newTitle string) {
+func (Termin) SetTitle(t *Termin, newTitle string) {
 	t.Title = newTitle
 }
 
-func setDescription(t *Termin, newDescription string) {
+func (Termin) SetDescription(t *Termin, newDescription string) {
 	t.Description = newDescription
 }
 
-func setRecurring(t *Termin, newRecurring repeat) {
+func (Termin) SetRecurring(t *Termin, newRecurring repeat) {
 	t.Recurring = newRecurring
 }
 
-func setDate(t *Termin, newDate string) {
+func (Termin) SetDate(t *Termin, newDate string) {
 	d, _ := time.Parse(dateLayoutISO, newDate)
 	t.Date = d
 }
 
-func setEndeDate(t *Termin, newDate string) {
+func (Termin) SetEndeDate(t *Termin, newDate string) {
 	d, _ := time.Parse(dateLayoutISO, newDate)
 	t.EndDate = d
 }
