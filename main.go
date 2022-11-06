@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"DHBW_GO_Projekt/assets/templates"
 	"log"
 	"net/http"
 )
@@ -14,7 +14,7 @@ var Server = http.Server{
 }
 
 func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprintf(writer, "Hello!")
+	templates.TemplTest.ExecuteTemplate(writer, "page", nil)
 }
 
 func main() {
