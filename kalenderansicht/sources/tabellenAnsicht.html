@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        table {
+            width:75%;
+            margin:0 auto;
+        }
+        th, td {
+            width: 25px;
+        }
+    </style>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Calendar</title>
+</head>
+<body>
+<header>
+    <h1 id="demo">Kalender</h1>
+    <hr>
+</header>
+    <table>
+        <thead>
+        <caption>
+            <button type="monthback " onclick="zurueck()">&larr;</button>
+            <b>{{.MonatsAnzeige}} {{.JahrAnzeige}}</b>
+            <button type="monthForward" onclick="vor()">&rarr;</button>
+            <hr>
+        </caption>
+        <tr>
+            <th>Montag</th>
+            <th>Dienstag</th>
+            <th>Mittwoch</th>
+            <th>Donnerstag</th>
+            <th>Freitag</th>
+            <th>Samstag</th>
+            <th>Sonntag</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+<script>
+    function zurueck() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function() {
+            location.reload();
+        }
+        xhttp.open("GET", "?suche=minusMonat");
+        xhttp.send();
+    }
+    function vor() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function() {
+            location.reload();
+        }
+        xhttp.open("GET", "?suche=plusMonat");
+        xhttp.send();
+    }
+</script>
+</body>
+</html>
