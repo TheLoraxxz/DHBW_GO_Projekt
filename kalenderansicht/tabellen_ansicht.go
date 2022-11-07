@@ -18,6 +18,9 @@ func (c TabellenAnsicht) MonatsAnzeige() time.Month {
 func (c TabellenAnsicht) ErstelleKalenderEintraege(userId string) {
 
 }
+func (c TabellenAnsicht) ErstelleTabellenAnsicht() []int {
+	return make([]int, 5)
+}
 
 func (c *TabellenAnsicht) SpringMonatVor() {
 	switch day := uint8(c.Datumsanzeige.Day()); {
