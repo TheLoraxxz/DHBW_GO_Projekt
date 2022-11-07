@@ -102,7 +102,7 @@ func testSpringZuHeute(t *testing.T) {
 func TestTabellenAnsicht(t *testing.T) {
 	t.Run("testRuns", testJahrAnzeige)
 	t.Run("testRuns", testMonatsAnzeige)
-	t.Run("testRuns", testErstelleKalenderEinträge)
+	t.Run("testRuns", testErstelleKalenderEintraege)
 	t.Run("testRuns", testSpringMonatVor)
 	t.Run("testRuns", testSpringMonatZurueck)
 	t.Run("testRuns", testWaehleMonat)
