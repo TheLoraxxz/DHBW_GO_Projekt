@@ -1,6 +1,7 @@
 package kalenderansicht
 
 import (
+	"strconv"
 	"time"
 )
 
@@ -10,6 +11,11 @@ type TabellenAnsicht struct {
 
 func (c TabellenAnsicht) JahrAnzeige() int {
 	return c.Datumsanzeige.Year()
+}
+func (c TabellenAnsicht) JahrAnzeige2(zahlStr ...string) int {
+	zahl, _ := strconv.Atoi(zahlStr[0])
+	jahr := c.Datumsanzeige.Year() + zahl
+	return jahr
 }
 func (c TabellenAnsicht) MonatsAnzeige() time.Month {
 	return c.Datumsanzeige.Month()
@@ -39,8 +45,9 @@ func (c *TabellenAnsicht) SpringMonatZurueck() {
 		c.Datumsanzeige = c.Datumsanzeige.AddDate(0, 0, -31)
 	}
 }
-
-//Date(year int, month Month, day int, hour int, min int, sec int, nsec int, loc *Location) Time
+func (c *TabellenAnsicht) SpringeJahr(summand int) {
+	c.Datumsanzeige = c.Datumsanzeige.AddDate(summand, 0, 0)
+}
 
 func (c *TabellenAnsicht) WaehleMonat(monat time.Month) {
 	jahr := c.Datumsanzeige.Year()

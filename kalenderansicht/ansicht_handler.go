@@ -3,6 +3,8 @@ package kalenderansicht
 import (
 	"html/template"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -23,11 +25,21 @@ var listenTpl, _ = template.New("listenAnsicht.html").ParseFiles("../assets/temp
 // Hier wereden all http-Request anfragen geregelt,die im Kontext der Kalenderansicht anfallen
 func tabellenHandler(w http.ResponseWriter, r *http.Request) {
 	//r.RequestURI == /monat -> einträge erstellen
-	switch r.RequestURI {
-	case "/tabellenAnsicht?suche=minusMonat":
+	switch {
+	case r.RequestURI == "/tabellenAnsicht?suche=minusMonat":
 		ta.SpringMonatZurueck()
-	case "/tabellenAnsicht?suche=plusMonat":
+	case r.RequestURI == "/tabellenAnsicht?suche=plusMonat":
 		ta.SpringMonatVor()
+	case strings.Contains(r.RequestURI, "/tabellenAnsicht?monat="):
+		monatStr := r.RequestURI[23:]
+		monat, _ := strconv.Atoi(monatStr)
+		ta.WaehleMonat(time.Month(monat))
+	case strings.Contains(r.RequestURI, "/tabellenAnsicht?jahr="):
+		summandStr := r.RequestURI[22:]
+		summand, _ := strconv.Atoi(summandStr)
+		ta.SpringeJahr(summand)
+	case r.RequestURI == "/tabellenAnsicht?datum=heute":
+		ta.SpringZuHeute()
 	}
 	tabellenTpl.ExecuteTemplate(w, "tbl.html", ta)
 }

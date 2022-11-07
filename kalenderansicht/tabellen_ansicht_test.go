@@ -79,6 +79,15 @@ func testSpringMonatZurueck(t *testing.T) {
 		}
 	}
 }
+func testSpringeJahr(t *testing.T) {
+	var ta TabellenAnsicht
+	ta.Datumsanzeige = generiereZufallsdatum()
+	aktuellesJahr := ta.Datumsanzeige.Year()
+	ta.SpringeJahr(1)
+	assert.Equal(t, aktuellesJahr+1, ta.Datumsanzeige.Year(), "Die Jahre sollten identisch sein.")
+	ta.SpringeJahr(-1)
+	assert.Equal(t, aktuellesJahr, ta.Datumsanzeige.Year(), "Die Jahre sollten identisch sein.")
+}
 
 func testWaehleMonat(t *testing.T) {
 	i := 100
@@ -105,6 +114,7 @@ func TestTabellenAnsicht(t *testing.T) {
 	t.Run("testRuns", testErstelleKalenderEintraege)
 	t.Run("testRuns", testSpringMonatVor)
 	t.Run("testRuns", testSpringMonatZurueck)
+	t.Run("testRuns", testSpringeJahr)
 	t.Run("testRuns", testWaehleMonat)
 	t.Run("testRuns", testSpringZuHeute)
 }

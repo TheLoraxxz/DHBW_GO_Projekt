@@ -43,7 +43,36 @@
             </tbody>
         </table>
     </div>
-    <div class="col"></div>
+    <div class="col align-self-start">
+        <div class=" p-2">
+        <button type="button" class="btn btn-secondary" onclick="springZuHeute()">Heute</button>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-secondary p-2" onclick="jahr(-1)">&larr;</button>
+            <b class="text-muted card-text w-25 p-2">{{.JahrAnzeige}}</b>
+            <button type="button" class="btn btn-outline-secondary p-2"  onclick="jahr(1)">&rarr;</button>
+
+        </div>
+        <div class="dropdown  p-2">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                Monat
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark " aria-labelledby="dropdownMenuButton2">
+                <li class="dropdown-item" onclick="monatswahl(1)">Januar</li>
+                <li class="dropdown-item" onclick="monatswahl(2)">Februar</li>
+                <li class="dropdown-item" onclick="monatswahl(3)">März</li>
+                <li class="dropdown-item" onclick="monatswahl(4)">April</li>
+                <li class="dropdown-item" onclick="monatswahl(5)">Mai</li>
+                <li class="dropdown-item" onclick="monatswahl(6)">Juni</li>
+                <li class="dropdown-item" onclick="monatswahl(7)">Juli</li>
+                <li class="dropdown-item" onclick="monatswahl(8)">August</li>
+                <li class="dropdown-item" onclick="monatswahl(9)">September</li>
+                <li class="dropdown-item" onclick="monatswahl(10)">Oktober</li>
+                <li class="dropdown-item" onclick="monatswahl(11)">November</li>
+                <li class="dropdown-item" onclick="monatswahl(12)">Dezember</li>
+            </ul>
+        </div>
+    </div>
 </div>
 {{ template "footer" . }}
 
@@ -64,6 +93,32 @@
             location.reload();
         }
         xhttp.open("GET", "?suche=plusMonat");
+        xhttp.send();
+    }
+    function monatswahl(monat){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            location.reload();
+        }
+        requestString = new String("?monat=" + monat)
+        xhttp.open("GET", requestString);
+        xhttp.send();
+    }
+    function jahr(summand){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            location.reload();
+        }
+        requestString = new String("?jahr=" + summand)
+        xhttp.open("GET", requestString);
+        xhttp.send();
+    }
+    function springZuHeute(){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            location.reload();
+        }
+        xhttp.open("GET", "?datum=heute");
         xhttp.send();
     }
 </script>
