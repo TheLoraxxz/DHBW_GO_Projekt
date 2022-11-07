@@ -2,6 +2,7 @@ package templates
 
 import "html/template"
 
+// für templates: https://www.practical-go-lessons.com/chap-32-templates
 const pageHtml = `
 <!DOCTYPE html>
 <html lang="en">
