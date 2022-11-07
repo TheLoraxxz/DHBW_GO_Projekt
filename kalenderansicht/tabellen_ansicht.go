@@ -4,43 +4,55 @@ import (
 	"time"
 )
 
-type TabellenKalendar struct {
+type TabellenAnsicht struct {
 	Datumsanzeige time.Time
 }
 
-func (c TabellenKalendar) JahrAnzeige() int {
+func (c TabellenAnsicht) JahrAnzeige() int {
 	return c.Datumsanzeige.Year()
 }
-func (c TabellenKalendar) MonatsAnzeige() time.Month {
+func (c TabellenAnsicht) MonatsAnzeige() time.Month {
 	return c.Datumsanzeige.Month()
 }
 
-func (c TabellenKalendar) createCalendarEntries(userId string) {
+func (c TabellenAnsicht) ErstelleKalenderEintraege(userId string) {
 
 }
 
-func (c *TabellenKalendar) springMonatVor() {
+func (c *TabellenAnsicht) SpringMonatVor() {
 	switch day := uint8(c.Datumsanzeige.Day()); {
 	case day < 29:
 		c.Datumsanzeige = c.Datumsanzeige.AddDate(0, 1, 0)
-	case day > 30:
+	case day >= 29:
 		c.Datumsanzeige = c.Datumsanzeige.AddDate(0, 0, 5)
 	}
 }
 
-func (c *TabellenKalendar) springMonatZurueck() {
+func (c *TabellenAnsicht) SpringMonatZurueck() {
 	switch day := uint8(c.Datumsanzeige.Day()); {
 	case day < 29:
 		c.Datumsanzeige = c.Datumsanzeige.AddDate(0, -1, 0)
-	case day > 30:
+	case day >= 29:
 		c.Datumsanzeige = c.Datumsanzeige.AddDate(0, 0, -31)
 	}
 }
 
-func (c *TabellenKalendar) waehleMonat(month time.Time) {
+//Date(year int, month Month, day int, hour int, min int, sec int, nsec int, loc *Location) Time
 
+func (c *TabellenAnsicht) WaehleMonat(monat time.Month) {
+	jahr := c.Datumsanzeige.Year()
+	c.Datumsanzeige = time.Date(
+		jahr,
+		monat,
+		1,
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
 }
 
-func (c *TabellenKalendar) springZuHeute() {
-
+func (c *TabellenAnsicht) SpringZuHeute() {
+	c.Datumsanzeige = time.Now()
 }

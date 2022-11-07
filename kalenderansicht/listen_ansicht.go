@@ -11,19 +11,19 @@ const (
 type ListenAnsicht struct {
 }
 
-func (c ListenAnsicht) createCalendarEntries(userId string) {
+func (c ListenAnsicht) ErstelleKalenderEintraege(userId string) {
 
 }
 
-func (c ListenAnsicht) waehleDatum() {
+func (c ListenAnsicht) WaehleDatum() {
 
 }
-func (c ListenAnsicht) waehleSeitenAnzahl(amount pagesAmount) {
+func (c ListenAnsicht) WaehleSeitenAnzahl(amount pagesAmount) {
 
 }
-func (c ListenAnsicht) springSeiteWeiter() {
+func (c ListenAnsicht) SpringSeiteWeiter() {
 
 }
-func (c ListenAnsicht) springSeiteZuueck() {
+func (c ListenAnsicht) SpringSeiteZuueck() {
 
 }
