@@ -34,7 +34,7 @@ func TestTermin(t *testing.T) { //prüft ob der dummy Termin nicht Leer ist
 	assert.Equal(t, "2021-08-15 15:30:45 +0000 UTC", termin.EndDate.String())
 }
 
-func TestTerminUpdate(t *testing.T) { // prüft, ob die updates durchgeführt wurden
+func TestTerminUpdate(t *testing.T) { //prüft, ob die updates durchgeführt wurden
 	termin := newTermin()
 	updateTermin(termin) //ruft die setter auf
 

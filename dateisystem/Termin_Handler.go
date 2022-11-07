@@ -10,6 +10,20 @@ import (
 	"time"
 )
 
+func NewTerminObj(title string, description string, rep repeat, date string, endDate string) Termin { //erzeugt einen transitiven Termin
+
+	dat, _ := time.Parse(dateLayoutISO, date)
+	enddat, _ := time.Parse(dateLayoutISO, endDate)
+
+	T := Termin{
+		Title:       title,
+		Description: description,
+		Recurring:   rep,
+		Date:        dat,
+		EndDate:     enddat}
+	return T
+}
+
 func CreateNewTermin(title string, description string, rep repeat, date string, endDate string, username string) Termin { //erzeugt einen persistenten Termin
 	t := NewTerminObj(title, description, rep, date, endDate)
 	StoreTerminObj(t, username)
@@ -32,35 +46,16 @@ func GetTermine(username string) []Termin { //liefert slice mit allen terminen e
 		return nil
 	}
 
-	for _, v := range files { // lädt der Reihe nach alle Dateien ein
+	for _, v := range files { //lädt der Reihe nach alle Dateien ein
 		title := strings.Split(v.Name(), ".")
 		k = append(k, LoadTermin(title[0], username))
 	}
-	defer func(f *os.File) { // schließt Pointer auf die Json
+	defer func(f *os.File) { //schließt Pointer auf die json
 		err := f.Close()
 		if err != nil {
 			fmt.Println(err)
 		}
 	}(f)
-	return k
-}
-
-func NewTerminObj(title string, description string, rep repeat, date string, endDate string) Termin { //erzeugt einen transitiven Termin
-
-	dat, _ := time.Parse(dateLayoutISO, date)
-	enddat, _ := time.Parse(dateLayoutISO, endDate)
-
-	T := Termin{
-		Title:       title,
-		Description: description,
-		Recurring:   rep,
-		Date:        dat,
-		EndDate:     enddat}
-	return T
-}
-
-func AddToCache(termin Termin, kalender []Termin) []Termin { // fügt Termin dem Caching hinzu
-	k := append(kalender, termin)
 	return k
 }
 
@@ -77,6 +72,19 @@ func StoreTerminObj(termin Termin, username string) { //exportiert Termine zu js
 	_ = os.WriteFile(file, p, 0755)
 }
 
+func AddToCache(termin Termin, kalender []Termin) []Termin { //fügt Termin dem Caching hinzu
+	k := append(kalender, termin)
+	return k
+}
+
+func StoreCache(kalender []Termin, username string) { //speichert alle Elemente Caches von User "username"
+	k := kalender
+
+	for i := 0; i < len(k); i++ {
+		StoreTerminObj(k[i], username)
+	}
+}
+
 func LoadTermin(tittle string, username string) Termin { //kreiert Termin aus json, "username" mapped Termine und Nutzer
 	file := username + "/" + tittle + ".json"
 
@@ -91,7 +99,7 @@ func LoadTermin(tittle string, username string) Termin { //kreiert Termin aus js
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer func(f *os.File) { // schließt Pointer auf die Json
+	defer func(f *os.File) { //schließt Pointer auf die json
 		err := f.Close()
 		if err != nil {
 			fmt.Println(err)
@@ -100,10 +108,38 @@ func LoadTermin(tittle string, username string) Termin { //kreiert Termin aus js
 	return t
 }
 
-func DeleteTermin(tittle string, username string) { //löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
+func deleteTermin(tittle string, username string) { //löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
 	file := username + "/" + tittle + ".json"
 	err := os.Remove(file)
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func DeleteAll(kalender []Termin, username string) []Termin { //löscht alle Termine eines Users, liefert []Termin(nil) zurück
+	k := kalender
+
+	for i := 0; i < len(k); i++ {
+		deleteTermin(k[i].Title, username)
+	}
+
+	k = GetTermine(username)
+	return k
+}
+
+func DeleteFromCache(kalender []Termin, titel string, username string) []Termin { //Löscht einzelnes Element aus dem Cache
+	kOld := kalender
+	var kNew []Termin
+
+	for i := 0; i < len(kOld); i++ {
+		if kOld[i].Title != titel {
+			kNew = append(kNew, kOld[i])
+		} else { //prüft, ob der Termin persistent, transitiv ist
+			if _, err := os.Stat("/path/to/whatever"); err == nil {
+				deleteTermin(titel, username)
+			}
+		}
+	}
+
+	return kNew
 }
