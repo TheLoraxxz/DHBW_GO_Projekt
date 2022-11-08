@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-type repeat int
+type Repeat int
 
 const ( //"enum" um Wiederholung anzuzeigen
-	taeglich repeat = iota
-	woechentlich
-	monatlich
-	jaehrlich
-	niemals
+	DAILY Repeat = iota
+	WEEKLY
+	MONTHLY
+	YEARLY
+	Never
 )
 
 const ( //genutzt zum Formatieren von time.Date() Objekten
@@ -22,7 +22,7 @@ const ( //genutzt zum Formatieren von time.Date() Objekten
 type Termin struct {
 	Title       string    `json:"Title"`
 	Description string    `json:"Description"`
-	Recurring   repeat    `json:"Recurring"`
+	Recurring   Repeat    `json:"Recurring"`
 	Date        time.Time `json:"Date"`
 	EndDate     time.Time `json:"EndDate"`
 }
@@ -35,7 +35,7 @@ func (Termin) SetDescription(t *Termin, newDescription string) {
 	t.Description = newDescription
 }
 
-func (Termin) SetRecurring(t *Termin, newRecurring repeat) {
+func (Termin) SetRecurring(t *Termin, newRecurring Repeat) {
 	t.Recurring = newRecurring
 }
 
