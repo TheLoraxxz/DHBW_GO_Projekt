@@ -1,8 +1,11 @@
 package kalenderansicht
 
 import (
+	"fmt"
 	"html/template"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,32 +22,42 @@ var ta = TabellenAnsicht{
 var la = new(ListenAnsicht)
 
 // Templates für die Listenansicht sowie die Tabellensansicht
-var tabellenTpl, _ = template.New("tbl.html").ParseFiles("../assets/templates/tbl.html", "../assets/templates/header.html", "../assets/templates/footer.html")
-var listenTpl, _ = template.New("listenAnsicht.html").ParseFiles("../assets/templates/lise.html", "../assets/templates/header.html", "../assets/templates/footer.html")
+var path, _ = os.Getwd()
+var tabellenTpl, _ = template.New("tbl.html").ParseFiles(path+"/assets/templates/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html")
+var listenTpl, _ = template.New("listenAnsicht.html").ParseFiles(path+"/assets/templates/lise.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html")
 
 // Hier wereden all http-Request anfragen geregelt,die im Kontext der Kalenderansicht anfallen
-func tabellenHandler(w http.ResponseWriter, r *http.Request) {
+func TabellenHandler(w http.ResponseWriter, r *http.Request) {
 	//r.RequestURI == /monat -> einträge erstellen
-	switch {
-	case r.RequestURI == "/tabellenAnsicht?suche=minusMonat":
-		ta.SpringMonatZurueck()
-	case r.RequestURI == "/tabellenAnsicht?suche=plusMonat":
-		ta.SpringMonatVor()
-	case strings.Contains(r.RequestURI, "/tabellenAnsicht?monat="):
-		monatStr := r.RequestURI[23:]
-		monat, _ := strconv.Atoi(monatStr)
-		ta.WaehleMonat(time.Month(monat))
-	case strings.Contains(r.RequestURI, "/tabellenAnsicht?jahr="):
-		summandStr := r.RequestURI[22:]
-		summand, _ := strconv.Atoi(summandStr)
-		ta.SpringeJahr(summand)
-	case r.RequestURI == "/tabellenAnsicht?datum=heute":
-		ta.SpringZuHeute()
+	if r.Method == "GET" {
+		switch {
+		case r.RequestURI == "/tabellenAnsicht?suche=minusMonat":
+			ta.SpringMonatZurueck()
+		case r.RequestURI == "/tabellenAnsicht?suche=plusMonat":
+			ta.SpringMonatVor()
+		case strings.Contains(r.RequestURI, "/tabellenAnsicht?monat="):
+			monatStr := r.RequestURI[23:]
+			monat, _ := strconv.Atoi(monatStr)
+			ta.WaehleMonat(time.Month(monat))
+		case strings.Contains(r.RequestURI, "/tabellenAnsicht?jahr="):
+			summandStr := r.RequestURI[22:]
+			summand, _ := strconv.Atoi(summandStr)
+			ta.SpringeJahr(summand)
+		case r.RequestURI == "/tabellenAnsicht?datum=heute":
+			ta.SpringZuHeute()
+		}
 	}
-	tabellenTpl.ExecuteTemplate(w, "tbl.html", ta)
+	if r.Method == "POST" {
+		fmt.Println(r.FormValue("titel"))
+		w.WriteHeader(404)
+	}
+	er := tabellenTpl.ExecuteTemplate(w, "tbl.html", ta)
+	if er != nil {
+		log.Fatalln(er)
+	}
 }
 
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
-func listenHandler(w http.ResponseWriter, r *http.Request) {
+func ListenHandler(w http.ResponseWriter, r *http.Request) {
 	listenTpl.Execute(w, nil)
 }

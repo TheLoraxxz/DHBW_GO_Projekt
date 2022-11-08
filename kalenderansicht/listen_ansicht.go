@@ -12,7 +12,6 @@ type ListenAnsicht struct {
 }
 
 func (c ListenAnsicht) ErstelleKalenderEintraege(userId string) {
-
 }
 
 func (c ListenAnsicht) WaehleDatum() {
