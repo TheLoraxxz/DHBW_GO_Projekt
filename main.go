@@ -1,21 +1,16 @@
 package main
 
 import (
-	"DHBW_GO_Projekt/assets/templates"
 	"DHBW_GO_Projekt/kalenderansicht"
 	"log"
 	"net/http"
 )
 
-type RootHandler struct {
-}
+type RootHandler struct{}
+type LoginHandler struct{}
 
 var Server = http.Server{
 	Addr: ":80",
-}
-
-func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	templates.TemplTest.ExecuteTemplate(writer, "page", nil)
 }
 
 func main() {
