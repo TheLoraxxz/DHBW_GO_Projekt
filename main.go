@@ -1,20 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 )
 
-type RootHandler struct {
-}
+type RootHandler struct{}
+type LoginHandler struct{}
 
 var Server = http.Server{
 	Addr: ":80",
-}
-
-func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprintf(writer, "Hello!")
 }
 
 func main() {
