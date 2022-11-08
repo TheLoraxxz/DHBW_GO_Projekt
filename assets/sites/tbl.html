@@ -2,41 +2,7 @@
 <hr>
 <div class="row justify-content-center align-items-center">
     <div class="col">
-
-        <form action="/tabellenAnsicht" method="POST" id="terminerstellung"  role="form"  class="row mb-3 p-3  needs-validation" novalidate>
-            <h3>Neuen Termin erstellen</h3>
-            <div>
-                <label for="titel" class="col-sm-2 col-form-label ">Titel</label>
-                <input type="text" class="form-control" id="titel" placeholder="Termin-Titel" required>
-            </div>
-            <div>
-                <label for="beschreibung" class="col-sm-2 col-form-label">Beschreibung</label>
-                <input type="text" class="form-control" id="beschreibung" placeholder="Hier eine Termin Beschreibung eingeben." required>
-            </div>
-            <div class="col-12 col-form-label">
-                <label>Wiederholungsinterrvall</label>
-                <select class="form-select" id="wiederholung">
-                    <option selected>niemals</option>
-                    <option value="1">täglich</option>
-                    <option value="2">wöchentlich</option>
-                    <option value="3">jährlich</option>
-                    <option value="4">niemals</option>
-                </select>
-            </div>
-            <div class="col-md-6 col-form-label">
-                <label dor="datum" class="col-sm-2 ">Datum</label>
-                <input type="date" class="form-control" id="datum" required>
-            </div>
-            <div class="col-md-6 col-form-label">
-                <label class="col-sm-2 ">Enddatum</label>
-                <input type="date" class="form-control" id="endDatum">
-            </div>
-            <div class="col-12  p-3">
-                <button type="submit" class="btn btn-secondary">Termin erstellen</button>
-            </div>
-        </form>
-
-
+        {{ template "creator" . }}
     </div>
     <div class="col-6 text-light">
         <div class="card text-center bg-light">
@@ -118,10 +84,7 @@
     </div>
 </div>
 {{ template "footer" . }}
-
-
 <script>
-    /*
     //Hier wird das Formular auf vollständigkeit überprüft
     const form = document.getElementById('terminerstellung');
     form.addEventListener('submit', function (event) {
@@ -134,36 +97,6 @@
         }
         form.classList.add('was-validated')
     }, false);
-
-    function sendData() {
-        var http = new XMLHttpRequest();
-        //hole alle Termin-infos aus dem Formular
-        const terminInfos = new FormData();
-        terminInfos.append("titel", document.getElementById('titel').value);
-
-        var terminInfos = new Object();
-        terminInfos.titel = document.getElementById('titel').value;
-        terminInfos.beschreibung = document.getElementById('beschreibung').value;
-        terminInfos.wiederholung = document.getElementById('wiederholung').value;
-        terminInfos.datum = document.getElementById('beschreibung').value;
-        terminInfos.beschreibung = document.getElementById('endDatum').value;
-
-        //hier werden die Daten in ein Array umgewandelt
-        //Das Array enthält key/values Paare für den Request Context
-        let urlEncodedData = "", urlEncodedDataPairs = [], name;
-        for( name in terminInfos ) {
-            urlEncodedDataPairs.push(encodeURIComponent(name)+'='+encodeURIComponent(terminInfos[name]));
-        }
-        //Aufbau und senden der Post Request -> Info bei ergolgreicher Erstellung
-        http.open('POST', '/tabellenAnsicht')
-        http.setRequestHeader('Content-type', 'application/termin-form');
-        http.send(terminInfos);
-        http.onload = function() {
-            // Do whatever with response
-            alert(http.responseText)
-        }
-        }
-*/
     function zurueck() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {

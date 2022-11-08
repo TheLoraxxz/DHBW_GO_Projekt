@@ -1,0 +1,34 @@
+{{ define "creator" }}
+<form action="/tabellenAnsicht?terminErstellen" method="POST" id="terminerstellung"  role="form"  class="row mb-3 p-3  needs-validation" novalidate>
+  <h3>Neuen Termin erstellen</h3>
+  <div>
+    <label for="titel" class="col-sm-2 col-form-label ">Titel</label>
+    <input type="text" class="form-control" id="titel" name="titel" placeholder="Termin-Titel" required>
+  </div>
+  <div>
+    <label for="beschreibung" class="col-sm-2 col-form-label">Beschreibung</label>
+    <input type="text" class="form-control" id="beschreibung" name="beschreibung" placeholder="Hier eine Termin Beschreibung eingeben." required>
+  </div>
+  <div class="col-12 col-form-label">
+    <label for="wiederholung">Wiederholungsinterrvall</label>
+    <select name="wiederholung" id="wiederholung" class="form-select" >
+      <option selected>niemals</option>
+      <option value="1">täglich</option>
+      <option value="2">wöchentlich</option>
+      <option value="3">jährlich</option>
+      <option value="4">niemals</option>
+    </select>
+  </div>
+  <div class="col-md-6 col-form-label">
+    <label dor="datum" class="col-sm-2 ">Datum</label>
+    <input type="date" class="form-control" name="datum" id="datum" required>
+  </div>
+  <div class="col-md-6 col-form-label">
+    <label class="col-sm-2 ">Enddatum</label>
+    <input type="date" class="form-control" name="endDatum" id="endDatum" >
+  </div>
+  <div class="col-12  p-3">
+    <button type="submit" class="btn btn-secondary">Termin erstellen</button>
+  </div>
+</form>
+{{end}}
