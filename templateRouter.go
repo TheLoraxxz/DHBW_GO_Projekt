@@ -35,8 +35,9 @@ var la = new(kalenderansicht.ListenAnsicht)
 
 // Templates für die Listenansicht sowie die Tabellensansicht
 var path, _ = os.Getwd()
-var tabellenTpl, _ = template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
-var listenTpl, _ = template.New("listenAnsicht.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
+
+var tableTpl, _ = template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
+var listTpl, _ = template.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
 
 // Hier wereden all http-Request anfragen geregelt,die im Kontext der Kalenderansicht anfallen
 func TabellenHandler(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +64,7 @@ func TabellenHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" && r.RequestURI == "/tabellenAnsicht?terminErstellen" {
 		kalenderansicht.CreateTermin(r, username)
 	}
-	er := tabellenTpl.ExecuteTemplate(w, "tbl.html", ta)
+	er := tableTpl.ExecuteTemplate(w, "tbl.html", ta)
 	if er != nil {
 		log.Fatalln(er)
 	}
@@ -71,5 +72,8 @@ func TabellenHandler(w http.ResponseWriter, r *http.Request) {
 
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
 func ListenHandler(w http.ResponseWriter, r *http.Request) {
-	listenTpl.Execute(w, nil)
+	er := listTpl.ExecuteTemplate(w, "liste.html", nil)
+	if er != nil {
+		log.Fatalln(er)
+	}
 }

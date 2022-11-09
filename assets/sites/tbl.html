@@ -85,18 +85,6 @@
 </div>
 {{ template "footer" . }}
 <script>
-    //Hier wird das Formular auf vollständigkeit überprüft
-    const form = document.getElementById('terminerstellung');
-    form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-            event.preventDefault()
-            event.stopPropagation()
-        }
-        if(form.checkValidity()) {
-            sendData()
-        }
-        form.classList.add('was-validated')
-    }, false);
     function zurueck() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -105,7 +93,6 @@
         xhttp.open("GET", "?suche=minusMonat");
         xhttp.send();
     }
-
     function vor() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
