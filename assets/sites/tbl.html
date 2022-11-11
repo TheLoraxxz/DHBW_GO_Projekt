@@ -8,13 +8,13 @@
         <div class="card text-center bg-light">
             <div class="card-body row justify-content-md-center">
                 <div class="col-sm">
-                    <button type="button" class="btn btn-outline-secondary" onclick="zurueck()">&larr;</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="back()">&larr;</button>
                 </div>
                 <div class="col-sm">
-                    <b class="text-muted card-text w-25">{{.MonatsAnzeige}} {{.JahrAnzeige}}</b>
+                    <b class="text-muted card-text w-25">{{.ShowMonth}} {{.ShowYear}}</b>
                 </div>
                 <div class="col-sm">
-                    <button type="button" class="btn btn-outline-secondary" onclick="vor()">&rarr;</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="forward()">&rarr;</button>
                 </div>
             </div>
         </div>
@@ -31,17 +31,7 @@
             </tr>
             </thead>
             <tbody>
-            {{range $index, $element := .ErstelleTabellenAnsicht}}
-            <tr>
-                <th>{{ $element }}</th>
-                <th>{{ $element }}</th>
-                <th>{{ $element }}</th>
-                <th>{{ $element}}</th>
-                <th>{{ $element }}</th>
-                <th>{{ $element }}</th>
-                <th>{{ $element }}</th>
-            </tr>
-            {{end}}
+
             </tbody>
         </table>
     </div>
@@ -51,12 +41,12 @@
         <div class="card text-center border-0">
             <div class="card-body">
                 <div class=" p-2">
-                    <button type="button" class="btn btn-secondary" onclick="springZuHeute()">Heute</button>
+                    <button type="button" class="btn btn-secondary" onclick="jumpToToday()">Heute</button>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-outline-secondary p-2" onclick="jahr(-1)">&larr;</button>
-                    <b class="text-muted card-text w-25 p-2">{{.JahrAnzeige}}</b>
-                    <button type="button" class="btn btn-outline-secondary p-2" onclick="jahr(1)">&rarr;</button>
+                    <button type="button" class="btn btn-outline-secondary p-2" onclick="year(-1)">&larr;</button>
+                    <b class="text-muted card-text w-25 p-2">{{.ShowYear}}</b>
+                    <button type="button" class="btn btn-outline-secondary p-2" onclick="year(1)">&rarr;</button>
 
                 </div>
                 <div class="dropdown  p-2">
@@ -65,18 +55,18 @@
                         Monat
                     </button>
                     <ul class="dropdown-menu dropdown-menu-dark " aria-labelledby="dropdownMenuButton2">
-                        <li class="dropdown-item" onclick="monatswahl(1)">Januar</li>
-                        <li class="dropdown-item" onclick="monatswahl(2)">Februar</li>
-                        <li class="dropdown-item" onclick="monatswahl(3)">März</li>
-                        <li class="dropdown-item" onclick="monatswahl(4)">April</li>
-                        <li class="dropdown-item" onclick="monatswahl(5)">Mai</li>
-                        <li class="dropdown-item" onclick="monatswahl(6)">Juni</li>
-                        <li class="dropdown-item" onclick="monatswahl(7)">Juli</li>
-                        <li class="dropdown-item" onclick="monatswahl(8)">August</li>
-                        <li class="dropdown-item" onclick="monatswahl(9)">September</li>
-                        <li class="dropdown-item" onclick="monatswahl(10)">Oktober</li>
-                        <li class="dropdown-item" onclick="monatswahl(11)">November</li>
-                        <li class="dropdown-item" onclick="monatswahl(12)">Dezember</li>
+                        <li class="dropdown-item" onclick="monthSelection(1)">Januar</li>
+                        <li class="dropdown-item" onclick="monthSelection(2)">Februar</li>
+                        <li class="dropdown-item" onclick="monthSelection(3)">März</li>
+                        <li class="dropdown-item" onclick="monthSelection(4)">April</li>
+                        <li class="dropdown-item" onclick="monthSelection(5)">Mai</li>
+                        <li class="dropdown-item" onclick="monthSelection(6)">Juni</li>
+                        <li class="dropdown-item" onclick="monthSelection(7)">Juli</li>
+                        <li class="dropdown-item" onclick="monthSelection(8)">August</li>
+                        <li class="dropdown-item" onclick="monthSelection(9)">September</li>
+                        <li class="dropdown-item" onclick="monthSelection(10)">Oktober</li>
+                        <li class="dropdown-item" onclick="monthSelection(11)">November</li>
+                        <li class="dropdown-item" onclick="monthSelection(12)">Dezember</li>
                     </ul>
                 </div>
             </div>
@@ -85,7 +75,7 @@
 </div>
 {{ template "footer" . }}
 <script>
-    function zurueck() {
+    function back() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
@@ -93,7 +83,7 @@
         xhttp.open("GET", "?suche=minusMonat");
         xhttp.send();
     }
-    function vor() {
+    function forward() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
@@ -102,7 +92,7 @@
         xhttp.send();
     }
 
-    function monatswahl(monat) {
+    function monthSelection(monat) {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
@@ -112,7 +102,7 @@
         xhttp.send();
     }
 
-    function jahr(summand) {
+    function year(summand) {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
@@ -122,7 +112,7 @@
         xhttp.send();
     }
 
-    function springZuHeute() {
+    function jumpToToday() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();

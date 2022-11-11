@@ -10,21 +10,21 @@ import (
 	"time"
 )
 
-func NewTerminObj(title string, description string, rep Repeat, date string, endDate string) Termin { //erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
+func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time) Termin { //erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
 
-	dat, _ := time.Parse(dateLayoutISO, date)
-	enddat, _ := time.Parse(dateLayoutISO, endDate)
+	//dat, _ := time.Parse(dateLayoutISO, date)
+	//enddat, _ := time.Parse(dateLayoutISO, endDate)
 
 	T := Termin{
 		Title:       title,
 		Description: description,
 		Recurring:   rep,
-		Date:        dat,
-		EndDate:     enddat}
+		Date:        date,
+		EndDate:     endDate}
 	return T
 }
 
-func CreateNewTermin(title string, description string, rep Repeat, date string, endDate string, username string) Termin { //erzeugt einen persistenten Termin
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string) Termin { //erzeugt einen persistenten Termin
 	t := NewTerminObj(title, description, rep, date, endDate)
 	StoreTerminObj(t, username)
 	return t

@@ -1,17 +1,17 @@
 {{ define "creator" }}
-<form action="/tabellenAnsicht?terminErstellen" method="POST" id="terminerstellung"  role="form"  class="row mb-3 p-3  needs-validation" novalidate>
+<form action="/tabellenAnsicht?terminErstellen" method="POST" id="terminCreation" role="form" class="row mb-3 p-3  needs-validation" novalidate>
   <h3>Neuen Termin erstellen</h3>
   <div>
-    <label for="titel" class="col-sm-2 col-form-label ">Titel</label>
-    <input type="text" class="form-control" id="titel" name="titel" placeholder="Termin-Titel" required>
+    <label for="title" class="col-sm-2 col-form-label ">Titel</label>
+    <input type="text" class="form-control" id="title" name="title" placeholder="Termin-Titel" required>
   </div>
   <div>
-    <label for="beschreibung" class="col-sm-2 col-form-label">Beschreibung</label>
-    <input type="text" class="form-control" id="beschreibung" name="beschreibung" placeholder="Hier eine Termin Beschreibung eingeben." required>
+    <label for="description" class="col-sm-2 col-form-label">Beschreibung</label>
+    <input type="text" class="form-control" id="description" name="description" placeholder="Hier eine Termin Beschreibung eingeben." required>
   </div>
   <div class="col-12 col-form-label">
-    <label for="wiederholung">Wiederholungsinterrvall</label>
-    <select name="wiederholung" id="wiederholung" class="form-select" >
+    <label for="repeat">Wiederholungsinterrvall</label>
+    <select name="repeat" id="repeat" class="form-select" >
       <option selected>niemals</option>
       <option value="1">täglich</option>
       <option value="2">wöchentlich</option>
@@ -21,11 +21,11 @@
   </div>
   <div class="col-md-6 col-form-label">
     <label dor="datum" class="col-sm-2 ">Datum</label>
-    <input type="date" class="form-control" name="datum" id="datum" required>
+    <input type="date" class="form-control" name="date" id="date" required>
   </div>
   <div class="col-md-6 col-form-label">
     <label class="col-sm-2 ">Enddatum</label>
-    <input type="date" class="form-control" name="endDatum" id="endDatum" >
+    <input type="date" class="form-control" name="endDate" id="endDate" required>
   </div>
   <div class="col-12  p-3">
     <button type="submit" class="btn btn-secondary">Termin erstellen</button>
@@ -33,7 +33,7 @@
 </form>
 <script>
   //Hier wird das Formular auf vollständigkeit überprüft
-  const form = document.getElementById('terminerstellung');
+  const form = document.getElementById('terminCreation');
   form.addEventListener('submit', function (event) {
     if (!form.checkValidity()) {
       event.preventDefault()

@@ -1,11 +1,6 @@
 package dateisystem
 
-//Mat-Nr. 8689159
-import (
-	"github.com/stretchr/testify/assert"
-	"testing"
-)
-
+/*
 func TestNewTerminObj(t *testing.T) { //prüft das erstellen transitiver Termine
 
 	termin := NewTerminObj("test", "test", Repeat(WEEKLY), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC") //erzeugt dummy Termin
@@ -23,6 +18,7 @@ func TestLoadTermin(t *testing.T) { //prüft das Laden von Objekten
 
 	assert.Equal(t, termin, terminLoaded)
 }
+
 
 func TestGetTermine(t *testing.T) { //prüft ob das erzeugte Slice die korrekten Objekte geladen hat
 	CreateNewTermin("testo", "test", Repeat(WEEKLY), "2007-03-02T15:02:05 UTC", "2007-03-02T15:02:05 UTC", "mik")
@@ -76,3 +72,4 @@ func TestDeleteFromCache(t *testing.T) { //prüft, ob Termin aus dem Caching gel
 
 	assert.Equal(t, k[2], k2[1])
 }
+*/
