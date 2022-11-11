@@ -3,6 +3,7 @@ package authentifizierung
 import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 	"testing"
 )
 
@@ -15,7 +16,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestAuthenticateUserTrue(t *testing.T) {
-	users = []UserData{}
+	users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
@@ -24,21 +25,34 @@ func TestAuthenticateUserTrue(t *testing.T) {
 }
 
 func TestAuthenticateUserFalse(t *testing.T) {
-	users = []UserData{}
+	users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
 	passwordWrong := "user"
-	wahr, _ := AuthenticateUser(&user, &passwordWrong)
+	wahr, cookie := AuthenticateUser(&user, &passwordWrong)
 	assert.Equal(t, false, wahr)
+	assert.NotEqual(t, nil, cookie)
 }
 
 func TestAuthenticateUserCookieMngmt(t *testing.T) {
-	users = []UserData{}
+	users = make(map[string]string)
 	user := "admin"
 	password := "admin"
+	// nutzer erstellen
 	CreateUser(&user, &password)
+	// den coookie zurückholen aufgebaut wie:
 	_, cookie := AuthenticateUser(&user, &password)
-	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte(users[0].password))
+	// auslesen des cookies und des uernames
+	username := cookie[:strings.Index(cookie, "|")]
+	cookie = cookie[strings.Index(cookie, "|")+1:]
+	// schauen, dass der neue hash richtig generiert ist
+	//TODO: finish this shit that it works
+	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte(users["admin"]))
 	assert.Equal(t, nil, isSame)
+	assert.Equal(t, user, username)
+}
+
+func TestCheckCookie(t *testing.T) {
+
 }

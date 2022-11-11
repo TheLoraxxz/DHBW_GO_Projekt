@@ -1,6 +1,7 @@
 package authentifizierung
 
 import (
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
@@ -12,31 +13,41 @@ type UserData struct {
 }
 
 // TODO: muss darauf warten ein threadsafe weg zu implementieren --> ich fixe das nach der Vorlesng: Channels und Go Routinen ^^
-var users = []UserData{}
+var users = make(map[string]string)
 
 func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie string) {
+	val, found := users[*user]
 	for _, oneOfUsers := range users {
-		err := bcrypt.CompareHashAndPassword([]byte(oneOfUsers.password), []byte(*pasw))
-		if err == nil && strings.Compare(*user, oneOfUsers.user) == 0 {
-			bytes, _ := bcrypt.GenerateFromPassword([]byte(oneOfUsers.password), 2)
-			return true, string(bytes)
+		err := bcrypt.CompareHashAndPassword([]byte(oneOfUsers), []byte(*pasw))
+		if err == nil && found && strings.Compare(val, oneOfUsers) == 0 {
+			bytes, hashError := bcrypt.GenerateFromPassword([]byte(oneOfUsers+val), 2)
+			if hashError != nil {
+				return false, ""
+			}
+			return true, *user + "|" + string(bytes)
 		}
 	}
 	return false, ""
 }
 
-func CheckCookie() {
-
+func CheckCookie(cookie *string) bool {
+	cookieDeRef := *cookie
+	username := cookieDeRef[:strings.Index(cookieDeRef, "|")]
+	cookieString := cookieDeRef[strings.Index(cookieDeRef, "|")+1:]
+	fmt.Println(username)
+	fmt.Println(cookieString)
+	return false
 }
 
-func CreateUser(user *string, pasw *string) {
+func CreateUser(user *string, pasw *string) error {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(*pasw), 14)
 	if err != nil {
-		fmt.Println(err)
+		return errors.New("Fehlschlag des Hashings")
 	}
-	newUser := UserData{
-		user:     *user,
-		password: string(bytes),
+	notAllowed := strings.ContainsAny(*user, "|$")
+	if notAllowed {
+		return errors.New("Username darf keine Sonderzeichen enthalten")
 	}
-	users = append(users, newUser)
+	users[*user] = string(bytes)
+	return nil
 }
