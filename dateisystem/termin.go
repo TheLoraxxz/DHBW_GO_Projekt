@@ -39,12 +39,10 @@ func (Termin) SetRecurring(t *Termin, newRecurring Repeat) {
 	t.Recurring = newRecurring
 }
 
-func (Termin) SetDate(t *Termin, newDate string) {
-	d, _ := time.Parse(dateLayoutISO, newDate)
-	t.Date = d
+func (Termin) SetDate(t *Termin, newDate time.Time) {
+	t.Date = newDate
 }
 
-func (Termin) SetEndeDate(t *Termin, newDate string) {
-	d, _ := time.Parse(dateLayoutISO, newDate)
-	t.EndDate = d
+func (Termin) SetEndeDate(t *Termin, newDate time.Time) {
+	t.EndDate = newDate
 }

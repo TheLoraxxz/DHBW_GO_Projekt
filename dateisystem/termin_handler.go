@@ -6,25 +6,23 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
-func NewTerminObj(title string, description string, rep Repeat, date string, endDate string) Termin { //erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
-
-	dat, _ := time.Parse(dateLayoutISO, date)
-	enddat, _ := time.Parse(dateLayoutISO, endDate)
+func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time) Termin { //erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
 
 	T := Termin{
 		Title:       title,
 		Description: description,
 		Recurring:   rep,
-		Date:        dat,
-		EndDate:     enddat}
+		Date:        date,
+		EndDate:     endDate}
 	return T
 }
 
-func CreateNewTermin(title string, description string, rep Repeat, date string, endDate string, username string) Termin { //erzeugt einen persistenten Termin
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string) Termin { //erzeugt einen persistenten Termin
 	t := NewTerminObj(title, description, rep, date, endDate)
 	StoreTerminObj(t, username)
 	return t
@@ -33,8 +31,9 @@ func CreateNewTermin(title string, description string, rep Repeat, date string, 
 func GetTermine(username string) []Termin { //liefert slice mit allen terminen eines Users zurück
 	var k []Termin
 
-	path := username //öffnet das Verzeichnis des Users
-	f, err := os.Open(path)
+	path := getDirectory(username)
+
+	f, err := os.Open(path) //öffnet das Verzeichnis des Users
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -60,16 +59,18 @@ func GetTermine(username string) []Termin { //liefert slice mit allen terminen e
 }
 
 func StoreTerminObj(termin Termin, username string) { //exportiert Termine zu json, "username" mapped Termine und Nutzer
-	file := username + "/" + termin.Title + ".json"
+	path := getFileNameByTerminObj(termin, username)
+	directory, _ := filepath.Split(path)
+
 	ter := termin
 
-	err := os.MkdirAll(username, 755) //erzeugt Verzeichnis passend zum User, falls noch nicht existent
+	err := os.MkdirAll(directory, 755) //erzeugt Verzeichnis passend zum User, falls noch nicht existent
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	p, _ := json.MarshalIndent(ter, "", " ") //erzeugt die json
-	_ = os.WriteFile(file, p, 0755)          //schreibt json in Datei
+	_ = os.WriteFile(path, p, 0755)          //schreibt json in Datei
 }
 
 func AddToCache(termin Termin, kalender []Termin) []Termin { //fügt Termin dem Caching hinzu
@@ -86,7 +87,7 @@ func StoreCache(kalender []Termin, username string) { //speichert alle Elemente 
 }
 
 func LoadTermin(title string, username string) Termin { //kreiert Termin aus json, "username" mapped Termine und Nutzer
-	file := username + "/" + title + ".json"
+	file := getFileNameByTitle(title, username)
 
 	open, err := os.Open(file) //öffnet json
 	if err != nil {
@@ -109,7 +110,7 @@ func LoadTermin(title string, username string) Termin { //kreiert Termin aus jso
 }
 
 func deleteTermin(title string, username string) { //löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
-	file := username + "/" + title + ".json"
+	file := getFileNameByTitle(title, username)
 	err := os.Remove(file)
 	if err != nil {
 		fmt.Println(err)
@@ -130,7 +131,7 @@ func DeleteAll(kalender []Termin, username string) []Termin { //löscht alle Ter
 func DeleteFromCache(kalender []Termin, title string, username string) []Termin { //Löscht einzelnes Element aus dem Cache
 	kOld := kalender
 	var kNew []Termin
-	file := username + "/" + title + ".json"
+	file := getFileNameByTerminObj(kalender[0], username)
 
 	for i := 0; i < len(kOld); i++ {
 		if kOld[i].Title != title {
