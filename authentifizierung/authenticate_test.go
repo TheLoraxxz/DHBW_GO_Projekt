@@ -2,10 +2,20 @@ package authentifizierung
 
 import (
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 	"testing"
 )
 
+func TestCreateUser(t *testing.T) {
+	user := "admin"
+	password := "admin"
+	assert.Equal(t, 0, len(users))
+	CreateUser(&user, &password)
+	assert.Equal(t, 1, len(users))
+}
+
 func TestAuthenticateUserTrue(t *testing.T) {
+	users = []UserData{}
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
@@ -14,6 +24,7 @@ func TestAuthenticateUserTrue(t *testing.T) {
 }
 
 func TestAuthenticateUserFalse(t *testing.T) {
+	users = []UserData{}
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
@@ -22,10 +33,12 @@ func TestAuthenticateUserFalse(t *testing.T) {
 	assert.Equal(t, false, wahr)
 }
 
-func TestCreateUser(t *testing.T) {
+func TestAuthenticateUserCookieMngmt(t *testing.T) {
+	users = []UserData{}
 	user := "admin"
 	password := "admin"
-	assert.Equal(t, 0, len(users))
 	CreateUser(&user, &password)
-	assert.Equal(t, 1, len(users))
+	_, cookie := AuthenticateUser(&user, &password)
+	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte(users[0].password))
+	assert.Equal(t, nil, isSame)
 }
