@@ -1,6 +1,7 @@
 package main
 
 import (
+	ds "DHBW_GO_Projekt/dateisystem"
 	ka "DHBW_GO_Projekt/kalenderansicht"
 	"fmt"
 	"html/template"
@@ -29,7 +30,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 var tv = ka.InitTableView()
 var la ka.ListView
 
-// Templates für die Listenansicht sowie die Tabellensansicht
+// Templates für die Tabellensansicht sowie die Listenansicht
 var path, _ = os.Getwd()
 var tableTpl, _ = template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
 var listTpl, _ = template.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
@@ -56,11 +57,21 @@ func TabellenHandler(w http.ResponseWriter, r *http.Request) {
 			tv.JumpToYear(summand)
 		case r.RequestURI == "/tabellenAnsicht?datum=heute":
 			tv.JumpToToday()
+		case strings.Contains(r.RequestURI, "/tabellenAnsicht?editTerminsWhereIndex="):
+			sliceIndexStr := r.RequestURI[39:]
+			sliceIndex, _ := strconv.Atoi(sliceIndexStr)
+			terminsInMonth := tv.FilterCalendarEntries(ds.GetTermine(tv.Username))[sliceIndex]
+			ka.SetEditableTermins(terminsInMonth)
 		}
 	}
 
-	if r.Method == "POST" && r.RequestURI == "/tabellenAnsicht?terminErstellen" {
-		ka.CreateTermin(r, "mik")
+	if r.Method == "POST" {
+		switch {
+		case r.RequestURI == "/tabellenAnsicht?terminErstellen":
+			ka.CreateTermin(r, "mik")
+		case r.RequestURI == "/tabellenAnsicht?termineBearbeiten":
+			ka.EditTermin(r, "mik")
+		}
 	}
 	er := tableTpl.ExecuteTemplate(w, "tbl.html", tv)
 	if er != nil {

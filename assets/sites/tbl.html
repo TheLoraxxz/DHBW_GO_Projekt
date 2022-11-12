@@ -1,79 +1,160 @@
 {{ template "header" . }}
-<hr>
-<div class="row justify-content-center align-items-center">
-    <div class="col">
-        {{ template "creator" . }}
-    </div>
-    <div class="col-6 text-light">
-        <div class="card text-center bg-light">
-            <div class="card-body row justify-content-md-center">
-                <div class="col-sm">
-                    <button type="button" class="btn btn-outline-secondary" onclick="back()">&larr;</button>
-                </div>
-                <div class="col-sm">
-                    <b class="text-muted card-text w-25">{{.ShowMonth}} {{.ShowYear}}</b>
-                </div>
-                <div class="col-sm">
-                    <button type="button" class="btn btn-outline-secondary" onclick="forward()">&rarr;</button>
-                </div>
-            </div>
+<div class="container-fluid">
+    <hr>
+    <div class="row justify-content-center align-items-center">
+        <div class="col ">
+            <!--------------template um Termin zu erstellen----------->
+            {{ template "creator" . }}
         </div>
-        <table class="table table-secondary table-striped table-hover table-bordered">
-            <thead>
-            <tr>
-                <th scope="col">Montag</th>
-                <th scope="col">Dienstag</th>
-                <th scope="col">Mittwoch</th>
-                <th scope="col">Donnerstag</th>
-                <th scope="col">Freitag</th>
-                <th scope="col">Samstag</th>
-                <th scope="col">Sonntag</th>
-            </tr>
-            </thead>
-            <tbody>
+        <div class="col text-light">
+            <div class="card text-center border-0">
+                <div class="card-body ">
+                    <div class=" p-2">
+                        <button type="button" class="btn btn-secondary" onclick="jumpToToday()">Heute</button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary p-2" onclick="year(-1)">&larr;</button>
+                        <b class="text-muted card-text w-25 p-2">{{.ShowYear}}</b>
+                        <button type="button" class="btn btn-outline-secondary p-2" onclick="year(1)">&rarr;</button>
 
-            </tbody>
-        </table>
-    </div>
-
-
-    <div class="col">
-        <div class="card text-center border-0">
-            <div class="card-body">
-                <div class=" p-2">
-                    <button type="button" class="btn btn-secondary" onclick="jumpToToday()">Heute</button>
+                    </div>
+                    <div class="dropdown  p-2">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton2"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            Monat
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark " aria-labelledby="dropdownMenuButton2">
+                            <li class="dropdown-item" onclick="monthSelection(1)">Januar</li>
+                            <li class="dropdown-item" onclick="monthSelection(2)">Februar</li>
+                            <li class="dropdown-item" onclick="monthSelection(3)">März</li>
+                            <li class="dropdown-item" onclick="monthSelection(4)">April</li>
+                            <li class="dropdown-item" onclick="monthSelection(5)">Mai</li>
+                            <li class="dropdown-item" onclick="monthSelection(6)">Juni</li>
+                            <li class="dropdown-item" onclick="monthSelection(7)">Juli</li>
+                            <li class="dropdown-item" onclick="monthSelection(8)">August</li>
+                            <li class="dropdown-item" onclick="monthSelection(9)">September</li>
+                            <li class="dropdown-item" onclick="monthSelection(10)">Oktober</li>
+                            <li class="dropdown-item" onclick="monthSelection(11)">November</li>
+                            <li class="dropdown-item" onclick="monthSelection(12)">Dezember</li>
+                        </ul>
+                    </div>
                 </div>
-                <div>
-                    <button type="button" class="btn btn-outline-secondary p-2" onclick="year(-1)">&larr;</button>
-                    <b class="text-muted card-text w-25 p-2">{{.ShowYear}}</b>
-                    <button type="button" class="btn btn-outline-secondary p-2" onclick="year(1)">&rarr;</button>
+            <table class="table table-secondary table-striped table-hover table-bordered">
+                <caption class="caption-top">
+                    <div class="card text-center bg-light">
+                        <div class="card-body row justify-content-md-center">
+                            <div class="col-sm">
+                                <button type="button" class="btn btn-outline-secondary" onclick="back()">&larr;</button>
+                            </div>
+                            <div class="col-sm">
+                                <b class="text-muted card-text w-25">{{.ShowMonth}} {{.ShowYear}}</b>
+                            </div>
+                            <div class="col-sm">
+                                <button type="button" class="btn btn-outline-secondary" onclick="forward()">&rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </caption>
+                <thead>
+                <tr>
+                    <th scope="col">Montag</th>
+                    <th scope="col">Dienstag</th>
+                    <th scope="col">Mittwoch</th>
+                    <th scope="col">Donnerstag</th>
+                    <th scope="col">Freitag</th>
+                    <th scope="col">Samstag</th>
+                    <th scope="col">Sonntag</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!------------Hier findet die Terminfilterung statt------------------->
+                <tr>
+                    <!------------Je nachdem an welchen Wochentag der Monat beginnt werden leere Felder eingefügt------------------->
+                    {{range $index, $element := .MonthStarts}}
+                    <td></td>
+                    {{end}}
+                    <!------------Hier wird über die einzelnen Objekte dayInfos iteriert------------------->
+                    {{range $index, $element := .CreateTerminTable}}
+                    <td>
+                        {{if (call .IsToday .Day)}}
+                        <div class="card border-danger text-center border-1">
+                            <div class="card-body ">
+                                <div class="text-danger">
+                                    Heute
+                                    <br>
+                                    <b class="text-danger">{{.Day.Day}} </b>
+                                    <hr>
+                                    Termine: {{len .Dayentries}}
+                                    <br>
+                                    <div class="d-grid gap-2 d-md-block">
+                                        <button type="button" class="btn btn-link"
+                                                onclick="showTermin({{.Day.Day}}, {{.Dayentries}})">anzeigen
+                                        </button>
+                                        <button type="button" class="btn btn-link"
+                                                onclick="edditTermin({{$index}},{{.Dayentries}})">bearbeiten
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                </div>
-                <div class="dropdown  p-2">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton2"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                        Monat
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-dark " aria-labelledby="dropdownMenuButton2">
-                        <li class="dropdown-item" onclick="monthSelection(1)">Januar</li>
-                        <li class="dropdown-item" onclick="monthSelection(2)">Februar</li>
-                        <li class="dropdown-item" onclick="monthSelection(3)">März</li>
-                        <li class="dropdown-item" onclick="monthSelection(4)">April</li>
-                        <li class="dropdown-item" onclick="monthSelection(5)">Mai</li>
-                        <li class="dropdown-item" onclick="monthSelection(6)">Juni</li>
-                        <li class="dropdown-item" onclick="monthSelection(7)">Juli</li>
-                        <li class="dropdown-item" onclick="monthSelection(8)">August</li>
-                        <li class="dropdown-item" onclick="monthSelection(9)">September</li>
-                        <li class="dropdown-item" onclick="monthSelection(10)">Oktober</li>
-                        <li class="dropdown-item" onclick="monthSelection(11)">November</li>
-                        <li class="dropdown-item" onclick="monthSelection(12)">Dezember</li>
-                    </ul>
+                        {{ else }}
+                        <div class="card border-secondary text-center border-1">
+                            <div class="card-body ">
+                                <div>
+                                    <br>
+                                    <b>{{.Day.Day}} </b>
+                                    <hr>
+                                    Termine: {{len .Dayentries}}
+                                    <br>
+                                    <div class="d-grid gap-2 d-md-block">
+                                        <button type="button" class="btn btn-link"
+                                                onclick="showTermin({{.Day}}, {{.Dayentries}})">anzeigen
+                                        </button>
+                                        <button type="button" class="btn btn-link"
+                                                onclick="edditTermin({{$index}}, {{.Dayentries}})">bearbeiten
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+
+                    </td>
+                    {{if (call .NeedsBreak .Day)}}
+                </tr>
+                <tr>
+                    {{end}}
+                    {{end}}
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+
+        <!--------------Hier kann Monat/Jahr und der heutige Tag gewählt werden ----------->
+        <div class="col">
+            <!------------hier werden die Termine des gewählten Tages angezeigt------------------------------------->
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">Termine</h5>
+                    <h6 class="card-subtitle mb-2 text-muted" id="dateField">Hier werden deine Termine
+                        angezeigt</h6>
+                    <hr>
+                    <div id="terminListField" class="text-start">
+
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {{ template "footer" . }}
+
+
+<!--------------------Hier folgt benötigter JavaScript-Code--------------------------->
+
 <script>
     function back() {
         var xhttp = new XMLHttpRequest();
@@ -83,6 +164,7 @@
         xhttp.open("GET", "?suche=minusMonat");
         xhttp.send();
     }
+
     function forward() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -119,5 +201,75 @@
         }
         xhttp.open("GET", "?datum=heute");
         xhttp.send();
+    }
+
+    function showTermin(day, dayentries) {
+        let terminStr = "";
+        document.getElementById("dateField").innerHTML = "Deine Termine am: <br>" + day;
+        for (let i = 0; i < dayentries.length; i++) {
+            entrie = dayentries;
+            terminStr = terminStr + "<b>" + dayentries[i].Title.toString() + "</b>"
+                + "<ul>" +
+                "<li> Beschreibung: " + dayentries[i].Description + "</li>" +
+                "<li> Wiederholung: " + dayentries[i].Recurring + "</li>" +
+                "</ul>";
+        }
+        document.getElementById("terminListField").innerHTML = terminStr;
+    }
+
+    function edditTermin(dayIndex, dayentries) {
+        //Get, um die Termine zu filtern, die bearbeitet werden
+        var xhttp = new XMLHttpRequest();
+        uriStr =  "?editTerminsWhereIndex=" + dayIndex
+        xhttp.open("GET", uriStr);
+        xhttp.send();
+
+        //Formulare um die neuen Werte zu bearbeiten
+        let edditFormStr = "<h3>Termine berabeiten</h3>\n"
+        for (let i = 0; i < dayentries.length; i++) {
+            terminNr = i+1
+            edditFormStr = edditFormStr +
+                "<form action=\"/tabellenAnsicht?termineBearbeiten\" method=\"POST\" id=\"terminCreation\" role=\"form\" class=\"row mb-3 p-3  needs-validation\" novalidate>\n" +
+                "  <div>\n" +
+                "<div class=\"mb-3\">\n" +
+                "    <label for=\"editing"+ terminNr +"\">Bearbeitungsmodus</label>\n" +
+                "    <select name=\"editing"+ terminNr +"\" id=\"editing"+ terminNr +"\"  class=\"form-select\">\n" +
+                "      <option selected>Bearbeiten: Termin "+ terminNr +" </option>\n" +
+                "      <option value=\"1\">Löschen: Termin "+ terminNr +"</option>\n" +
+                "      <option value=\"2\">Bearbeiten: Termin "+ terminNr +"</option>\n" +
+                "    </select>\n" +
+                "  </div>"+
+                "    <label for=\"title"+ terminNr +"\" class=\"col-sm-2 col-form-label \">Titel</label>\n" +
+                "    <input type=\"text\" class=\"form-control\" id=\"title"+ terminNr +"\" name=\"title"+ terminNr +"\" value=\""+ dayentries[i].Title + "\"required>\n" +
+                "  </div>\n" +
+                "  <div>\n" +
+                "    <label for=\"description"+ terminNr +"\" class=\"col-sm-2 col-form-label\">Beschreibung</label>\n" +
+                "    <input type=\"text\" class=\"form-control\" id=\"description"+ terminNr +"\" name=\"description"+ terminNr +"\" value=\""+ dayentries[i].Description +  "\"required>\n" +
+                "  </div>\n" +
+                "  <div class=\"col-12 col-form-label\">\n" +
+                "    <label for=\"repeat"+ terminNr +"\">Wiederholungsinterrvall</label>\n" +
+                "    <select name=\"repeat\" id=\"repeat"+ terminNr +"\" class=\"form-select\" >\n" +
+                "      <option selected>niemals</option>\n" +
+                "      <option value=\"1\">täglich</option>\n" +
+                "      <option value=\"2\">wöchentlich</option>\n" +
+                "      <option value=\"3\">jährlich</option>\n" +
+                "      <option value=\"4\">niemals</option>\n" +
+                "    </select>\n" +
+                "  </div>\n" +
+                "  <div class=\"col-md-12 col-form-label\">\n" +
+                "    <label for=\"date"+ terminNr +"\" class=\"col-sm-2 \">Datum: "+ dayentries[i].Date +"</label>\n" +
+                "    <input type=\"date\" class=\"form-control\" name=\"date"+ terminNr +"\" id=\"date"+ terminNr +"\" required>\n" +
+                "  </div>\n" +
+                "  <div class=\"col-md-12 col-form-label\">\n" +
+                "    <label for=\"endDate"+ terminNr +"\" class=\"col-sm-2 \">Enddatum: "+ dayentries[i].EndDate +"</label>\n" +
+                "    <input type=\"date\" class=\"form-control\" name=\"endDate"+ terminNr +"\" id=\"endDate"+ terminNr +"\" required>\n" +
+                "  </div>\n" +
+                "<hr>";
+        }
+        edditFormStr = edditFormStr + "  <div class=\"col-12  p-3\">\n" +
+            "    <button type=\"submit\" class=\"btn btn-secondary\">Bestätigen</button>\n" +
+            "  </div>\n"
+        "</form>";
+        document.getElementById("terminCreation").innerHTML = edditFormStr;
     }
 </script>

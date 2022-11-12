@@ -30,6 +30,7 @@ func CreateNewTermin(title string, description string, rep Repeat, date time.Tim
 	return t
 }
 
+// liefert slice mit allen terminen eines Users zurück
 func GetTermine(username string) []Termin { //liefert slice mit allen terminen eines Users zurück
 	var k []Termin
 
