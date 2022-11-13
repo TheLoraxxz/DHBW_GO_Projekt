@@ -16,8 +16,8 @@ func main() {
 	//hier weitere handler hinzufügen in ähnlicher fashion für die verschiedenen Templates
 	root := RootHandler{}
 	http.Handle("/", &root)
-	http.HandleFunc("/tabellenAnsicht", TabellenHandler)
-	http.HandleFunc("/listenAnsicht", ListenHandler)
+	http.HandleFunc("/tabellenAnsicht", TableHandler)
+	http.HandleFunc("/listenAnsicht", ListHandler)
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
 	}

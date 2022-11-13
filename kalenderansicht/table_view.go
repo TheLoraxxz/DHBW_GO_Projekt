@@ -15,15 +15,14 @@ type TableView struct {
 // Rückgabewert: Pointer auf ein Objekt TableView
 // Dient zur Initialisierung der TableView zu Start des Programms.
 // Zu Begin wird diese auf den ersten Tag des aktuellen Monats gesetzt.
-func InitTableView() TableView {
+func InitTableView() *TableView {
 	var tv = new(TableView)
 	tv.ShownDate = tv.getFirstDayOfMonth(time.Now())
-	tv.CreateTerminTable()
-	return *tv
+	return tv
 }
 
 // getFirstDayOfMonth
-// liefert den ersten Tag des (auf der Webseite) betrachteten Monats
+// Hilfsfunktion, die den ersten Tag des Monats liefert
 func (tv TableView) getFirstDayOfMonth(specificDate time.Time) time.Time {
 	return time.Date(
 		specificDate.Year(),
@@ -43,13 +42,13 @@ Diese werden im html-template angesprochen.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 // ShowYear
-// gibt das Jahr des auf der Webseite zu sehenden Monats zurück
+// gibt das Jahr des betrachten Monats zurück, um dies auf der Webseite anzuzeigen
 func (tv TableView) ShowYear() int {
 	return tv.ShownDate.Year()
 }
 
 // ShowMonth
-// gibt das Jahr des auf der Webseite zu sehenden Monats zurück
+// gibt den betrachten Monat zurück, um ihn auf der Webseite anzuzeigen
 func (tv TableView) ShowMonth() time.Month {
 	return tv.ShownDate.Month()
 }
@@ -118,9 +117,60 @@ type dayInfos struct {
 }
 
 // CreateTerminTable
+// Lädt alle Termine des Benutzers.
+// Ruft die Funktion zum Filtern der Termine auf, die in den betrachteten Monat fallen.
+// Weißt diese Termine dem Feld MonthEntries von TableView zu.
 func (tv *TableView) CreateTerminTable() {
 	termins := ds.GetTermine(tv.Username)
 	tv.MonthEntries = tv.FilterCalendarEntries(termins)
+}
+
+// FilterCalendarEntries
+// Parameter: Slice, die alle Termine des Users enthält
+// Rückgabewert: Gefilterte Slice, deren Länge der Monatslänge entspricht und für jeden Tag die Termininfos enthält
+// Der Termintag entspricht dabei dem Index -1 in dem Slice
+func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
+
+	monthStartDate := tv.ShownDate
+	monthEndDate := tv.getLastDayOfMonth()
+	//Die Termine für diesen Monat werden in ein Slice gefiltert
+	//für jeden Tag des Monats befindet sich ein Objekt DayInfos in der Slice
+	//Der Index des Tages ist in diesem Falle die Tagesnummer im Monat -1
+	//Der 1.01.2022 wäre dementsprechend beim Index 0
+	entriesForThisMonth := make([]dayInfos, getMaxDays(int(tv.ShownDate.Month()), tv.ShownDate.Year()))
+	for _, termin := range termins {
+		if (termin.Date.Before(monthEndDate) || termin.Date.Equal(monthEndDate)) && (termin.EndDate.After(monthStartDate) || termin.EndDate.Equal(monthStartDate)) {
+			switch termin.Recurring {
+			case ds.Never, ds.YEARLY, ds.MONTHLY:
+				monthDay := termin.Date.Day()
+				entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
+				// Vom Start des Termins wird je eine Woche dazu addiert und geprüft, ob dieses neue Datum in den betrachteten Monat fällt
+				// Fällt der Termin in den gewählten Zeitraum, wird der termin in die Slice hinzugefügt
+			case ds.WEEKLY:
+				startDateOfTermin := termin.Date
+				folgeTermin := startDateOfTermin
+				for folgeTermin.Before(termin.EndDate) {
+					if (folgeTermin.Before(monthEndDate) || folgeTermin.Equal(monthEndDate)) && (folgeTermin.After(monthStartDate) || folgeTermin.Equal(monthStartDate)) {
+						monthDay := folgeTermin.Day()
+						entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
+					}
+					folgeTermin = folgeTermin.AddDate(0, 0, 7)
+				}
+			}
+		}
+	}
+	//Hier werden für jeden Tag die restlichen Informationen sowie Funktionen hinzugefügt
+	for i := 0; i < len(entriesForThisMonth); i++ {
+		entriesForThisMonth[i].Day = monthStartDate
+		monthStartDate = monthStartDate.AddDate(0, 0, 1)
+		entriesForThisMonth[i].NeedsBreak = NeedsBreak
+		entriesForThisMonth[i].IsToday = IsToday
+		//Delete: is just for testing
+		entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
+		entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test2", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
+
+	}
+	return entriesForThisMonth
 }
 
 // getLastDayOfMonth

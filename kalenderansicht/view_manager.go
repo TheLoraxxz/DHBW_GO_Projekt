@@ -31,54 +31,6 @@ func getMaxDays(month, year int) int {
 	return days
 }
 
-// FilterCalendarEntries
-// Parameter: Slice, die alle Termine des Users enthält
-// Rückgabewert: Gefilterte Slice, deren Länge der Monatslänge entspricht und für jeden Tag die Termininfos enthält
-// Der Termintag entspricht dabei dem Index -1 in dem Slice
-func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
-
-	monthStartDate := tv.ShownDate
-	monthEndDate := tv.getLastDayOfMonth()
-	//Die Termine für diesen Monat werden in ein Slice gefiltert
-	//für jeden Tag des Monats befindet sich ein Objekt DayInfos, welches alle termine enthält in dem Slice
-	//Der Index des Tages ist in diesem Falle die Tagesnummer im Monat -1
-	//Der 1.01.2022 wäre dementsprechend beim Index 0
-	entriesForThisMonth := make([]dayInfos, getMaxDays(int(tv.ShownDate.Month()), tv.ShownDate.Year()))
-	for _, termin := range termins {
-		if (termin.Date.Before(monthEndDate) || termin.Date.Equal(monthEndDate)) && (termin.EndDate.After(monthStartDate) || termin.EndDate.Equal(monthStartDate)) {
-			switch termin.Recurring {
-			case ds.Never, ds.YEARLY, ds.MONTHLY:
-				monthDay := termin.Date.Day()
-				entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
-				// Vom Start des Termins wird je ein Woche dazu addiert und geprüft, ob diese in den betrachteten Monat fallen
-				// Fallen sie in den Zeitraum werden diese der Slice Liste hinzugefügt
-			case ds.WEEKLY:
-				startDateOfTermin := termin.Date
-				folgeTermin := startDateOfTermin
-				for folgeTermin.Before(termin.EndDate) {
-					if (folgeTermin.Before(monthEndDate) || folgeTermin.Equal(monthEndDate)) && (folgeTermin.After(monthStartDate) || folgeTermin.Equal(monthStartDate)) {
-						monthDay := folgeTermin.Day()
-						entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
-					}
-					folgeTermin = folgeTermin.AddDate(0, 0, 7)
-				}
-			}
-		}
-	}
-	//Hier werden für jeden Tag die restlichen Informationen sowie Funktionen hinzugefügt
-	for i := 0; i < len(entriesForThisMonth); i++ {
-		entriesForThisMonth[i].Day = monthStartDate
-		monthStartDate = monthStartDate.AddDate(0, 0, 1)
-		entriesForThisMonth[i].NeedsBreak = NeedsBreak
-		entriesForThisMonth[i].IsToday = IsToday
-		//Delete: is just for testing
-		entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test1", Description: "boa", Date: monthStartDate})
-		entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test2", Description: "boa", Date: monthStartDate})
-
-	}
-	return entriesForThisMonth
-}
-
 // filterRepetition
 // Parameter: string, eine nummer als string
 // Rückgabewert: ein Typ von ds.Repeat, der der entsprechenden Nummer entspricht

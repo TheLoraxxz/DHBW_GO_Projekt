@@ -2,9 +2,19 @@
 <div class="container-fluid">
     <hr>
     <div class="row justify-content-center align-items-center">
+
         <div class="col ">
-            <!--------------template um Termin zu erstellen----------->
-            {{ template "creator" . }}
+{{ template "creator" . }}
+            <!--------------Link Termin zu erstellen----------->
+            <div class="offcanvas offcanvas-top" tabindex="-1" id="offcanvasTop" aria-labelledby="offcanvasTopLabel">
+                <div class="offcanvas-header">
+                    <h5 id="offcanvasTopLabel">Offcanvas top</h5>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+
+                </div>
+            </div>
         </div>
         <div class="col text-light">
             <div class="card text-center border-0">
@@ -88,8 +98,8 @@
                                     Termine: {{len .Dayentries}}
                                     <br>
                                     <div class="d-grid gap-2 d-md-block">
-                                        <button type="button" class="btn btn-link"
-                                                onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">anzeigen
+                                        <button class="btn btn-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#showTermins" aria-controls="offcanvasExample"  onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">
+                                            anzeigen
                                         </button>
                                         <button type="button" class="btn btn-link"
                                                 onclick="edditTermin({{$index}},{{.Dayentries}})">bearbeiten
@@ -109,8 +119,8 @@
                                     Termine: {{len .Dayentries}}
                                     <br>
                                     <div class="d-grid gap-2 d-md-block">
-                                        <button type="button" class="btn btn-link"
-                                                onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">anzeigen
+                                        <button class="btn btn-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#showTermins" aria-controls="offcanvasExample"  onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">
+                                            anzeigen
                                         </button>
                                         <button type="button" class="btn btn-link"
                                                 onclick="edditTermin({{$index}}, {{.Dayentries}})">bearbeiten
@@ -132,20 +142,11 @@
             </table>
         </div>
         </div>
-
+        <div class="col text-light">
+        </div>
         <!--------------Hier kann Monat/Jahr und der heutige Tag gewählt werden ----------->
-        <div class="col">
-            <!------------hier werden die Termine des gewählten Tages angezeigt------------------------------------->
-            <div class="card" style="width: 18rem;">
-                <div class="card-body">
-                    <h5 class="card-title">Termine</h5>
-                    <h6 class="card-subtitle mb-2 text-muted" id="dateField">Hier werden deine Termine
-                        angezeigt</h6>
-                    <hr>
-                    <div id="terminListField" class="text-start">
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="showTermins" aria-labelledby="offcanvasExampleLabel">
 
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -205,16 +206,39 @@
 
     function showTermin(day,month, year, dayentries) {
         let terminStr = "";
-        document.getElementById("dateField").innerHTML = "Deine Termine am: <br>" + day +" " + month +" " +year;
+        document.getElementById("showTermins").innerHTML = "Deine Termine am: <br>" + day +" " + month +" " +year;
         for (let i = 0; i < dayentries.length; i++) {
             entrie = dayentries;
+            switch(dayentries[i].Recurring) {
+                case 0:
+                    recurring = "täglich"
+                    break;
+                case 1:
+                    recurring = "wöchentlich"
+                    break;
+                case 2:
+                    recurring = "monatlich"
+                    break;
+                case 3:
+                    recurring = "jährlich"
+                    break;
+                case 4:
+                    recurring = "niemals"
+                    break;
+                default:
+                    recurring = "niemals"
+            }
             terminStr = terminStr + "<b>" + dayentries[i].Title.toString() + "</b>"
                 + "<ul>" +
-                "<li> Beschreibung: " + dayentries[i].Description + "</li>" +
-                "<li> Wiederholung: " + dayentries[i].Recurring + "</li>" +
-                "</ul>";
+                "<li> <b>Beschreibung:</b> " + dayentries[i].Description + "</li>" +
+                "<li><b> Wiederholung: </b>" + recurring + "</li>" +
+                "<li> <b>Starttermin: </b>" + dayentries[i].Date + "</li>" +
+                "<li> <b>Endtermin: </b>" + dayentries[i].EndDate + "</li>" +
+                "</ul>" +
+                "<hr>";
+
         }
-        document.getElementById("terminListField").innerHTML = terminStr;
+        document.getElementById("showTermins").innerHTML = terminStr;
     }
 
 </script>

@@ -27,19 +27,20 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 // Die folgenden Variablen werden benötigt, um die objektbezogenen Funktionen im Handler aufzurufen
 var tv = ka.InitTableView()
-var la ka.ListView
+var lv = ka.InitListView()
 
 // Templates für die Tabellensansicht sowie die Listenansicht
 var path, _ = os.Getwd()
 var tableTpl, _ = template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
 var listTpl, _ = template.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
 
-// TabellenHandler
+// TableHandler
 // Hier werden all http-Request anfragen geregelt,die im Kontext der Kalenderansicht anfallen
 // Ich muss hier noch iwi den Usernamer herausfiltern können
-func TabellenHandler(w http.ResponseWriter, r *http.Request) {
+func TableHandler(w http.ResponseWriter, r *http.Request) {
 	//UserId muss noch iwo geholt werden
 	tv.Username = "mik"
+	tv.CreateTerminTable()
 	if r.Method == "GET" {
 		switch {
 		case r.RequestURI == "/tabellenAnsicht?suche=minusMonat":
@@ -73,10 +74,12 @@ func TabellenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ListenHandler
+// ListHandler
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
-func ListenHandler(w http.ResponseWriter, r *http.Request) {
-	er := listTpl.ExecuteTemplate(w, "liste.html", nil)
+func ListHandler(w http.ResponseWriter, r *http.Request) {
+	lv.Username = "mik"
+	lv.CreateTerminList()
+	er := listTpl.ExecuteTemplate(w, "liste.html", lv)
 	if er != nil {
 		log.Fatalln(er)
 	}

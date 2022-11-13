@@ -2,15 +2,58 @@
 <hr>
 <div class="row justify-content-center align-items-center">
     <div class="col">
-        {{ template "creator" . }}
+      {{ template "creator" . }}
     </div>
-    <div class="col-6 text-light">
-
+    <div class="col-6 text-light bg-secondary">
+       <h3 class="sticky-sm-top">Deine Termine ab dem {{.SelectedDate.Format "2006-01-02"}}</h3>
+        {{range $index, $element := .EntriesSinceSelDate}}
+        <div  class="card text-dark bg-light mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{.Title}}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{.Description}}</h6>
+                <!-------Filter Reccuring String-Repräsentation----->
+                {{$rep := ""}}
+                {{if eq .Recurring 0}}
+                    {{$rep = "täglich"}}
+                {{else}}
+                    {{if eq .Recurring 1}}
+                {{$rep = "wöchentlich"}}
+                    {{else}}
+                        {{if eq .Recurring 2}}
+                {{$rep = "monatlich"}}
+                        {{else}}
+                            {{if eq .Recurring 3}}
+                {{$rep = "jährlich"}}
+                            {{else}}
+                {{$rep =  "niemals"}}
+                            {{end}}
+                        {{end}}
+                    {{end}}
+                {{end}}
+                <div class="card-text">
+                    <ul>
+                        <li>
+                            <b>Wiederholung: </b>{{$rep}}
+                        </li>
+                        <li>
+                            <b>Startdatum: </b>{{.Date.Format "2006-01-02"}}
+                        </li>
+                        <li>
+                            <b>Enddatum: </b>{{.EndDate.Format "2006-01-02"}}
+                        </li>
+                    </ul>
+            </div>
+                <button type="button" class="btn btn-link"
+                        onclick="edditTermin({{$index}}, {{$element}})">bearbeiten
+                </button>
+            </div>
+        </div>
+        {{end}}
     </div>
 
 
     <div class="col">
-
+        <a href="#terminCreater" class="btn btn-secondary" tabindex="-1" role="button">Termin erstellen</a>
     </div>
 </div>
 {{ template "footer" . }}
