@@ -75,7 +75,7 @@
                     <td></td>
                     {{end}}
                     <!------------Hier wird über die einzelnen Objekte dayInfos iteriert------------------->
-                    {{range $index, $element := .CreateTerminTable}}
+                    {{range $index, $element := .MonthEntries}}
                     <td>
                         {{if (call .IsToday .Day)}}
                         <div class="card border-danger text-center border-1">
@@ -89,7 +89,7 @@
                                     <br>
                                     <div class="d-grid gap-2 d-md-block">
                                         <button type="button" class="btn btn-link"
-                                                onclick="showTermin({{.Day.Day}}, {{.Dayentries}})">anzeigen
+                                                onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">anzeigen
                                         </button>
                                         <button type="button" class="btn btn-link"
                                                 onclick="edditTermin({{$index}},{{.Dayentries}})">bearbeiten
@@ -110,7 +110,7 @@
                                     <br>
                                     <div class="d-grid gap-2 d-md-block">
                                         <button type="button" class="btn btn-link"
-                                                onclick="showTermin({{.Day}}, {{.Dayentries}})">anzeigen
+                                                onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">anzeigen
                                         </button>
                                         <button type="button" class="btn btn-link"
                                                 onclick="edditTermin({{$index}}, {{.Dayentries}})">bearbeiten
@@ -203,9 +203,9 @@
         xhttp.send();
     }
 
-    function showTermin(day, dayentries) {
+    function showTermin(day,month, year, dayentries) {
         let terminStr = "";
-        document.getElementById("dateField").innerHTML = "Deine Termine am: <br>" + day;
+        document.getElementById("dateField").innerHTML = "Deine Termine am: <br>" + day +" " + month +" " +year;
         for (let i = 0; i < dayentries.length; i++) {
             entrie = dayentries;
             terminStr = terminStr + "<b>" + dayentries[i].Title.toString() + "</b>"
@@ -217,59 +217,4 @@
         document.getElementById("terminListField").innerHTML = terminStr;
     }
 
-    function edditTermin(dayIndex, dayentries) {
-        //Get, um die Termine zu filtern, die bearbeitet werden
-        var xhttp = new XMLHttpRequest();
-        uriStr =  "?editTerminsWhereIndex=" + dayIndex
-        xhttp.open("GET", uriStr);
-        xhttp.send();
-
-        //Formulare um die neuen Werte zu bearbeiten
-        let edditFormStr = "<h3>Termine berabeiten</h3>\n"
-        for (let i = 0; i < dayentries.length; i++) {
-            terminNr = i+1
-            edditFormStr = edditFormStr +
-                "<form action=\"/tabellenAnsicht?termineBearbeiten\" method=\"POST\" id=\"terminCreation\" role=\"form\" class=\"row mb-3 p-3  needs-validation\" novalidate>\n" +
-                "  <div>\n" +
-                "<div class=\"mb-3\">\n" +
-                "    <label for=\"editing"+ terminNr +"\">Bearbeitungsmodus</label>\n" +
-                "    <select name=\"editing"+ terminNr +"\" id=\"editing"+ terminNr +"\"  class=\"form-select\">\n" +
-                "      <option selected>Bearbeiten: Termin "+ terminNr +" </option>\n" +
-                "      <option value=\"1\">Löschen: Termin "+ terminNr +"</option>\n" +
-                "      <option value=\"2\">Bearbeiten: Termin "+ terminNr +"</option>\n" +
-                "    </select>\n" +
-                "  </div>"+
-                "    <label for=\"title"+ terminNr +"\" class=\"col-sm-2 col-form-label \">Titel</label>\n" +
-                "    <input type=\"text\" class=\"form-control\" id=\"title"+ terminNr +"\" name=\"title"+ terminNr +"\" value=\""+ dayentries[i].Title + "\"required>\n" +
-                "  </div>\n" +
-                "  <div>\n" +
-                "    <label for=\"description"+ terminNr +"\" class=\"col-sm-2 col-form-label\">Beschreibung</label>\n" +
-                "    <input type=\"text\" class=\"form-control\" id=\"description"+ terminNr +"\" name=\"description"+ terminNr +"\" value=\""+ dayentries[i].Description +  "\"required>\n" +
-                "  </div>\n" +
-                "  <div class=\"col-12 col-form-label\">\n" +
-                "    <label for=\"repeat"+ terminNr +"\">Wiederholungsinterrvall</label>\n" +
-                "    <select name=\"repeat\" id=\"repeat"+ terminNr +"\" class=\"form-select\" >\n" +
-                "      <option selected>niemals</option>\n" +
-                "      <option value=\"1\">täglich</option>\n" +
-                "      <option value=\"2\">wöchentlich</option>\n" +
-                "      <option value=\"3\">jährlich</option>\n" +
-                "      <option value=\"4\">niemals</option>\n" +
-                "    </select>\n" +
-                "  </div>\n" +
-                "  <div class=\"col-md-12 col-form-label\">\n" +
-                "    <label for=\"date"+ terminNr +"\" class=\"col-sm-2 \">Datum: "+ dayentries[i].Date +"</label>\n" +
-                "    <input type=\"date\" class=\"form-control\" name=\"date"+ terminNr +"\" id=\"date"+ terminNr +"\" required>\n" +
-                "  </div>\n" +
-                "  <div class=\"col-md-12 col-form-label\">\n" +
-                "    <label for=\"endDate"+ terminNr +"\" class=\"col-sm-2 \">Enddatum: "+ dayentries[i].EndDate +"</label>\n" +
-                "    <input type=\"date\" class=\"form-control\" name=\"endDate"+ terminNr +"\" id=\"endDate"+ terminNr +"\" required>\n" +
-                "  </div>\n" +
-                "<hr>";
-        }
-        edditFormStr = edditFormStr + "  <div class=\"col-12  p-3\">\n" +
-            "    <button type=\"submit\" class=\"btn btn-secondary\">Bestätigen</button>\n" +
-            "  </div>\n"
-        "</form>";
-        document.getElementById("terminCreation").innerHTML = edditFormStr;
-    }
 </script>

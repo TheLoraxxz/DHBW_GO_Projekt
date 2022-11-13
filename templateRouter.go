@@ -1,7 +1,6 @@
 package main
 
 import (
-	ds "DHBW_GO_Projekt/dateisystem"
 	ka "DHBW_GO_Projekt/kalenderansicht"
 	"fmt"
 	"html/template"
@@ -57,20 +56,15 @@ func TabellenHandler(w http.ResponseWriter, r *http.Request) {
 			tv.JumpToYear(summand)
 		case r.RequestURI == "/tabellenAnsicht?datum=heute":
 			tv.JumpToToday()
-		case strings.Contains(r.RequestURI, "/tabellenAnsicht?editTerminsWhereIndex="):
-			sliceIndexStr := r.RequestURI[39:]
-			sliceIndex, _ := strconv.Atoi(sliceIndexStr)
-			terminsInMonth := tv.FilterCalendarEntries(ds.GetTermine(tv.Username))[sliceIndex]
-			ka.SetEditableTermins(terminsInMonth)
 		}
 	}
 
 	if r.Method == "POST" {
 		switch {
 		case r.RequestURI == "/tabellenAnsicht?terminErstellen":
-			ka.CreateTermin(r, "mik")
+			ka.CreateTermin(r, tv.Username)
 		case r.RequestURI == "/tabellenAnsicht?termineBearbeiten":
-			ka.EditTermin(r, "mik")
+			ka.EditTermin(r, tv.Username, tv.MonthEntries)
 		}
 	}
 	er := tableTpl.ExecuteTemplate(w, "tbl.html", tv)

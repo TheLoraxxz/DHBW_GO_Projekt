@@ -35,15 +35,15 @@ func getMaxDays(month, year int) int {
 // Parameter: Slice, die alle Termine des Users enthält
 // Rückgabewert: Gefilterte Slice, deren Länge der Monatslänge entspricht und für jeden Tag die Termininfos enthält
 // Der Termintag entspricht dabei dem Index -1 in dem Slice
-func (c TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
+func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 
-	monthStartDate := c.ShownDate
-	monthEndDate := c.getLastDayOfMonth()
+	monthStartDate := tv.ShownDate
+	monthEndDate := tv.getLastDayOfMonth()
 	//Die Termine für diesen Monat werden in ein Slice gefiltert
 	//für jeden Tag des Monats befindet sich ein Objekt DayInfos, welches alle termine enthält in dem Slice
 	//Der Index des Tages ist in diesem Falle die Tagesnummer im Monat -1
 	//Der 1.01.2022 wäre dementsprechend beim Index 0
-	entriesForThisMonth := make([]dayInfos, getMaxDays(int(c.ShownDate.Month()), c.ShownDate.Year()))
+	entriesForThisMonth := make([]dayInfos, getMaxDays(int(tv.ShownDate.Month()), tv.ShownDate.Year()))
 	for _, termin := range termins {
 		if (termin.Date.Before(monthEndDate) || termin.Date.Equal(monthEndDate)) && (termin.EndDate.After(monthStartDate) || termin.EndDate.Equal(monthStartDate)) {
 			switch termin.Recurring {
@@ -79,6 +79,26 @@ func (c TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 	return entriesForThisMonth
 }
 
+// filterRepetition
+// Parameter: string, eine nummer als string
+// Rückgabewert: ein Typ von ds.Repeat, der der entsprechenden Nummer entspricht
+func filterRepetition(repStr string) ds.Repeat {
+	var rep ds.Repeat
+	switch repStr {
+	case "1":
+		rep = ds.Never
+	case "2":
+		rep = ds.DAILY
+	case "3":
+		rep = ds.WEEKLY
+	case "4":
+		rep = ds.MONTHLY
+	case "5":
+		rep = ds.YEARLY
+	}
+	return rep
+}
+
 // CreateTermin
 // Parameter: eine Post-Request mit Informationen über einen Termin und den Usernamen des Nutzers, der diesen anlegen möchte
 // CreateTermin ruft die Funktion zum Erstellen des Termins auf
@@ -90,17 +110,7 @@ func CreateTermin(r *http.Request, username string) ds.Termin {
 	repStr := r.FormValue("repeat")
 
 	//Filter das Wiederholungsintervall aus der Antwort
-	var rep ds.Repeat
-	switch repStr {
-	case "täglich":
-		rep = 0
-	case "wöchentlich":
-		rep = 1
-	case "jährlich":
-		rep = 2
-	case "niemals":
-		rep = 3
-	}
+	rep := filterRepetition(repStr)
 
 	//Daten in das richtige Format überführen mithilfe eines Layouts
 	layout := "2006-01-02"
@@ -116,50 +126,41 @@ func CreateTermin(r *http.Request, username string) ds.Termin {
 	return ds.CreateNewTermin(title, description, rep, date, endDate, username)
 }
 
-// Die Variable wird gesetzt, wenn der Benutzer auf "bearbeiten" auf der Webseite klickt
-// Die Variable enthält alle Termine, die im moment bearbeitet werden
-var terminsForEditing []ds.Termin
-
-// SetEditableTermins
-// Parameter: ein Objekt DayInfos, das die zu bearbeitenden Termine enthält
-// Die Funktion setzt die Termine, die momentan auf der Webseite bearbeitet werden
-func SetEditableTermins(editableTermins dayInfos) {
-	terminsForEditing = editableTermins.Dayentries
-}
-
 // EditTermin
-// Parameter:
-// Die Funktion ...
-func EditTermin(r *http.Request, username string) {
-	//Filtern der Termininfos
-	for i := 1; i <= len(terminsForEditing); i++ {
+// Parameter: Post-Request mit den Werten die geändert/gelöscht werden sollen
+// Die Funktion ermittelt aus der Post-request die Termine an dem Tag, der bearbeitet wird.
+// Anschließend wird für jeden Termin an dem tag ermittelt, ob dieser bearbeitet oder gelöscht werden soll:
+//
+//	-> Berbeiten: Dei neuen Termininfos werden ermittelt und ein neuer Termin erstellt. Der alte Termin wird gelöscht.
+//	-> Löschen: Der Termin wird gelöscht.
+func EditTermin(r *http.Request, username string, monthEntries []dayInfos) {
+	//Ermitteln des Index des Tages, dessen Termine bearbeitet werden
+	editingDayIndex, _ := strconv.Atoi(r.FormValue("editingIndex"))
+	editedDay := monthEntries[editingDayIndex].Dayentries
+
+	//Schleife, die alle bearbeiteten Termine des Tages durchgeht
+	for i := 1; i <= len(editedDay); i++ {
+		//index ist die variable i als String, benötigt um mach den richtigen Values zu suchen
 		index := strconv.FormatInt((int64(i)), 10)
+
+		//Filtern der übergebenen neuen Werte
 		mode := r.FormValue("editing" + index)
-		//editedTerminIndex := mode[19:]
+
+		//Wenn der Filtermodus nicht beearbeiten iste, müssen die übergebenen Values nicht gelesen werden
 		if strings.Contains(mode, "Bearbeiten") {
 			title := r.FormValue("title" + index)
 			description := r.FormValue("description" + index)
 			repStr := r.FormValue("repeat" + index)
 
 			//Filter das Wiederholungsintervall aus der Antwort
-			var rep ds.Repeat
-			switch repStr {
-			case "täglich":
-				rep = 0
-			case "wöchentlich":
-				rep = 1
-			case "jährlich":
-				rep = 2
-			case "niemals":
-				rep = 3
-			}
+			rep := filterRepetition(repStr)
 
 			//Daten in das richtige Format überführen mithilfe eines Layouts
 			layout := "2006-01-02"
 			date, _ := time.Parse(layout, r.FormValue("date"+index))
 			endDate, _ := time.Parse(layout, r.FormValue("endDate"+index))
 
-			//EditetTermin kann gelöscht werden, dient nur der Kontrolle
+			//EditetTermin kann gelöscht werden, dient nur der Kontrolle!!!!
 			editetTermin := ds.Termin{
 				title,
 				description,
@@ -167,11 +168,12 @@ func EditTermin(r *http.Request, username string) {
 				date,
 				endDate,
 			}
+			//Lösche Print anweisung
 			fmt.Println(editetTermin)
-			//editedTerminIndex, _ := strconv.Atoi(editedTerminIndex)
+			//Ein neuer Termin mit den geänderten Werten wird erstellt
 			ds.CreateNewTermin(title, description, rep, date, endDate, username)
 		}
-		//Hier implemntieren, dass gelöscht werden muss
-		//deleteTermin(title, description, rep, date, endDate, username)
+		//Der alte Termin wird gelöscht -> muss noch implementiert werden
+		//deleteTermin(editedDay[i-1])
 	}
 }

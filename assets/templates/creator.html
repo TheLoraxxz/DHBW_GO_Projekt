@@ -13,11 +13,11 @@
   <div class="col-12 col-form-label">
     <label for="repeat">Wiederholungsinterrvall</label>
     <select name="repeat" id="repeat" class="form-select" >
-      <option selected>niemals</option>
-      <option value="1">täglich</option>
-      <option value="2">wöchentlich</option>
-      <option value="3">jährlich</option>
-      <option value="4">niemals</option>
+      <option value="1">niemals</option>
+      <option value="2">täglich</option>
+      <option value="3">wöchentlich</option>
+      <option value="4">monatlich</option>
+      <option value="5">jährlich</option>
     </select>
   </div>
   <div class="col-md-6 col-form-label">
@@ -29,22 +29,82 @@
     <input type="date" class="form-control" name="endDate" id="endDate" required>
   </div>
   <div class="col-12  p-3">
-    <button type="submit" class="btn btn-secondary">Termin erstellen</button>
+    <button type="submit" class="btn btn-secondary" onclick="validateForm()">Termin erstellen</button>
   </div>
 </form>
 </div>
+
+<!-----------------------------------Hier folgt benötigter javaScript Code------------------------------>
 <script>
   //Hier wird das Formular auf vollständigkeit überprüft
-  const form = document.getElementById('terminCreation');
-  form.addEventListener('submit', function (event) {
-    if (!form.checkValidity()) {
-      event.preventDefault()
-      event.stopPropagation()
+  function validateForm() {
+    var form = document.getElementById('terminCreater');
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      if (form.checkValidity()) {
+        sendData()
+      }
+      form.classList.add('was-validated')
+    }, false);
+  }
+
+  //edditTermin
+  //Funktion erstellt Formular für eine Post-Anfrage, um Termine zu bearbeiten/löschen
+  function edditTermin(index, dayentries) {
+    //Formulare um die neuen Werte zu bearbeiten
+    let edditFormStr = "<h3>Termine berabeiten</h3>\n"
+    for (let i = 0; i < dayentries.length; i++) {
+      terminNr = i+1
+      edditFormStr = edditFormStr +
+              "<form action=\"/tabellenAnsicht?termineBearbeiten\" method=\"POST\" id=\"terminCreater\" role=\"form\" class=\"row mb-3 p-3  needs-validation\" novalidate>\n" +
+              "<input type=\"hidden\" readonly class=\"form-control-plaintext\" id=\"editingIndex\" name=\"editingIndex\" value=\""+ index +  "\" >\n"+
+              "  <div>\n" +
+              "<div class=\"mb-3\">\n" +
+              "    <label for=\"editing"+ terminNr +"\">Bearbeitungsmodus</label>\n" +
+              "    <select name=\"editing"+ terminNr +"\" id=\"editing"+ terminNr +"\"  class=\"form-select\">\n" +
+              "      <option selected>Bearbeiten: Termin "+ terminNr +" </option>\n" +
+              "      <option value=\"1\">Löschen: Termin "+ terminNr +"</option>\n" +
+              "      <option value=\"2\">Bearbeiten: Termin "+ terminNr +"</option>\n" +
+              "    </select>\n" +
+              "  </div>"+
+              "    <label for=\"title"+ terminNr +"\" class=\"col-sm-2 col-form-label \">Titel</label>\n" +
+              "    <input type=\"text\" class=\"form-control\" id=\"title"+ terminNr +"\" name=\"title"+ terminNr +"\" value=\""+ dayentries[i].Title + "\"required>\n" +
+              "  </div>\n" +
+              "  <div>\n" +
+              "    <label for=\"description"+ terminNr +"\" class=\"col-sm-2 col-form-label\">Beschreibung</label>\n" +
+              "    <input type=\"text\" class=\"form-control\" id=\"description"+ terminNr +"\" name=\"description"+ terminNr +"\" value=\""+ dayentries[i].Description +  "\"required>\n" +
+              "  </div>\n" +
+              "  <div class=\"col-12 col-form-label\">\n" +
+              "    <label for=\"repeat"+ terminNr +"\">Wiederholungsinterrvall</label>\n" +
+              "    <select name=\"repeat"+ terminNr +"\" id=\"repeat"+ terminNr +"\" class=\"form-select\" >\n" +
+              "      <option value=\"1\">niemals</option>\n" +
+              "      <option value=\"2\">täglich</option>\n" +
+              "      <option value=\"3\">wöchentlich</option>\n" +
+              "      <option value=\"4\">monatlich</option>\n" +
+              "      <option value=\"5\">jährlich</option>\n" +
+              "    </select>\n" +
+              "  </div>\n" +
+              "  <div class=\"col-md-12 col-form-label\">\n" +
+              "    <label for=\"date"+ terminNr +"\" class=\"col-sm-2 \">Datum: "+ dayentries[i].Date +"</label>\n" +
+              "    <input type=\"date\" class=\"form-control\" name=\"date"+ terminNr +"\" id=\"date"+ terminNr +"\" required>\n" +
+              "  </div>\n" +
+              "  <div class=\"col-md-12 col-form-label\">\n" +
+              "    <label for=\"endDate"+ terminNr +"\" class=\"col-sm-2 \">Enddatum: "+ dayentries[i].EndDate +"</label>\n" +
+              "    <input type=\"date\" class=\"form-control\" name=\"endDate"+ terminNr +"\" id=\"endDate"+ terminNr +"\" required>\n" +
+              "  </div>\n" +
+              "<hr>";
     }
-    if(form.checkValidity()) {
-      sendData()
-    }
-    form.classList.add('was-validated')
-  }, false);
-  </script>
+    edditFormStr = edditFormStr + "  <div class=\"col-12  p-3\">\n" +
+            "    <button type=\"submit\" class=\"btn btn-secondary\" onclick=\"validateForm()\">Bestätigen</button>\n" +
+            "  </div>\n"
+    "</form>";
+
+    document.getElementById("terminCreation").innerHTML = edditFormStr;
+  };
+
+
+</script>
 {{end}}

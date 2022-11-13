@@ -6,8 +6,9 @@ import (
 )
 
 type TableView struct {
-	ShownDate time.Time
-	Username  string
+	ShownDate    time.Time
+	Username     string
+	MonthEntries []dayInfos
 }
 
 // initTableView
@@ -17,12 +18,13 @@ type TableView struct {
 func InitTableView() TableView {
 	var tv = new(TableView)
 	tv.ShownDate = tv.getFirstDayOfMonth(time.Now())
+	tv.CreateTerminTable()
 	return *tv
 }
 
 // getFirstDayOfMonth
 // liefert den ersten Tag des (auf der Webseite) betrachteten Monats
-func (c TableView) getFirstDayOfMonth(specificDate time.Time) time.Time {
+func (tv TableView) getFirstDayOfMonth(specificDate time.Time) time.Time {
 	return time.Date(
 		specificDate.Year(),
 		specificDate.Month(),
@@ -42,14 +44,14 @@ Diese werden im html-template angesprochen.
 
 // ShowYear
 // gibt das Jahr des auf der Webseite zu sehenden Monats zurück
-func (c TableView) ShowYear() int {
-	return c.ShownDate.Year()
+func (tv TableView) ShowYear() int {
+	return tv.ShownDate.Year()
 }
 
 // ShowMonth
 // gibt das Jahr des auf der Webseite zu sehenden Monats zurück
-func (c TableView) ShowMonth() time.Month {
-	return c.ShownDate.Month()
+func (tv TableView) ShowMonth() time.Month {
+	return tv.ShownDate.Month()
 }
 
 /**********************************************************************************************************************
@@ -61,25 +63,28 @@ Die Funktionen werden mit Hilfe von JavaSkript aufgerufen, wenn das entsprechend
 
 // JumpMonthBack
 // Springt einen Monat in der Webseiten Ansicht vor
-func (c *TableView) JumpMonthBack() {
-	c.ShownDate = c.ShownDate.AddDate(0, 1, 0)
+func (tv *TableView) JumpMonthBack() {
+	tv.ShownDate = tv.ShownDate.AddDate(0, 1, 0)
+	tv.CreateTerminTable()
 }
 
 // JumpMonthFor
 // Springt einen Monat in der Webseiten Ansicht zurück
-func (c *TableView) JumpMonthFor() {
-	c.ShownDate = c.ShownDate.AddDate(0, -1, 0)
+func (tv *TableView) JumpMonthFor() {
+	tv.ShownDate = tv.ShownDate.AddDate(0, -1, 0)
+	tv.CreateTerminTable()
 }
-func (c *TableView) JumpToYear(summand int) {
-	c.ShownDate = c.ShownDate.AddDate(summand, 0, 0)
+func (tv *TableView) JumpToYear(summand int) {
+	tv.ShownDate = tv.ShownDate.AddDate(summand, 0, 0)
+	tv.CreateTerminTable()
 }
 
 // SelectMonth
 // Parameter: vom benutzer auf der Webseite gewählter Monat
 // Setzt den Monat auf den gewünschten Monat
-func (c *TableView) SelectMonth(monat time.Month) {
-	jahr := c.ShownDate.Year()
-	c.ShownDate = time.Date(
+func (tv *TableView) SelectMonth(monat time.Month) {
+	jahr := tv.ShownDate.Year()
+	tv.ShownDate = time.Date(
 		jahr,
 		monat,
 		1,
@@ -89,12 +94,14 @@ func (c *TableView) SelectMonth(monat time.Month) {
 		0,
 		time.UTC,
 	)
+	tv.CreateTerminTable()
 }
 
 // JumpToToday
 // Springt in der Webseiten Ansicht auf den heutigen Monat
-func (c *TableView) JumpToToday() {
-	c.ShownDate = c.getFirstDayOfMonth(time.Now())
+func (tv *TableView) JumpToToday() {
+	tv.ShownDate = tv.getFirstDayOfMonth(time.Now())
+	tv.CreateTerminTable()
 }
 
 /**********************************************************************************************************************
@@ -111,19 +118,19 @@ type dayInfos struct {
 }
 
 // CreateTerminTable
-func (c TableView) CreateTerminTable() []dayInfos {
-	termins := ds.GetTermine(c.Username)
-	return c.FilterCalendarEntries(termins)
+func (tv *TableView) CreateTerminTable() {
+	termins := ds.GetTermine(tv.Username)
+	tv.MonthEntries = tv.FilterCalendarEntries(termins)
 }
 
 // getLastDayOfMonth
 // liefert den letzten Tag des (auf der Webseite) betrachteten Monats
 // Rückgabe: letzter Tag des Monats, welcher in der Webansicht zu sehen ist.
-func (c TableView) getLastDayOfMonth() time.Time {
-	maxDays := getMaxDays(int(c.ShownDate.Month()), c.ShownDate.Year())
+func (tv TableView) getLastDayOfMonth() time.Time {
+	maxDays := getMaxDays(int(tv.ShownDate.Month()), tv.ShownDate.Year())
 	return time.Date(
-		c.ShownDate.Year(),
-		c.ShownDate.Month(),
+		tv.ShownDate.Year(),
+		tv.ShownDate.Month(),
 		maxDays,
 		0,
 		0,
@@ -137,8 +144,8 @@ func (c TableView) getLastDayOfMonth() time.Time {
 // dient dazu, dass die Tabelle beim richtigen Wochentag beginnt.
 // Hierzu wird eine Slice erstellt, deren Länge so groß ist wie die Anzahl der zu überspringenden Tage.
 // über die Slice wird iteriert wird und für jedes Objekt wir ein leeres Tabellenfeld erstellt
-func (c TableView) MonthStarts() []int {
-	firstDayOfMonth := c.ShownDate
+func (tv TableView) MonthStarts() []int {
+	firstDayOfMonth := tv.ShownDate
 	sliceSize := firstDayOfMonth.Weekday() - 1
 	if firstDayOfMonth.Weekday()-1 < 0 {
 		sliceSize = 6
@@ -148,8 +155,8 @@ func (c TableView) MonthStarts() []int {
 
 // NeedsBreak
 // Parameter: Datum
-// Rückgabewert: bool, handelt es sich bei dem tag um einen Sonntag?
-// Ist der Tag ein Sonntag wird ein Tabellenumbruch in der Html-Datei benötigt.
+// Rückgabewert: bool, handelt es sich bei dem Tag um einen Sonntag?
+// Ist der Tag ein Sonntag, wird ein Tabellenumbruch in der Html-Datei benötigt.
 func NeedsBreak(day time.Time) bool {
 	return day.Weekday() == time.Sunday
 }
@@ -157,7 +164,7 @@ func NeedsBreak(day time.Time) bool {
 // IsToday
 // Parameter: Datum
 // Rückgabewert: bool, handelt es sich bei dem datum um heute?
-// Handelt es sich um heute muss das Tabellenfeld gekennzeichnet werden.
+// Handelt es sich um heute, muss das Tabellenfeld gekennzeichnet werden.
 func IsToday(day time.Time) bool {
 	dayYear, dayMonth, dayNr := day.Date()
 	todayYear, todayMonth, todayNr := time.Now().Date()
