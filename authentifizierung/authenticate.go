@@ -7,8 +7,8 @@ import (
 )
 
 type UserData struct {
-	user     string `json:"user"`
-	password string `json:"password"`
+	User     string `json:"user"`
+	Password string `json:"password"`
 }
 
 // TODO: muss darauf warten ein threadsafe weg zu implementieren --> ich fixe das nach der Vorlesng: Channels und Go Routinen ^^
