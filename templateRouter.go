@@ -2,6 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	"DHBW_GO_Projekt/kalenderansicht"
 	"html/template"
 	"log"
 	"net/http"
@@ -17,7 +18,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		password := request.Form.Get("password")
 		// cookie authentifizieren checken
 		isUser, cookieText := authentifizierung.AuthenticateUser(&username, &password)
-		if isUser {
+		if isUser == true {
 			// wenn user authentifiziert ist dann wird cookie erstellt und
 			cookie := &http.Cookie{
 				Name:     "Session Kalender-ID",
@@ -27,6 +28,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 				HttpOnly: false,
 			}
 			request.AddCookie(cookie)
+			http.Redirect(writer, request, "/kalender", http.StatusContinue)
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
 			if len(cookieText) == 0 {
@@ -42,4 +44,8 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		log.Fatal("Coudnt export Parsefiles")
 	}
 
+}
+
+func (kalender TabellenHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	kalenderansicht.TabellenHandler(writer, request)
 }
