@@ -2,7 +2,6 @@ package authentifizierung
 
 import (
 	"errors"
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 )
@@ -17,25 +16,32 @@ var users = make(map[string]string)
 
 func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie string) {
 	val, found := users[*user]
-	for _, oneOfUsers := range users {
-		err := bcrypt.CompareHashAndPassword([]byte(oneOfUsers), []byte(*pasw))
-		if err == nil && found && strings.Compare(val, oneOfUsers) == 0 {
-			bytes, hashError := bcrypt.GenerateFromPassword([]byte(oneOfUsers+val), 2)
-			if hashError != nil {
-				return false, ""
+	if found {
+		for _, oneOfUsers := range users {
+			err := bcrypt.CompareHashAndPassword([]byte(oneOfUsers), []byte(*pasw))
+			if err == nil && strings.Compare(val, oneOfUsers) == 0 {
+				bytes, hashError := bcrypt.GenerateFromPassword([]byte(*user+oneOfUsers), 2)
+				if hashError != nil {
+					return false, ""
+				}
+				return true, *user + "|" + string(bytes)
 			}
-			return true, *user + "|" + string(bytes)
 		}
 	}
-	return false, ""
+	return false, *pasw
 }
 
 func CheckCookie(cookie *string) bool {
 	cookieDeRef := *cookie
 	username := cookieDeRef[:strings.Index(cookieDeRef, "|")]
 	cookieString := cookieDeRef[strings.Index(cookieDeRef, "|")+1:]
-	fmt.Println(username)
-	fmt.Println(cookieString)
+	if _, found := users[username]; found == true {
+		err := bcrypt.CompareHashAndPassword([]byte(cookieString), []byte(username+users[username]))
+		if err == nil {
+			return true
+		}
+
+	}
 	return false
 }
 

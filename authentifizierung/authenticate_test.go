@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+// tests pon create user
 func TestCreateUser(t *testing.T) {
 	user := "admin"
 	password := "admin"
@@ -15,6 +16,7 @@ func TestCreateUser(t *testing.T) {
 	assert.Equal(t, 1, len(users))
 }
 
+// tests that on authentication it returns a true user
 func TestAuthenticateUserTrue(t *testing.T) {
 	users = make(map[string]string)
 	user := "admin"
@@ -24,6 +26,7 @@ func TestAuthenticateUserTrue(t *testing.T) {
 	assert.Equal(t, true, wahr)
 }
 
+// checks that if it fails that it returns a wrong user
 func TestAuthenticateUserFalse(t *testing.T) {
 	users = make(map[string]string)
 	user := "admin"
@@ -35,6 +38,7 @@ func TestAuthenticateUserFalse(t *testing.T) {
 	assert.NotEqual(t, nil, cookie)
 }
 
+// test that the cookie which is given back is the right one
 func TestAuthenticateUserCookieMngmt(t *testing.T) {
 	users = make(map[string]string)
 	user := "admin"
@@ -47,12 +51,30 @@ func TestAuthenticateUserCookieMngmt(t *testing.T) {
 	username := cookie[:strings.Index(cookie, "|")]
 	cookie = cookie[strings.Index(cookie, "|")+1:]
 	// schauen, dass der neue hash richtig generiert ist
-	//TODO: finish this shit that it works
-	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte(users["admin"]))
+	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte("admin"+users["admin"]))
 	assert.Equal(t, nil, isSame)
 	assert.Equal(t, user, username)
 }
 
-func TestCheckCookie(t *testing.T) {
+// tests that cookie check is true on right input
+func TestCheckCookieTrue(t *testing.T) {
+	users = make(map[string]string)
+	user := "admin"
+	password := "admin"
+	CreateUser(&user, &password)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users["admin"]), 2)
+	cookie := "admin|" + string(hashedPassword)
+	isAllowed := CheckCookie(&cookie)
+	assert.Equal(t, true, isAllowed)
+}
 
+// checks that authenticate user and check cookie work with each other
+func TestCheckCookieAndAuthenticateUser(t *testing.T) {
+	users = make(map[string]string)
+	user := "admin"
+	password := "admin"
+	CreateUser(&user, &password)
+	_, cookie := AuthenticateUser(&user, &password)
+	isAllowed := CheckCookie(&cookie)
+	assert.Equal(t, true, isAllowed)
 }
