@@ -28,7 +28,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 				HttpOnly: false,
 			}
 			request.AddCookie(cookie)
-			http.Redirect(writer, request, "/kalender", http.StatusContinue)
+			http.Redirect(writer, request, "kalender/tabellenAnsicht", http.StatusContinue)
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
 			if len(cookieText) == 0 {

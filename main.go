@@ -29,7 +29,7 @@ func main() {
 	root := RootHandler{}
 	tabelle := TabellenHandler{}
 	http.Handle("/", &root)
-	http.Handle("/kalender", &tabelle)
+	http.Handle("kalender/", &tabelle)
 
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
