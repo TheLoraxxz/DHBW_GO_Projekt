@@ -3,7 +3,6 @@ package main
 import (
 	"DHBW_GO_Projekt/authentifizierung"
 	"DHBW_GO_Projekt/kalenderansicht"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -30,7 +29,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 				SameSite: http.SameSiteLaxMode,
 			}
 			http.SetCookie(writer, cookie)
-			fmt.Println("test")
+
 			http.Redirect(writer, request, "/kalender/", http.StatusContinue)
 			return
 		} else {
