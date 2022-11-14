@@ -3,6 +3,7 @@ package main
 import (
 	"DHBW_GO_Projekt/authentifizierung"
 	"DHBW_GO_Projekt/kalenderansicht"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -21,14 +22,17 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		if isUser == true {
 			// wenn user authentifiziert ist dann wird cookie erstellt und
 			cookie := &http.Cookie{
-				Name:     "Session Kalender-ID",
+				Name:     "session-KalenderID",
 				Value:    cookieText,
-				MaxAge:   300,
+				Path:     "/",
+				MaxAge:   3600,
 				Secure:   true,
-				HttpOnly: false,
+				SameSite: http.SameSiteLaxMode,
 			}
-			request.AddCookie(cookie)
-			http.Redirect(writer, request, "kalender/tabellenAnsicht", http.StatusContinue)
+			http.SetCookie(writer, cookie)
+			fmt.Println("test")
+			http.Redirect(writer, request, "/kalender/", http.StatusContinue)
+			return
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
 			if len(cookieText) == 0 {
