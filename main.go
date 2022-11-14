@@ -10,9 +10,7 @@ import (
 type RootHandler struct{}
 type TabellenHandler struct{}
 
-var Server = http.Server{
-	Addr: ":80",
-}
+var Server http.Server
 
 func main() {
 	//flags and configuration of application
