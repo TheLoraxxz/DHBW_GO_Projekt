@@ -2,6 +2,7 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
@@ -47,7 +48,8 @@ func (lv *ListView) SelectDate(r *http.Request) {
 // Parameter: int, gewünschte Anzahl Einträge pro Seite
 // setzt die Anzahl Einträge pro Seite auf die vom Benutzer gewählte
 func (lv *ListView) SelectEntriesPerPage(amount int) {
-	lv.EntriesPerPage = amount
+	lv.EntriesPerPage = amount * 5
+	fmt.Println(lv.EntriesPerPage)
 }
 
 // JumpPageForward

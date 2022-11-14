@@ -81,7 +81,10 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 	lv.CreateTerminList()
 	if r.Method == "GET" {
 		switch {
-		case r.RequestURI == "/listenAnsicht?":
+		case strings.Contains(r.RequestURI, "/listenAnsicht?Eintraege="):
+			amountStr := r.RequestURI[25:]
+			amount, _ := strconv.Atoi(amountStr)
+			lv.SelectEntriesPerPage(amount)
 		}
 	}
 
