@@ -2,6 +2,8 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
+	"math/rand"
+	"net/http"
 	"time"
 )
 
@@ -31,9 +33,13 @@ Ab hier Folgen Funktionen, die den Benutzer Custom-Settings & Navigation innerha
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 // SelectDate
-// Parameter: spezifisches Datum
+// Parameter: Post Request mit einem spezifischem Datum
 // setzt das Datum der Listenansicht auf das vom Benutzer gewählte
-func (lv *ListView) SelectDate(date time.Time) {
+func (lv *ListView) SelectDate(r *http.Request) {
+
+	//Datum Filtern und in das richtige Format überführen mithilfe eines Layouts
+	layout := "2006-01-02"
+	date, _ := time.Parse(layout, r.FormValue("selDate"))
 	lv.SelectedDate = date
 }
 
@@ -97,11 +103,40 @@ func (lv ListView) FilterCalendarEntries(termins []ds.Termin) []ds.Termin {
 	for i := 0; i < 200; i++ {
 		startDate = startDate.AddDate(0, 0, 1)
 		//Delete: is just for testing
-		entriesForThisMonth = append(entriesForThisMonth, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: startDate})
+		entriesForThisMonth = append(entriesForThisMonth, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: startDate, EndDate: startDate.AddDate(rand.Int(), rand.Int(), rand.Int())})
 	}
 	return entriesForThisMonth
 }
 
 func (lv ListView) requiredPages() int {
 	return len(lv.EntriesSinceSelDate) / lv.EntriesPerPage
+}
+func (lv ListView) NextOccurrences(termin ds.Termin) []time.Time {
+	selDate := lv.SelectedDate
+	nextOccurrences := make([]time.Time, 0, 3)
+
+	occur := termin.Date
+	noMoreOccur := false
+	//solange nicht die drei nächsten Termine gefiltert worden sind
+	//und das letzte Vorkommen des Termins noch nicht erreicht worden ist, füge weitere Termine der Liste hinzu
+	//Wenn der Termin nur einmal vorkommt, sorgt die Variable noMoreOccur für einen Abbruch,
+	//so wird nicht 3 Mal derselbe Termin hinzugefügt.
+	for len(nextOccurrences) < 3 && (!occur.After(termin.EndDate)) && noMoreOccur == false {
+		if occur.After(selDate) || occur.Equal(selDate) {
+			nextOccurrences = append(nextOccurrences, occur)
+		}
+		switch termin.Recurring {
+		case ds.YEARLY:
+			occur = occur.AddDate(1, 0, 0)
+		case ds.MONTHLY:
+			occur = occur.AddDate(0, 1, 0)
+		case ds.WEEKLY:
+			occur = occur.AddDate(0, 0, 7)
+		case ds.DAILY:
+			occur = occur.AddDate(0, 0, 1)
+		case ds.Never:
+			noMoreOccur = true
+		}
+	}
+	return nextOccurrences
 }

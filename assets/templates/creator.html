@@ -29,15 +29,15 @@
     <input type="date" class="form-control" name="endDate" id="endDate" required>
   </div>
   <div class="col-12  p-3">
-    <button type="submit" class="btn btn-secondary" onclick="validateForm()">Termin erstellen</button>
+    <button type="submit" class="btn btn-secondary" onclick="validateForm('terminCreater')">Termin erstellen</button>
   </div>
 </form>
 </div>
 <!-----------------------------------Hier folgt benötigter javaScript Code------------------------------>
 <script>
   //Hier wird das Formular auf vollständigkeit überprüft
-  function validateForm() {
-    var form = document.getElementById('terminCreater');
+  function validateForm(id) {
+    var form = document.getElementById(id);
     form.addEventListener('submit', function (event) {
       if (!form.checkValidity()) {
         event.preventDefault()
@@ -97,7 +97,7 @@
               "<hr>";
     }
     edditFormStr = edditFormStr + "  <div class=\"col-12  p-3\">\n" +
-            "    <button type=\"submit\" class=\"btn btn-secondary\" onclick=\"validateForm()\">Bestätigen</button>\n" +
+            "    <button type=\"submit\" class=\"btn btn-secondary\" onclick=\"validateForm('terminCreater')\">Bestätigen</button>\n" +
             "  </div>\n"
     "</form>";
 

@@ -79,6 +79,18 @@ func TableHandler(w http.ResponseWriter, r *http.Request) {
 func ListHandler(w http.ResponseWriter, r *http.Request) {
 	lv.Username = "mik"
 	lv.CreateTerminList()
+	if r.Method == "GET" {
+		switch {
+		case r.RequestURI == "/listenAnsicht?":
+		}
+	}
+
+	if r.Method == "POST" {
+		switch {
+		case r.RequestURI == "/listenAnsicht?selDatum":
+			lv.SelectDate(r)
+		}
+	}
 	er := listTpl.ExecuteTemplate(w, "liste.html", lv)
 	if er != nil {
 		log.Fatalln(er)

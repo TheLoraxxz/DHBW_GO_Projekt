@@ -2,7 +2,11 @@ package kalenderansicht
 
 import (
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/url"
+	"strings"
 	"testing"
+	"time"
 )
 
 /*
@@ -12,8 +16,18 @@ Tests für Custom-Settings innerhalb der Webseite
 */
 func testSelectDate(t *testing.T) {
 	lv := InitListView()
-	newDate := ganerateRandomDate()
-	lv.SelectDate(newDate)
+	newDate := time.Date(2030, 11, 11, 0, 0, 0, 0, time.UTC)
+
+	//Erstellen des Datums als POST-Value
+	data := url.Values{}
+	data.Add("selDate", "2030-11-11")
+
+	//Erstellen der Request
+	r, _ := http.NewRequest("POST", "/listenAnsicht?selDatum=Datum\"", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	lv.SelectDate(r)
 	assert.Equal(t, newDate, lv.SelectedDate, "Die zwei Daten sollten identisch sein.")
 }
 

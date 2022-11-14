@@ -1,11 +1,20 @@
 {{ template "header" }}
 <hr>
-<div class="row justify-content-center align-items-center">
+<div class="row">
     <div class="col">
       {{ template "creator" . }}
     </div>
     <div class="col-6 text-light bg-secondary">
        <h3 class="sticky-sm-top">Deine Termine ab dem {{.SelectedDate.Format "2006-01-02"}}</h3>
+        <form action="/listenAnsicht?selDatum" method="POST" id="dateSelector" role="form" class="row mb-3 p-3  needs-validation" novalidate>
+            <div>
+                <label for="selDate" class="col-sm-2 ">Wähle Datum</label>
+                <input type="date" class="form-control" name="selDate" id="selDate" required>
+                <div class="col-12  p-3">
+                    <button type="submit" class="btn btn-light float-end" onclick="validateForm('dateSelector')">Datum wählen</button>
+                </div>
+            </div>
+        </form>
         {{range $index, $element := .EntriesSinceSelDate}}
         <div  class="card text-dark bg-light mb-3">
             <div class="card-body">
@@ -36,6 +45,9 @@
                             <b>Wiederholung: </b>{{$rep}}
                         </li>
                         <li>
+                            <b>Nächsten Vorkommen: </b> {{range $occur := $.NextOccurrences $element}} {{ $occur.Format "2006-01-02"}},  {{end}}
+                        </li>
+                        <li>
                             <b>Startdatum: </b>{{.Date.Format "2006-01-02"}}
                         </li>
                         <li>
@@ -53,7 +65,19 @@
 
 
     <div class="col">
-        <a href="#terminCreater" class="btn btn-secondary" tabindex="-1" role="button">Termin erstellen</a>
+
     </div>
 </div>
 {{ template "footer" . }}
+
+<!--------------------Hier folgt benötigter JavaScript-Code--------------------------->
+<script>
+function back() {
+var xhttp = new XMLHttpRequest();
+xhttp.onload = function () {
+location.reload();
+}
+xhttp.open("GET", "?suche=minusMonat");
+xhttp.send();
+}
+</script>
