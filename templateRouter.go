@@ -2,7 +2,6 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -50,6 +49,12 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 }
 
 func (c CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-
-	fmt.Fprintf(writer, "<h1>Test</h1>")
+	mainRoute, err := template.ParseFiles("./assets/sites/create-User.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+	}
+	err = mainRoute.Execute(writer, nil)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
+	}
 }
