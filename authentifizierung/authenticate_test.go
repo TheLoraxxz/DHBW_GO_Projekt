@@ -14,7 +14,7 @@ func TestCreateUser(t *testing.T) {
 	user := "admin"
 	password := "admin"
 	assert.Equal(t, 0, len(users.users))
-	CreateUser(&user, &password)
+	_ = CreateUser(&user, &password)
 	assert.Equal(t, 1, len(users.users))
 }
 
@@ -23,7 +23,7 @@ func TestAuthenticateUser_True(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
-	CreateUser(&user, &password)
+	_ = CreateUser(&user, &password)
 	wahr, _ := AuthenticateUser(&user, &password)
 	assert.Equal(t, true, wahr)
 }
@@ -33,7 +33,7 @@ func TestAuthenticateUser_False(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
-	CreateUser(&user, &password)
+	_ = CreateUser(&user, &password)
 	passwordWrong := "user"
 	wahr, cookie := AuthenticateUser(&user, &passwordWrong)
 	assert.Equal(t, false, wahr)
@@ -46,7 +46,7 @@ func TestAuthenticateUser_CookieMngmt(t *testing.T) {
 	user := "admin"
 	password := "admin"
 	// nutzer erstellen
-	CreateUser(&user, &password)
+	_ = CreateUser(&user, &password)
 	// den coookie zurückholen aufgebaut wie:
 	_, cookie := AuthenticateUser(&user, &password)
 	// auslesen des cookies und des uernames
@@ -63,7 +63,7 @@ func TestCheckCookie_True(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
-	CreateUser(&user, &password)
+	_ = CreateUser(&user, &password)
 	//cookie is manually created
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users.users["admin"]), 2)
 	cookie := "admin|" + string(hashedPassword)
@@ -78,7 +78,7 @@ func TestCheckCookieAndAuthenticateUser(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
-	CreateUser(&user, &password)
+	_ = CreateUser(&user, &password)
 	_, cookie := AuthenticateUser(&user, &password)
 	isAllowed, _ := CheckCookie(&cookie)
 	assert.Equal(t, true, isAllowed)
@@ -89,7 +89,7 @@ func TestCreateUser_AlreadyExists(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
-	CreateUser(&user, &password)
+	_ = CreateUser(&user, &password)
 	err := CreateUser(&user, &password)
 	assert.NotEqual(t, nil, err)
 }
@@ -133,6 +133,42 @@ func TestCreateUser_SpecialCharacktersInPasswordAllowed(t *testing.T) {
 	assert.Equal(t, 1, len(users.users))
 }
 
+// should work correctly
 func TestChangeUser(t *testing.T) {
+	users.users = make(map[string]string)
+	username := "test"
+	password := "test"
+	_ = CreateUser(&username, &password)
+	newPassword := "bla"
+	//change password
+	newCookie, err := ChangeUser(&username, &password, &newPassword)
+	assert.Equal(t, err, nil)
+	//check  that cookie is allowed --> the right cookie should be given back
+	isCorrect, _ := AuthenticateUser(&username, &password)
+	assert.Equal(t, true, isCorrect)
 
+	isCorrect, _ = CheckCookie(&newCookie)
+	assert.Equal(t, true, isCorrect)
+}
+
+// should return an error if the wrong user is given
+func TestChangeUser_WrongUser(t *testing.T) {
+	users.users = make(map[string]string)
+	username := "test"
+	password := "test"
+	_ = CreateUser(&username, &password)
+	newPassword := "bla"
+	_, err := ChangeUser(&newPassword, &password, &newPassword)
+	assert.NotEqual(t, nil, err)
+}
+
+// should return an error if it is the wrong old password
+func TestChangeUser_WrongOldPassword(t *testing.T) {
+	users.users = make(map[string]string)
+	username := "test"
+	password := "test"
+	_ = CreateUser(&username, &password)
+	newPassword := "bla"
+	_, err := ChangeUser(&username, &newPassword, &password)
+	assert.NotEqual(t, nil, err)
 }

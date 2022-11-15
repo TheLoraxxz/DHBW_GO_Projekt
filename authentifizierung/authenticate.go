@@ -7,11 +7,13 @@ import (
 	"sync"
 )
 
+// UserData used for dateisystem
 type UserData struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 }
 
+// struct for user synchronisation
 type usersync struct {
 	lock  sync.Mutex
 	users map[string]string
@@ -22,6 +24,7 @@ var users = usersync{
 	users: make(map[string]string, 5),
 }
 
+// AuthenticateUser --> called on login --> creates cookie
 func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie string) {
 	val, found := users.users[*user]
 	if found {
@@ -39,12 +42,17 @@ func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie 
 	return false, *pasw
 }
 
+// CheckCookie checks whether cookie is the right one/**
 func CheckCookie(cookie *string) (isAllowed bool, userName string) {
-	cookieDeRef := *cookie
-	username := cookieDeRef[:strings.Index(cookieDeRef, "|")]
-	cookieString := cookieDeRef[strings.Index(cookieDeRef, "|")+1:]
+	//get the username and cookie string from the cookie given
+	username := (*cookie)[:strings.Index(*cookie, "|")]
+	cookieString := (*cookie)[strings.Index(*cookie, "|")+1:]
+	// if the username is as key in the map then it checks whether key is the same as the cookie
 	if _, found := users.users[username]; found == true {
+		//always checks whether the username given in the cookie is the same as the hashed value --> so one cant change the
+		// username and get more access rights or different access rights
 		err := bcrypt.CompareHashAndPassword([]byte(cookieString), []byte(username+users.users[username]))
+		// if it is the same then it returns true and the username
 		if err == nil {
 			return true, username
 		}
@@ -54,24 +62,37 @@ func CheckCookie(cookie *string) (isAllowed bool, userName string) {
 }
 
 func CreateUser(user *string, pasw *string) error {
-
-	bytes, err := bcrypt.GenerateFromPassword([]byte(*pasw), 14)
-	if err != nil {
-		return errors.New("Fehlschlag des Hashings")
-	}
+	//check whether it contains $ or | --> | is not allowed because it is used in the cookie
 	notAllowed := strings.ContainsAny(*user, "|$")
 	if notAllowed {
-		return errors.New("Username darf keine Sonderzeichen enthalten")
+		return errors.New("Username can't contain | or $")
 	}
+	//lock user because now we are looking into the user and check whether the username is the same
 	users.lock.Lock()
+	// on end unlock the user
 	defer users.lock.Unlock()
+	//if user is found then it returns
 	_, found := users.users[*user]
 	if found {
 		return errors.New("User already created")
 	}
+	// now do the performance costing hashing algorithms and check whether error is nil
+	bytes, err := bcrypt.GenerateFromPassword([]byte(*pasw), 14)
+	if err != nil {
+		return err
+	}
+	// actually create the user and then return nil to show that everything worked
 	users.users[*user] = string(bytes)
 	return nil
 }
-func ChangeUser(olduser *string, newuser *string, oldPassw *string, newPassw *string) (newCookie string, err error) {
-	return "", nil
+func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie string, err error) {
+	val, found := users.users[*user]
+	if found {
+		err := bcrypt.CompareHashAndPassword([]byte(val), []byte(*oldPassw))
+		if err != nil {
+			return "", err
+		}
+
+	}
+	return "", errors.New("Wrong User")
 }
