@@ -144,7 +144,7 @@ func TestChangeUser(t *testing.T) {
 	newCookie, err := ChangeUser(&username, &password, &newPassword)
 	assert.Equal(t, err, nil)
 	//check  that cookie is allowed --> the right cookie should be given back
-	isCorrect, _ := AuthenticateUser(&username, &password)
+	isCorrect, _ := AuthenticateUser(&username, &newPassword)
 	assert.Equal(t, true, isCorrect)
 
 	isCorrect, _ = CheckCookie(&newCookie)

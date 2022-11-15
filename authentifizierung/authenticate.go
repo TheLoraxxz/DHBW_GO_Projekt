@@ -92,7 +92,13 @@ func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie str
 		if err != nil {
 			return "", err
 		}
-
+		newHash, errorHash := bcrypt.GenerateFromPassword([]byte(*newPassw), 14)
+		if errorHash != nil {
+			return "", errorHash
+		}
+		users.users[*user] = string(newHash)
+		_, cookie := AuthenticateUser(user, newPassw)
+		return cookie, nil
 	}
 	return "", errors.New("Wrong User")
 }
