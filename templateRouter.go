@@ -48,7 +48,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 }
 
-func (c CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	// get cookie
 	cookie, err := request.Cookie("SessionID-Kalender")
 	//if cookie is not existing it returns back to the host
@@ -59,7 +59,7 @@ func (c CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 	//if it is not allowed then continue with normal website else redirect to root
 	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
 	if isAllowed {
-		mainRoute, err := template.ParseFiles("./assets/sites/create-User.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+		mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
 			log.Fatal("Coudnt export Parsefiles")
 			return
@@ -73,4 +73,29 @@ func (c CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 	}
 
+}
+
+func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	cookie, err := request.Cookie("SessionID-Kalender")
+	//if cookie is not existing it returns back to the host
+	if err != nil {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+	//if it is not allowed then continue with normal website else redirect to root
+	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
+	if isAllowed {
+		mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+		if err != nil {
+			log.Fatal("Coudnt export Parsefiles")
+			return
+		}
+		err = mainRoute.Execute(writer, nil)
+		if err != nil {
+			log.Fatal("Coudnt Execute Parsefiles")
+			return
+		}
+	} else {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+	}
 }

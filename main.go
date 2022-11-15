@@ -8,7 +8,8 @@ import (
 )
 
 type RootHandler struct{}
-type TabellenHandler struct{}
+type ChangeUserHandler struct{}
+
 type CreatUserHandler struct{}
 
 var Server http.Server
@@ -27,8 +28,10 @@ func main() {
 	//hier weitere handler hinzufügen in ähnlicher fashion für die verschiedenen Templates
 	root := RootHandler{}
 	createUser := CreatUserHandler{}
+	changeUser := ChangeUserHandler{}
 	http.Handle("/", &root)
-	http.Handle("/user/Create", &createUser)
+	http.Handle("/user/create", &createUser)
+	http.Handle("/user/change", &changeUser)
 
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
