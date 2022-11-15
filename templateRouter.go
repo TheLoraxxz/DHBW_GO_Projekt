@@ -20,7 +20,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		if isUser == true {
 			// wenn user authentifiziert ist dann wird cookie erstellt und
 			cookie := &http.Cookie{
-				Name:     "session-KalenderID",
+				Name:     "SessionID-Kalender",
 				Value:    cookieText,
 				Path:     "/",
 				MaxAge:   3600,
@@ -49,12 +49,28 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 }
 
 func (c CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	mainRoute, err := template.ParseFiles("./assets/sites/create-User.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	// get cookie
+	cookie, err := request.Cookie("SessionID-Kalender")
+	//if cookie is not existing it returns back to the host
 	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
 	}
-	err = mainRoute.Execute(writer, nil)
-	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+	//if it is not allowed then continue with normal website else redirect to root
+	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
+	if isAllowed {
+		mainRoute, err := template.ParseFiles("./assets/sites/create-User.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+		if err != nil {
+			log.Fatal("Coudnt export Parsefiles")
+			return
+		}
+		err = mainRoute.Execute(writer, nil)
+		if err != nil {
+			log.Fatal("Coudnt Execute Parsefiles")
+			return
+		}
+	} else {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 	}
+
 }
