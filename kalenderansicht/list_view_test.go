@@ -16,7 +16,7 @@ Tests für Custom-Settings innerhalb der Webseite
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
 func testSelectDate(t *testing.T) {
-	lv := InitListView()
+	var lv = new(ListView)
 	newDate := time.Date(2030, 11, 11, 0, 0, 0, 0, time.UTC)
 
 	//Erstellen des Datums als POST-Value
@@ -33,13 +33,31 @@ func testSelectDate(t *testing.T) {
 }
 
 func testSelectEntriesPerPage(t *testing.T) {
-	lv := InitListView()
+	var lv = new(ListView)
 	//Die Values der Webseite gehen von 1 bis 3, wobei 1 für 5 Einträge steht und 3 für 15
 	entriesAmountValue := 2
 	lv.SelectEntriesPerPage(2)
 	assert.Equal(t, entriesAmountValue*5, lv.EntriesPerPage, "Die Nummern sollten identisch sein.")
 }
 
+/*
+**************************************************************************************************************
+Test zur Navigation innerhalb der Listenansicht
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+func testJumPageFor(t *testing.T) {
+	//lv := InitListView()
+
+}
+func testJumpPageback(t *testing.T) {
+	//lv := InitListView()
+}
+
+/*
+*********************************************************************************************************************
+Tests zum Filtern der Termine in der Listenansicht
+*********************************************************************************************************************
+*/
 func testFilterCalendarEntries(t *testing.T) {
 	var lv ListView
 	//Hier wird der 1.11.2022 als Startdatum gesetzt
@@ -76,27 +94,19 @@ func testFilterCalendarEntries(t *testing.T) {
 	assert.Equal(t, testTermine[1], filteredSlice[1], "Termine an diesen Positionen sollten identisch sein")
 	assert.Equal(t, testTermine[2], filteredSlice[2], "Termine an diesen Positionen sollten identisch sein")
 	assert.Equal(t, testTermine[3], filteredSlice[3], "Termine an diesen Positionen sollten identisch sein")
-	assert.True(t, len(filteredSlice) == 4, "4 Termine sollten sich in der Slice befinden")
+	assert.Equal(t, 4, len(filteredSlice), "4 Termine sollten sich in der Slice befinden")
 
-}
-
-/*
-**************************************************************************************************************
-Test zur Navigation innerhalb der Listenansicht
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
-func testSpringSeiteWeiter(t *testing.T) {
-	//lv := InitListView()
-
-}
-func testSpringSeiteZurueck(t *testing.T) {
-	//lv := InitListView()
 }
 
 func TestListView(t *testing.T) {
-	t.Run("testRuns", testSelectDate)
-	t.Run("testRuns", testSelectEntriesPerPage)
-	t.Run("testRuns", testSpringSeiteWeiter)
-	t.Run("testRuns", testSpringSeiteZurueck)
-	t.Run("testRuns", testFilterCalendarEntries)
+	//Tests für Custom-Settings innerhalb der Webseite
+	t.Run("testRuns SelectDate", testSelectDate)
+	t.Run("testRuns SelectEntriesPerPage", testSelectEntriesPerPage)
+
+	//Test zur Navigation innerhalb der Listenansicht
+	t.Run("testRuns JumPageFor", testJumPageFor)
+	t.Run("testRuns JumpPageback", testJumpPageback)
+
+	//Tests zum Filtern der Termine in der Listenansicht
+	t.Run("testRuns FilterCalendarEntries", testFilterCalendarEntries)
 }

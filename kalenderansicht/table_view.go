@@ -7,7 +7,6 @@ import (
 
 type TableView struct {
 	ShownDate    time.Time
-	Username     string
 	MonthEntries []dayInfos
 }
 
@@ -15,9 +14,10 @@ type TableView struct {
 // Rückgabewert: Pointer auf ein Objekt TableView
 // Dient zur Initialisierung der TableView zu Start des Programms.
 // Zu Begin wird diese auf den ersten Tag des aktuellen Monats gesetzt.
-func InitTableView() *TableView {
-	var tv = new(TableView)
+func InitTableView(terminCache []ds.Termin) *TableView {
+	tv := new(TableView)
 	tv.ShownDate = tv.getFirstDayOfMonth(time.Now())
+	tv.CreateTerminTableEntries(terminCache)
 	return tv
 }
 
@@ -49,18 +49,18 @@ Die Funktionen werden mit Hilfe von JavaSkript aufgerufen, wenn das entsprechend
 // Springt einen Monat in der Webseiten Ansicht vor
 func (tv *TableView) JumpMonthBack() {
 	tv.ShownDate = tv.ShownDate.AddDate(0, 1, 0)
-	tv.CreateTerminTable()
 }
 
 // JumpMonthFor
 // Springt einen Monat in der Webseiten Ansicht zurück
 func (tv *TableView) JumpMonthFor() {
 	tv.ShownDate = tv.ShownDate.AddDate(0, -1, 0)
-	tv.CreateTerminTable()
 }
+
+// JumpToYear
+// Springt einen in der Webseiten zu einem bestimten Jahr
 func (tv *TableView) JumpToYear(summand int) {
 	tv.ShownDate = tv.ShownDate.AddDate(summand, 0, 0)
-	tv.CreateTerminTable()
 }
 
 // SelectMonth
@@ -78,14 +78,12 @@ func (tv *TableView) SelectMonth(monat time.Month) {
 		0,
 		time.UTC,
 	)
-	tv.CreateTerminTable()
 }
 
 // JumpToToday
 // Springt in der Webseiten Ansicht auf den heutigen Monat
 func (tv *TableView) JumpToToday() {
 	tv.ShownDate = tv.getFirstDayOfMonth(time.Now())
-	tv.CreateTerminTable()
 }
 
 /**********************************************************************************************************************
@@ -101,13 +99,12 @@ type dayInfos struct {
 	IsToday    func(day time.Time) bool
 }
 
-// CreateTerminTable
+// CreateTerminTableEntries
 // Lädt alle Termine des Benutzers.
 // Ruft die Funktion zum Filtern der Termine auf, die in den betrachteten Monat fallen.
 // Weißt diese Termine dem Feld MonthEntries von TableView zu.
-func (tv *TableView) CreateTerminTable() {
-	termins := ds.GetTermine(tv.Username)
-	tv.MonthEntries = tv.FilterCalendarEntries(termins)
+func (tv *TableView) CreateTerminTableEntries(terminCache []ds.Termin) {
+	tv.MonthEntries = tv.FilterCalendarEntries(terminCache)
 }
 
 // FilterCalendarEntries
@@ -147,13 +144,12 @@ func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 	//Hier werden für jeden Tag die restlichen Informationen sowie Funktionen hinzugefügt
 	for i := 0; i < len(entriesForThisMonth); i++ {
 		entriesForThisMonth[i].Day = monthStartDate
-		monthStartDate = monthStartDate.AddDate(0, 0, 1)
 		entriesForThisMonth[i].NeedsBreak = NeedsBreak
 		entriesForThisMonth[i].IsToday = IsToday
 		//Delete: is just for testing Webview
-		// entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
-		// entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test2", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
-
+		//entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
+		//entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test2", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
+		monthStartDate = monthStartDate.AddDate(0, 0, 1)
 	}
 	return entriesForThisMonth
 }

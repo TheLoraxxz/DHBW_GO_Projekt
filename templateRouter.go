@@ -25,9 +25,8 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 }
 
-// Die folgenden Variablen werden benötigt, um die objektbezogenen Funktionen im Handler aufzurufen
-var tv = ka.InitTableView()
-var lv = ka.InitListView()
+// Das Objekt ViewManager wird benötigt, um den Username, die ListView, die TableView sowie den Cache mit den Terminen des Nutzers zu verwalten
+var vm ka.ViewManager
 
 // Templates für die Tabellensansicht sowie die Listenansicht
 var path, _ = os.Getwd()
@@ -39,36 +38,36 @@ var listTpl, _ = template.New("liste.html").ParseFiles(path+"/assets/sites/liste
 // Ich muss hier noch iwi den Usernamer herausfiltern können
 func TableHandler(w http.ResponseWriter, r *http.Request) {
 	//UserId muss noch iwo geholt werden
-	tv.Username = "mik"
-	tv.CreateTerminTable()
+	vm.InitViewManager("mik")
 	if r.Method == "GET" {
 		switch {
 		case r.RequestURI == "/tabellenAnsicht?suche=minusMonat":
-			tv.JumpMonthFor()
+			vm.Tv.JumpMonthFor()
+			vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 		case r.RequestURI == "/tabellenAnsicht?suche=plusMonat":
-			tv.JumpMonthBack()
+			vm.Tv.JumpMonthBack()
 		case strings.Contains(r.RequestURI, "/tabellenAnsicht?monat="):
 			monatStr := r.RequestURI[23:]
 			monat, _ := strconv.Atoi(monatStr)
-			tv.SelectMonth(time.Month(monat))
+			vm.Tv.SelectMonth(time.Month(monat))
 		case strings.Contains(r.RequestURI, "/tabellenAnsicht?jahr="):
 			summandStr := r.RequestURI[22:]
 			summand, _ := strconv.Atoi(summandStr)
-			tv.JumpToYear(summand)
+			vm.Tv.JumpToYear(summand)
 		case r.RequestURI == "/tabellenAnsicht?datum=heute":
-			tv.JumpToToday()
+			vm.Tv.JumpToToday()
 		}
 	}
 
 	if r.Method == "POST" {
 		switch {
 		case r.RequestURI == "/tabellenAnsicht?terminErstellen":
-			ka.CreateTermin(r, tv.Username)
+			vm.CreateTermin(r, vm.Username)
 		case r.RequestURI == "/tabellenAnsicht?termineBearbeiten":
-			ka.EditTermin(r, tv.Username, tv.MonthEntries)
+			vm.EditTermin(r, vm.Username)
 		}
 	}
-	er := tableTpl.ExecuteTemplate(w, "tbl.html", tv)
+	er := tableTpl.ExecuteTemplate(w, "tbl.html", vm.Tv)
 	if er != nil {
 		log.Fatalln(er)
 	}
@@ -77,24 +76,26 @@ func TableHandler(w http.ResponseWriter, r *http.Request) {
 // ListHandler
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
 func ListHandler(w http.ResponseWriter, r *http.Request) {
-	lv.Username = "mik"
-	lv.CreateTerminList()
+	vm.InitViewManager("mik")
 	if r.Method == "GET" {
 		switch {
 		case strings.Contains(r.RequestURI, "/listenAnsicht?Eintraege="):
 			amountStr := r.RequestURI[25:]
 			amount, _ := strconv.Atoi(amountStr)
-			lv.SelectEntriesPerPage(amount)
+			vm.Lv.SelectEntriesPerPage(amount)
 		}
 	}
 
 	if r.Method == "POST" {
 		switch {
 		case r.RequestURI == "/listenAnsicht?selDatum":
-			lv.SelectDate(r)
+			vm.Lv.SelectDate(r)
+		case r.RequestURI == "/listenAnsicht?termineBearbeiten":
+			vm.EditTermin(r, vm.Username)
 		}
 	}
-	er := listTpl.ExecuteTemplate(w, "liste.html", lv)
+
+	er := listTpl.ExecuteTemplate(w, "liste.html", vm.Lv)
 	if er != nil {
 		log.Fatalln(er)
 	}

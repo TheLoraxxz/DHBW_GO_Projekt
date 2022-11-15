@@ -97,11 +97,13 @@
                                     Termine: {{len .Dayentries}}
                                     <br>
                                     <div class="d-grid gap-2 d-md-block">
+                                        <!-- Button show Termin -->
                                         <button class="btn btn-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#showTermins" aria-controls="offcanvasExample"  onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">
                                             anzeigen
                                         </button>
-                                        <button type="button" class="btn btn-link"
-                                                onclick="edditTermin({{$index}},{{.Dayentries}})">bearbeiten
+                                        <!-- Button eddit Termin -->
+                                        <button type="butto"  class="btn  btn-link" onclick="askForTerminToEditing({{.Dayentries}})">
+                                            bearbeiten
                                         </button>
                                     </div>
                                 </div>
@@ -118,11 +120,13 @@
                                     Termine: {{len .Dayentries}}
                                     <br>
                                     <div class="d-grid gap-2 d-md-block">
+                                        <!-- Button show Termin -->
                                         <button class="btn btn-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#showTermins" aria-controls="offcanvasExample"  onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">
                                             anzeigen
                                         </button>
-                                        <button type="button" class="btn btn-link"
-                                                onclick="edditTermin({{$index}}, {{.Dayentries}})">bearbeiten
+                                        <!-- Button eddit Termin -->
+                                        <button type="butto"  class="btn  btn-link" onclick="askForTerminToEditing({{.Dayentries}})">
+                                            bearbeiten
                                         </button>
                                     </div>
                                 </div>
@@ -143,13 +147,13 @@
         </div>
         <div class="col text-light">
         </div>
-        <!--------------Hier kann Monat/Jahr und der heutige Tag gewählt werden ----------->
+        <!--------------Hier werden die Termininforamtionen angezeigt (erscheint links im Bildschirm) ----------->
             <div class="offcanvas offcanvas-start" tabindex="-1" id="showTermins" aria-labelledby="offcanvasExampleLabel">
-
             </div>
         </div>
     </div>
 </div>
+
 {{ template "footer" . }}
 
 
@@ -208,29 +212,10 @@
         document.getElementById("showTermins").innerHTML = "Deine Termine am: <br>" + day +" " + month +" " +year;
         for (let i = 0; i < dayentries.length; i++) {
             entrie = dayentries;
-            switch(dayentries[i].Recurring) {
-                case 0:
-                    recurring = "täglich"
-                    break;
-                case 1:
-                    recurring = "wöchentlich"
-                    break;
-                case 2:
-                    recurring = "monatlich"
-                    break;
-                case 3:
-                    recurring = "jährlich"
-                    break;
-                case 4:
-                    recurring = "niemals"
-                    break;
-                default:
-                    recurring = "niemals"
-            }
             terminStr = terminStr + "<b>" + dayentries[i].Title.toString() + "</b>"
                 + "<ul>" +
                 "<li> <b>Beschreibung:</b> " + dayentries[i].Description + "</li>" +
-                "<li><b> Wiederholung: </b>" + recurring + "</li>" +
+                "<li><b> Wiederholung: </b>" + getRecurring(dayentries[i].Recurring) + "</li>" +
                 "<li> <b>Starttermin: </b>" + dayentries[i].Date + "</li>" +
                 "<li> <b>Endtermin: </b>" + dayentries[i].EndDate + "</li>" +
                 "</ul>" +
@@ -238,6 +223,60 @@
 
         }
         document.getElementById("showTermins").innerHTML = terminStr;
+    }
+
+    function askForTerminToEditing(index, dayentries) {
+        var selTermin;
+        var termineStr = "";
+        var indexInMonthEntries = index;
+
+        for (let i = 0; i < dayentries.length; i++) {
+            terminNr = i +1
+            termin = dayentries[i]
+            termineStr = termineStr + terminNr +". Termin: " + termin.Title + "\n Beschreibung: " + termin.Description +
+                "\n Wiederholung: " + getRecurring(termin.Recurring) +  "\n Start-Datum: " + termin.Date +
+                "\n End-Datum: " + termin.EndDate +
+            "\n-------------------------------------------\n"
+        }
+        selTermin = prompt(termineStr + "GIB DIE NUMMER DES ZU BEARBEITENDEN TERMINS EIN:");
+
+        //Hier folgt eine Überprüfung der Gültigkeit der Eingabe
+        var terminEditable = false;
+        for (let i = 0; i < dayentries.length; i++) {
+            terminNr = i+1
+            if (selTermin == terminNr){
+                terminEditable = true;
+            }
+        }
+        if (!terminEditable) {
+            confirm("Diese Eingabe ist nicht gültig!");
+        }else{
+            editTermin(dayentries[selTermin-1])
+        }
+    }
+
+    function getRecurring(rec){
+        var recurring
+        switch(rec) {
+            case 0:
+                recurring = "täglich"
+                break;
+            case 1:
+                recurring = "wöchentlich"
+                break;
+            case 2:
+                recurring = "monatlich"
+                break;
+            case 3:
+                recurring = "jährlich"
+                break;
+            case 4:
+                recurring = "niemals"
+                break;
+            default:
+                recurring = "niemals"
+        }
+        return recurring
     }
 
 </script>

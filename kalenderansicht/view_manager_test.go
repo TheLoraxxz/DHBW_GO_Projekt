@@ -70,10 +70,12 @@ func createTestDate(year, day int, month time.Month) time.Time {
 
 /*
 **************************************************************************************************************
-Hier Folgen die Tests
+Hier Folgen die Tests zum Termine erstellen/bearbeiten/löschen
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
 func testCreateTermin(t *testing.T) {
+	vm := new(ViewManager)
+	vm.InitViewManager("testuser")
 	//Erstellen der Termininfos, die über die Request gesendet werden
 	data := url.Values{}
 	data.Add("title", "Test Termin")
@@ -94,11 +96,19 @@ func testCreateTermin(t *testing.T) {
 		Date:        createTestDate(2022, 11, 11),
 		EndDate:     createTestDate(2030, 11, 11),
 	}
-	assert.Equal(t, termin, CreateTermin(r, "Testuser"), "Die Termine sollten identisch sein.")
+	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
+	oldLen := len(vm.TerminCache)
+	vm.CreateTermin(r, vm.Username)
+	assert.Equal(t, oldLen+1, len(vm.TerminCache), "Die Länge sollte um eins erhöht worden sein.")
+	assert.Equal(t, termin, vm.TerminCache[0], "Die Termine sollten überein stimmen.")
 
+}
+func testEditTermin(t *testing.T) {
+	//r *http.Request, username string, monthEntries []dayInfos
 }
 
 func TestViewManager(t *testing.T) {
 	//createTestTermins()
-	t.Run("testRuns", testCreateTermin)
+	t.Run("testRuns CreateTermin", testCreateTermin)
+	t.Run("testRuns EditTermin", testEditTermin)
 }

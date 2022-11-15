@@ -4,10 +4,23 @@ import (
 	ds "DHBW_GO_Projekt/dateisystem"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
+
+type ViewManager struct {
+	Tv          TableView
+	Lv          ListView
+	Username    string
+	TerminCache []ds.Termin
+}
+
+func (vm *ViewManager) InitViewManager(username string) {
+	vm.Tv = *InitTableView(vm.TerminCache)
+	vm.Lv = *InitListView(vm.TerminCache)
+	vm.Username = username
+	vm.TerminCache = ds.GetTermine(vm.Username)
+}
 
 // getMaxDays
 // Parameter: Monat und Jahr eines Datums
@@ -54,7 +67,7 @@ func filterRepetition(repStr string) ds.Repeat {
 // CreateTermin
 // Parameter: eine Post-Request mit Informationen über einen Termin und den Usernamen des Nutzers, der diesen anlegen möchte
 // CreateTermin ruft die Funktion zum Erstellen des Termins auf
-func CreateTermin(r *http.Request, username string) ds.Termin {
+func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 
 	//Filtern der Termininfos
 	title := r.FormValue("title")
@@ -74,8 +87,9 @@ func CreateTermin(r *http.Request, username string) ds.Termin {
 		endDate = date
 	}
 
-	//erstelle neuen Termin
-	return ds.CreateNewTermin(title, description, rep, date, endDate, username)
+	//Erstelle neuen Termin und füge diesen dem Cache hinzu
+	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
+	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 }
 
 // EditTermin
@@ -85,47 +99,89 @@ func CreateTermin(r *http.Request, username string) ds.Termin {
 //
 //	-> Berbeiten: Dei neuen Termininfos werden ermittelt und ein neuer Termin erstellt. Der alte Termin wird gelöscht.
 //	-> Löschen: Der Termin wird gelöscht.
-func EditTermin(r *http.Request, username string, monthEntries []dayInfos) {
-	//Ermitteln des Index des Tages, dessen Termine bearbeitet werden
-	editingDayIndex, _ := strconv.Atoi(r.FormValue("editingIndex"))
-	editedDay := monthEntries[editingDayIndex].Dayentries
+func (vm *ViewManager) EditTermin(r *http.Request, username string) {
 
-	//Schleife, die alle bearbeiteten Termine des Tages durchgeht
-	for i := 1; i <= len(editedDay); i++ {
-		//index ist die variable i als String, benötigt um mach den richtigen Values zu suchen
-		index := strconv.FormatInt((int64(i)), 10)
+	//Den alten Titel zum Löschen ermitteln
+	oldTitle := r.FormValue("oldTitle")
 
-		//Filtern der übergebenen neuen Werte
-		mode := r.FormValue("editing" + index)
+	//Filtern des gewünschten Modus: bearbeiten oder Löschen
+	mode := r.FormValue("editing")
 
-		//Wenn der Filtermodus nicht beearbeiten iste, müssen die übergebenen Values nicht gelesen werden
-		if strings.Contains(mode, "Bearbeiten") {
-			title := r.FormValue("title" + index)
-			description := r.FormValue("description" + index)
-			repStr := r.FormValue("repeat" + index)
+	//Wenn der Modus Bearbeiten ist, müssen die übergebenen Values gelesen werden und der Termin
+	//Wenn der Modus Löschen ist, kann der Termin gleich gelöscht werden (ohne Werteauslesen)
+	if strings.Contains(mode, "Bearbeiten") {
+		title := r.FormValue("title")
+		description := r.FormValue("description")
+		repStr := r.FormValue("repeat")
 
-			//Filter das Wiederholungsintervall aus der Antwort
-			rep := filterRepetition(repStr)
+		//Filter das Wiederholungsintervall aus der Antwort
+		rep := filterRepetition(repStr)
 
-			//Daten in das richtige Format überführen mithilfe eines Layouts
-			layout := "2006-01-02"
-			date, _ := time.Parse(layout, r.FormValue("date"+index))
-			endDate, _ := time.Parse(layout, r.FormValue("endDate"+index))
+		//Daten in das richtige Format überführen mithilfe eines Layouts
+		layout := "2006-01-02"
+		date, _ := time.Parse(layout, r.FormValue("date"))
+		endDate, _ := time.Parse(layout, r.FormValue("endDate"))
 
-			//EditetTermin kann gelöscht werden, dient nur der Kontrolle!!!!
-			editetTermin := ds.Termin{
-				title,
-				description,
-				rep,
-				date,
-				endDate,
-			}
-			//Lösche Print anweisung
-			fmt.Println(editetTermin)
-			//Ein neuer Termin mit den geänderten Werten wird erstellt
-			ds.CreateNewTermin(title, description, rep, date, endDate, username)
+		editetTermin := ds.Termin{
+			title,
+			description,
+			rep,
+			date,
+			endDate,
 		}
-		//Der alte Termin wird gelöscht -> muss noch implementiert werden
-		//deleteTermin(editedDay[i-1])
+
+		//Lösche Print anweisung
+		fmt.Println(editetTermin)
+
+		//Erstelle neuen Termin mit den geänderten und füge diesen dem Cache hinzu
+		newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
+		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
+
 	}
+	//Löschen des alten Termins
+	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, oldTitle, vm.Username)
 }
+
+/**********************************************************************************************************************
+Hier Folgen Funktionen, die dem Handeln der Tabellenansicht/TableView dienen.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+// JumpMonthBack
+// Springt einen Monat in der Webseiten Ansicht vor
+func (vm *ViewManager) TvJumpMonthBack() {
+	vm.Tv.JumpMonthBack()
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+}
+
+// TvJumpMonthFor
+// Springt einen Monat in der Webseiten Ansicht zurück
+func (vm *ViewManager) TvJumpMonthFor() {
+	vm.Tv.JumpMonthFor()
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+}
+
+// TvJumpToYear
+// Springt zu einem bestimmten Jahr
+func (vm *ViewManager) TvJumpToYear(summand int) {
+	vm.Tv.JumpToYear(summand)
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+}
+
+// TvSelectMonth
+// Parameter: vom benutzer auf der Webseite gewählter Monat
+// Setzt den Monat auf den gewünschten Monat
+func (vm *ViewManager) TvSelectMonth(monat time.Month) {
+	vm.Tv.SelectMonth(monat)
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+}
+
+// TvJumpToToday
+// Springt in der Webseiten Ansicht auf den heutigen Monat
+func (vm *ViewManager) TvJumpToToday() {
+	vm.Tv.getFirstDayOfMonth(time.Now())
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+}
+
+/**********************************************************************************************************************
+Hier Folgen Funktionen, die dem Handeln der Listenansicht/ListView dienen.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */

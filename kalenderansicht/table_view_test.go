@@ -138,13 +138,13 @@ func testGetLastDayOfMonth(t *testing.T) {
 
 	//Test Monate mit 31 Tagen
 	months31 := []int{1, 3, 5, 7, 8, 10, 12}
-	ta.ShownDate = generateRandomDateInSpecificMonth(2022, time.Month(months31[rand.Int()]))
+	ta.ShownDate = generateRandomDateInSpecificMonth(2022, time.Month(months31[rand.Intn(6)]))
 	lastDay := ta.getLastDayOfMonth()
 	assert.Equal(t, 31, lastDay.Day(), "Der Tag sollte der 31. sein")
 
 	//Test Monate mit 30 Tagen
-	months30 := []int{2, 4, 6, 9, 11}
-	ta.ShownDate = generateRandomDateInSpecificMonth(2022, time.Month(months30[rand.Int()]))
+	months30 := []int{4, 6, 9, 11}
+	ta.ShownDate = generateRandomDateInSpecificMonth(2022, time.Month(months30[rand.Intn(3)]))
 	lastDay = ta.getLastDayOfMonth()
 	assert.Equal(t, 30, lastDay.Day(), "Der Tag sollte der 30. sein")
 
@@ -161,16 +161,16 @@ func testGetLastDayOfMonth(t *testing.T) {
 func testMonthStarts(t *testing.T) {
 	var tv TableView
 	//1. Test Monat: November 2022
-	tv.ShownDate = generateRandomDateInSpecificMonth(2022, 11)
-	assert.True(t, len(tv.MonthStarts()) == 1, "Die Slice sollte die Länge 1 haben, da der 11.2022 an einem Dienstag startet.")
+	tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDateInSpecificMonth(2022, 11))
+	assert.Equal(t, 1, len(tv.MonthStarts()), "Die Slice sollte die Länge 1 haben, da der 11.2022 an einem Dienstag startet.")
 
 	//2. Test Monat: Dezember 2022
-	tv.ShownDate = generateRandomDateInSpecificMonth(2022, 12)
-	assert.True(t, len(tv.MonthStarts()) == 3, "Die Slice sollte die Länge 3 haben, da der 12.2022 an einem Donnerstag startet.")
+	tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDateInSpecificMonth(2022, 12))
+	assert.Equal(t, 3, len(tv.MonthStarts()), "Die Slice sollte die Länge 3 haben, da der 12.2022 an einem Donnerstag startet.")
 
 	//3. Test Monat: Januar 2023
-	tv.ShownDate = generateRandomDateInSpecificMonth(2023, 1)
-	assert.True(t, len(tv.MonthStarts()) == 6, "Die Slice sollte die Länge 6 haben, da der 1.2023 an einem Sonntag startet.")
+	tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDateInSpecificMonth(2023, 1))
+	assert.Equal(t, 6, len(tv.MonthStarts()), "Die Slice sollte die Länge 6 haben, da der 1.2023 an einem Sonntag startet.")
 }
 func testIsToday(t *testing.T) {
 	dateToday := time.Now()
@@ -242,7 +242,7 @@ func testFilterCalendarEntriesCorrectRecurring(t *testing.T) {
 		assert.Equal(t, testTermine[0], filteredSlice[day-1].Dayentries[0], "Termine an diesen Positionen sollten identisch sein")
 		assert.Equal(t, testTermine[0], filteredSlice[day-1].Dayentries[0], "Termine an diesen Positionen sollten identisch sein")
 		assert.Equal(t, testTermine[0], filteredSlice[29-1].Dayentries[0], "Termine an diesen Positionen sollten identisch sein")
-		assert.True(t, len(filteredSlice[30-1].Dayentries) == 0, "An dieser Position sollte kein Termin eingetragen sein")
+		assert.Equal(t, 0, len(filteredSlice[30-1].Dayentries), "An dieser Position sollte kein Termin eingetragen sein")
 	}
 	//Kontrolle ob Termine korrekt wöchentlich eingefügt werden, startet beim 27.10 -> 3.11 -> 10.11...
 	//Kontrolle von korrektem Einfügen hinter schon eingefügten Terminen
@@ -260,7 +260,7 @@ func testFilterCalendarEntriesCorrectRecurring(t *testing.T) {
 	assert.Equal(t, testTermine[3], filteredSlice[10-1].Dayentries[2], "Termine an diesen Positionen sollten identisch sein")
 
 }
-func TestTabellenAnsicht(t *testing.T) {
+func TestTableView(t *testing.T) {
 	//Tests zur Kontrolle der richtigen Wertanzeige in der Webansicht
 	t.Run("testRuns ShowYear", testShowYear)
 	t.Run("testRuns showMonth", testShowMonth)

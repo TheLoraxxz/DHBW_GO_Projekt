@@ -15,7 +15,7 @@
                 </div>
             </div>
         </form>
-        {{range $index, $element := .EntriesSinceSelDate}}
+        {{range $index, $dayEntry := .EntriesSinceSelDate}}
         <div  class="card text-dark bg-light mb-3">
             <div class="card-body">
                 <h5 class="card-title">{{.Title}}</h5>
@@ -45,7 +45,7 @@
                             <b>Wiederholung: </b>{{$rep}}
                         </li>
                         <li>
-                            <b>Nächsten Vorkommen: </b> {{range $occur := $.NextOccurrences $element}} {{ $occur.Format "2006-01-02"}},  {{end}}
+                            <b>Nächsten Vorkommen: </b> {{range $occur := $.NextOccurrences $dayEntry}} {{ $occur.Format "2006-01-02"}},  {{end}}
                         </li>
                         <li>
                             <b>Startdatum: </b>{{.Date.Format "2006-01-02"}}
@@ -55,8 +55,8 @@
                         </li>
                     </ul>
             </div>
-                <button type="button" class="btn btn-link"
-                        onclick="edditTermin({{$index}}, {{$element}})">bearbeiten
+                <!---button zum Bearbeiten des Termins--->
+                <button type="button" class="btn btn-link" onclick="editTermin(new Termin({{.Title}},{{.Description}},{{.Recurring}},{{.Date}},{{.EndDate}}))">bearbeiten
                 </button>
             </div>
         </div>
@@ -81,6 +81,9 @@
 
 <!--------------------Hier folgt benötigter JavaScript-Code--------------------------->
 <script>
+
+    // entrySelection
+    // hier wird eine Get request gestellt, um die gewünschten Einträge pro Seit zu erhalten
     function entrySelection(amount) {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -89,5 +92,15 @@
         requestString = String("?Eintraege=" + amount)
         xhttp.open("GET", requestString);
         xhttp.send();
+    }
+
+    // Termin
+    // hier wird ein Objekt Termin erstellt, welches für die Terminbearbeitung benötigt wird
+    function Termin(title, description, recurring, date, endDate) {
+        this.Title = title;
+        this.Description = description;
+        this.Recurring = recurring;
+        this.Date = date;
+        this.EndDate = endDate;
     }
 </script>

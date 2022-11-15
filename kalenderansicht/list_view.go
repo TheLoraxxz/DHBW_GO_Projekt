@@ -9,7 +9,6 @@ import (
 
 type ListView struct {
 	SelectedDate        time.Time
-	Username            string
 	EntriesSinceSelDate []ds.Termin
 	EntriesPerPage      int
 	PagesAmount         int
@@ -19,11 +18,12 @@ type ListView struct {
 // Rückgabewert: Pointer auf ein Objekt ListView
 // Dient zur Initialisierung der ListView zum Start des Programms.
 // Zu Begin wird diese auf das aktuelle Datum gesetzt, die Seitenanzahl Terminen wird die Seite mehrseitig.
-func InitListView() *ListView {
+func InitListView(terminCache []ds.Termin) *ListView {
 	var lv = new(ListView)
 	lv.SelectedDate = time.Now()
 	lv.EntriesPerPage = 5
 	lv.PagesAmount = lv.requiredPages()
+	lv.CreateTerminListEntries(terminCache)
 	return lv
 }
 
@@ -66,12 +66,17 @@ func (lv ListView) JumpPageBack() {
 Ab hier Folgen Funktionen, die dem Filtern und Anzeigen der Termine in der Listenansicht dienen
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-// CreateTerminList
-func (lv *ListView) CreateTerminList() {
-	termins := ds.GetTermine(lv.Username)
-	lv.EntriesSinceSelDate = lv.FilterCalendarEntries(termins)
+// CreateTerminListEntries
+// Parameter: Slice mit allen Terminen des Nutzers
+// Die Funktion weist dem Feld EntriesSinceSelDate des Listview Objektes eine Slice mit allen Terminen des Users seit dem
+// gewünschten Datum zu.
+func (lv *ListView) CreateTerminListEntries(terminCache []ds.Termin) {
+	lv.EntriesSinceSelDate = lv.FilterCalendarEntries(terminCache)
 }
 
+// FilterCalendarEntries
+// Parameter: Slice mit allen Terminen des Nutzers
+// Rückgabewert: Ein Slice mit allen Terminen des Users seit dem gewünschten Datum
 func (lv ListView) FilterCalendarEntries(termins []ds.Termin) []ds.Termin {
 	startDate := lv.SelectedDate
 
@@ -82,17 +87,25 @@ func (lv ListView) FilterCalendarEntries(termins []ds.Termin) []ds.Termin {
 		}
 	}
 	//Hier werden Termine zum testen hinzugeügt: LÖSCHEN SPÄTER
-	/*for i := 0; i < 200; i++ {
+	for i := 0; i < 200; i++ {
 		startDate = startDate.AddDate(0, 0, 1)
 		//Delete: is just for testing
-		entriesSinnceSelDate = append(entriesSinnceSelDate, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: startDate, EndDate: startDate.AddDate(rand.Int(), rand.Int(), rand.Int())})
-	}*/
+		//entriesSinnceSelDate = append(entriesSinnceSelDate, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: startDate, EndDate: startDate.AddDate(3, 4, 2)})
+	}
 	return entriesSinnceSelDate
 }
 
+// requiredPages
+// Berechnet je nachdem wie viele Einträge pro Seite gewünscht sind die benötigte Seizenanzahl und weist diese dem entsprechenden
+// Feld in dem Objekt ListView zu.
 func (lv ListView) requiredPages() int {
 	return len(lv.EntriesSinceSelDate) / lv.EntriesPerPage
 }
+
+// NextOccurrences
+// Parameter: ein Termin
+// Rückgabewert: drei Instanzen des Typs time.Time
+// Berechnet je nach Wiederholung des Termins und des gewählten Datums, die nächsten drei Vorkommen des Termins.
 func (lv ListView) NextOccurrences(termin ds.Termin) []time.Time {
 	selDate := lv.SelectedDate
 	nextOccurrences := make([]time.Time, 0, 3)
