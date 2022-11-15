@@ -73,5 +73,5 @@ func CreateUser(user *string, pasw *string) error {
 	return nil
 }
 func ChangeUser(olduser *string, newuser *string, oldPassw *string, newPassw *string) (newCookie string, err error) {
-
+	return "", nil
 }
