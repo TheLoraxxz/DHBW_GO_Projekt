@@ -31,18 +31,18 @@ func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie 
 	return false, *pasw
 }
 
-func CheckCookie(cookie *string) bool {
+func CheckCookie(cookie *string) (isAllowed bool, userName string) {
 	cookieDeRef := *cookie
 	username := cookieDeRef[:strings.Index(cookieDeRef, "|")]
 	cookieString := cookieDeRef[strings.Index(cookieDeRef, "|")+1:]
 	if _, found := users[username]; found == true {
 		err := bcrypt.CompareHashAndPassword([]byte(cookieString), []byte(username+users[username]))
 		if err == nil {
-			return true
+			return true, username
 		}
 
 	}
-	return false
+	return false, ""
 }
 
 func CreateUser(user *string, pasw *string) error {

@@ -64,7 +64,7 @@ func TestCheckCookieTrue(t *testing.T) {
 	CreateUser(&user, &password)
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users["admin"]), 2)
 	cookie := "admin|" + string(hashedPassword)
-	isAllowed := CheckCookie(&cookie)
+	isAllowed, _ := CheckCookie(&cookie)
 	assert.Equal(t, true, isAllowed)
 }
 
@@ -75,6 +75,6 @@ func TestCheckCookieAndAuthenticateUser(t *testing.T) {
 	password := "admin"
 	CreateUser(&user, &password)
 	_, cookie := AuthenticateUser(&user, &password)
-	isAllowed := CheckCookie(&cookie)
+	isAllowed, _ := CheckCookie(&cookie)
 	assert.Equal(t, true, isAllowed)
 }

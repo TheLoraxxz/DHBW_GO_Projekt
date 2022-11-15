@@ -9,6 +9,7 @@ import (
 
 type RootHandler struct{}
 type TabellenHandler struct{}
+type CreatUserHandler struct{}
 
 var Server http.Server
 
@@ -26,8 +27,10 @@ func main() {
 	//hier weitere handler hinzufügen in ähnlicher fashion für die verschiedenen Templates
 	root := RootHandler{}
 	tabelle := TabellenHandler{}
+	createUser := CreatUserHandler{}
 	http.Handle("/", &root)
 	http.Handle("/kalender/", &tabelle)
+	http.Handle("/user/Create", &createUser)
 
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)

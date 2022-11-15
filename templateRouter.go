@@ -3,6 +3,7 @@ package main
 import (
 	"DHBW_GO_Projekt/authentifizierung"
 	"DHBW_GO_Projekt/kalenderansicht"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -30,7 +31,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			}
 			http.SetCookie(writer, cookie)
 
-			http.Redirect(writer, request, "/kalender/", http.StatusContinue)
+			http.Redirect(writer, request, "/user/Create", http.StatusAccepted)
 			return
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
@@ -51,4 +52,8 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 func (kalender TabellenHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	kalenderansicht.TabellenHandler(writer, request)
+}
+
+func (c CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	fmt.Fprintf(writer, "<h1>Test</h1>")
 }
