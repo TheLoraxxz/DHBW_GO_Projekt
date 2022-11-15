@@ -3,7 +3,6 @@ package kalenderansicht
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"time"
 )
@@ -76,38 +75,19 @@ func (lv *ListView) CreateTerminList() {
 func (lv ListView) FilterCalendarEntries(termins []ds.Termin) []ds.Termin {
 	startDate := lv.SelectedDate
 
-	//Die Termine für diesen Monat werden in ein Slice gefiltert
-	//für jeden Tag des Monats befindet sich ein Objekt DayInfos in der Slice
-	//Der Index des Tages ist in diesem Falle die Tagesnummer im Monat -1
-	//Der 1.01.2022 wäre dementsprechend beim Index 0
-
-	entriesForThisMonth := make([]ds.Termin, 0, len(termins))
+	entriesSinnceSelDate := make([]ds.Termin, 0, len(termins))
 	for _, termin := range termins {
 		if termin.EndDate.After(startDate) || termin.EndDate.Equal(startDate) {
-			switch termin.Recurring {
-			case ds.Never, ds.YEARLY, ds.MONTHLY:
-				entriesForThisMonth = append(entriesForThisMonth, termin)
-				// Vom Start des Termins wird je eine Woche dazu addiert und geprüft, ob dieses neue Datum in den betrachteten Monat fällt
-				// Fällt der Termin in den gewählten Zeitraum, wird der termin in die Slice hinzugefügt
-			case ds.WEEKLY:
-				startDateOfTermin := termin.Date
-				folgeTermin := startDateOfTermin
-				for folgeTermin.Before(termin.EndDate) {
-					if folgeTermin.After(startDate) || folgeTermin.Equal(startDate) {
-						entriesForThisMonth = append(entriesForThisMonth, termin)
-					}
-					folgeTermin = folgeTermin.AddDate(0, 0, 7)
-				}
-			}
+			entriesSinnceSelDate = append(entriesSinnceSelDate, termin)
 		}
 	}
 	//Hier werden Termine zum testen hinzugeügt: LÖSCHEN SPÄTER
-	for i := 0; i < 200; i++ {
+	/*for i := 0; i < 200; i++ {
 		startDate = startDate.AddDate(0, 0, 1)
 		//Delete: is just for testing
-		entriesForThisMonth = append(entriesForThisMonth, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: startDate, EndDate: startDate.AddDate(rand.Int(), rand.Int(), rand.Int())})
-	}
-	return entriesForThisMonth
+		entriesSinnceSelDate = append(entriesSinnceSelDate, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: startDate, EndDate: startDate.AddDate(rand.Int(), rand.Int(), rand.Int())})
+	}*/
+	return entriesSinnceSelDate
 }
 
 func (lv ListView) requiredPages() int {

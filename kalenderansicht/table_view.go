@@ -21,21 +21,6 @@ func InitTableView() *TableView {
 	return tv
 }
 
-// getFirstDayOfMonth
-// Hilfsfunktion, die den ersten Tag des Monats liefert
-func (tv TableView) getFirstDayOfMonth(specificDate time.Time) time.Time {
-	return time.Date(
-		specificDate.Year(),
-		specificDate.Month(),
-		1,
-		0,
-		0,
-		0,
-		0,
-		time.UTC,
-	)
-}
-
 /**********************************************************************************************************************
 Ab hier Folgen Funktionen, die der Tabellenansicht dienen.
 Diese werden im html-template angesprochen.
@@ -133,10 +118,7 @@ func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 
 	monthStartDate := tv.ShownDate
 	monthEndDate := tv.getLastDayOfMonth()
-	//Die Termine für diesen Monat werden in ein Slice gefiltert
-	//für jeden Tag des Monats befindet sich ein Objekt DayInfos in der Slice
-	//Der Index des Tages ist in diesem Falle die Tagesnummer im Monat -1
-	//Der 1.01.2022 wäre dementsprechend beim Index 0
+
 	entriesForThisMonth := make([]dayInfos, getMaxDays(int(tv.ShownDate.Month()), tv.ShownDate.Year()))
 	for _, termin := range termins {
 		if (termin.Date.Before(monthEndDate) || termin.Date.Equal(monthEndDate)) && (termin.EndDate.After(monthStartDate) || termin.EndDate.Equal(monthStartDate)) {
@@ -146,15 +128,18 @@ func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 				entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
 				// Vom Start des Termins wird je eine Woche dazu addiert und geprüft, ob dieses neue Datum in den betrachteten Monat fällt
 				// Fällt der Termin in den gewählten Zeitraum, wird der termin in die Slice hinzugefügt
-			case ds.WEEKLY:
-				startDateOfTermin := termin.Date
-				folgeTermin := startDateOfTermin
-				for folgeTermin.Before(termin.EndDate) {
+			case ds.DAILY, ds.WEEKLY:
+				folgeTermin := termin.Date
+				for folgeTermin.Before(termin.EndDate) || folgeTermin.Equal(termin.EndDate) {
 					if (folgeTermin.Before(monthEndDate) || folgeTermin.Equal(monthEndDate)) && (folgeTermin.After(monthStartDate) || folgeTermin.Equal(monthStartDate)) {
 						monthDay := folgeTermin.Day()
 						entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
 					}
-					folgeTermin = folgeTermin.AddDate(0, 0, 7)
+					if termin.Recurring == ds.WEEKLY {
+						folgeTermin = folgeTermin.AddDate(0, 0, 7)
+					} else {
+						folgeTermin = folgeTermin.AddDate(0, 0, 1)
+					}
 				}
 			}
 		}
@@ -165,12 +150,27 @@ func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 		monthStartDate = monthStartDate.AddDate(0, 0, 1)
 		entriesForThisMonth[i].NeedsBreak = NeedsBreak
 		entriesForThisMonth[i].IsToday = IsToday
-		//Delete: is just for testing
-		entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
-		entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test2", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
+		//Delete: is just for testing Webview
+		// entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
+		// entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test2", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
 
 	}
 	return entriesForThisMonth
+}
+
+// getFirstDayOfMonth
+// Hilfsfunktion, die den ersten Tag des Monats liefert
+func (tv TableView) getFirstDayOfMonth(specificDate time.Time) time.Time {
+	return time.Date(
+		specificDate.Year(),
+		specificDate.Month(),
+		1,
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
 }
 
 // getLastDayOfMonth
