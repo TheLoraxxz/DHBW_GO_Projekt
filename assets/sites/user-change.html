@@ -1,28 +1,26 @@
 {{ template "header" . }}
 
 <div class="container-fluid">
-  <div class="row">
-    <div class="col" style="width: 33%"></div>
-    <div class="col">
-      <h3>Passwort ändern</h3>
-      <form method="post">
-        <div class="mb-3">
-          <label for="userInput" class="form-label">Nutzername:</label>
-          <input type="text" class="form-control" name="newUsername" id="userInput" placeholder="Nutzer">
+    <div class="row">
+        <div class="col" style="width: 33%"></div>
+        <div class="col">
+            <h3>Passwort ändern</h3>
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label" for="passwordInput">Altes Passwort:</label>
+                    <input type="password" class="form-control" name="oldPassword" id="passwordInput"
+                           placeholder="Altes Passwort">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="passwordInput">Neues Passwort:</label>
+                    <input type="password" class="form-control" name="newPassword" id="passwordInputNew"
+                           placeholder="Neues Passwort">
+                </div>
+                <button class="btn btn-primary" type="submit">Passwort ändern</button>
+            </form>
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="passwordInput">Altes Passwort:</label>
-          <input type="password" class="form-control" name="oldPassword" id="passwordInput" placeholder="Altes Passwort">
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="passwordInput">Neues Passwort:</label>
-          <input type="password" class="form-control" name="newPassword" id="passwordInputNew" placeholder="Neues Passwort">
-        </div>
-        <button class="btn btn-primary" type="submit">Passwort ändern</button>
-      </form>
+        <div class="col" style="width: 33%"></div>
     </div>
-    <div class="col" style="width: 33%"></div>
-  </div>
 </div>
 
 {{ template "footer" . }}
