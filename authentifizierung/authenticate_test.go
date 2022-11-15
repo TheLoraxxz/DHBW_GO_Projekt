@@ -11,14 +11,14 @@ import (
 func TestCreateUser(t *testing.T) {
 	user := "admin"
 	password := "admin"
-	assert.Equal(t, 0, len(users))
+	assert.Equal(t, 0, len(users.users))
 	CreateUser(&user, &password)
-	assert.Equal(t, 1, len(users))
+	assert.Equal(t, 1, len(users.users))
 }
 
 // tests that on authentication it returns a true user
 func TestAuthenticateUserTrue(t *testing.T) {
-	users = make(map[string]string)
+	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
@@ -28,7 +28,7 @@ func TestAuthenticateUserTrue(t *testing.T) {
 
 // checks that if it fails that it returns a wrong user
 func TestAuthenticateUserFalse(t *testing.T) {
-	users = make(map[string]string)
+	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
@@ -40,7 +40,7 @@ func TestAuthenticateUserFalse(t *testing.T) {
 
 // test that the cookie which is given back is the right one
 func TestAuthenticateUserCookieMngmt(t *testing.T) {
-	users = make(map[string]string)
+	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	// nutzer erstellen
@@ -51,18 +51,18 @@ func TestAuthenticateUserCookieMngmt(t *testing.T) {
 	username := cookie[:strings.Index(cookie, "|")]
 	cookie = cookie[strings.Index(cookie, "|")+1:]
 	// schauen, dass der neue hash richtig generiert ist
-	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte("admin"+users["admin"]))
+	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte("admin"+users.users["admin"]))
 	assert.Equal(t, nil, isSame)
 	assert.Equal(t, user, username)
 }
 
 // tests that cookie check is true on right input
 func TestCheckCookieTrue(t *testing.T) {
-	users = make(map[string]string)
+	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users["admin"]), 2)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users.users["admin"]), 2)
 	cookie := "admin|" + string(hashedPassword)
 	isAllowed, username := CheckCookie(&cookie)
 	assert.Equal(t, true, isAllowed)
@@ -71,7 +71,7 @@ func TestCheckCookieTrue(t *testing.T) {
 
 // checks that authenticate user and check cookie work with each other
 func TestCheckCookieAndAuthenticateUser(t *testing.T) {
-	users = make(map[string]string)
+	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
