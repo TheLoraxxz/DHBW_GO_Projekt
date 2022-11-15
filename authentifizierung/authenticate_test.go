@@ -3,7 +3,9 @@ package authentifizierung
 import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -17,7 +19,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 // tests that on authentication it returns a true user
-func TestAuthenticateUserTrue(t *testing.T) {
+func TestAuthenticateUser_True(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
@@ -27,7 +29,7 @@ func TestAuthenticateUserTrue(t *testing.T) {
 }
 
 // checks that if it fails that it returns a wrong user
-func TestAuthenticateUserFalse(t *testing.T) {
+func TestAuthenticateUser_False(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
@@ -39,7 +41,7 @@ func TestAuthenticateUserFalse(t *testing.T) {
 }
 
 // test that the cookie which is given back is the right one
-func TestAuthenticateUserCookieMngmt(t *testing.T) {
+func TestAuthenticateUser_CookieMngmt(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
@@ -57,13 +59,15 @@ func TestAuthenticateUserCookieMngmt(t *testing.T) {
 }
 
 // tests that cookie check is true on right input
-func TestCheckCookieTrue(t *testing.T) {
+func TestCheckCookie_True(t *testing.T) {
 	users.users = make(map[string]string)
 	user := "admin"
 	password := "admin"
 	CreateUser(&user, &password)
+	//cookie is manually created
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users.users["admin"]), 2)
 	cookie := "admin|" + string(hashedPassword)
+	//checked whether cookie is equal
 	isAllowed, username := CheckCookie(&cookie)
 	assert.Equal(t, true, isAllowed)
 	assert.Equal(t, "admin", username)
@@ -78,4 +82,57 @@ func TestCheckCookieAndAuthenticateUser(t *testing.T) {
 	_, cookie := AuthenticateUser(&user, &password)
 	isAllowed, _ := CheckCookie(&cookie)
 	assert.Equal(t, true, isAllowed)
+}
+
+// tests if user already exists whether it returns an error
+func TestCreateUser_AlreadyExists(t *testing.T) {
+	users.users = make(map[string]string)
+	user := "admin"
+	password := "admin"
+	CreateUser(&user, &password)
+	err := CreateUser(&user, &password)
+	assert.NotEqual(t, nil, err)
+}
+
+// tests if multiple users are created at the same time whether it saves them all or whether there are overlapping
+func TestCreateUser_MultipleUserAtOnce(t *testing.T) {
+	users.users = make(map[string]string)
+	//create sync group for making done
+	var wg sync.WaitGroup
+	// function that checks whether the function has run through successfully
+	addUser := func(name *string, passw *string) {
+		err := CreateUser(name, passw)
+		assert.Equal(t, nil, err)
+		wg.Done()
+	}
+	wg.Add(20)
+	for i := 0; i < 20; i++ {
+		test := "user" + strconv.Itoa(i)
+		go addUser(&test, &test)
+	}
+	wg.Wait()
+	//check at the end that the length of user is 20 and the information is secured
+	assert.Equal(t, 20, len(users.users))
+}
+
+func TestCreateUser_NoSpecialChractersInUsername(t *testing.T) {
+	users.users = make(map[string]string)
+	username := "test|"
+	password := "test"
+	err := CreateUser(&username, &password)
+	assert.NotEqual(t, nil, err, "Create User works but shoudnt")
+	assert.Equal(t, 0, len(users.users))
+}
+
+func TestCreateUser_SpecialCharacktersInPasswordAllowed(t *testing.T) {
+	users.users = make(map[string]string)
+	username := "test"
+	password := "test|$"
+	err := CreateUser(&username, &password)
+	assert.Equal(t, nil, err, "should work")
+	assert.Equal(t, 1, len(users.users))
+}
+
+func TestChangeUser(t *testing.T) {
+
 }

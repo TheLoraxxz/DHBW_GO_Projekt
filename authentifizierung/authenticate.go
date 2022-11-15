@@ -64,7 +64,14 @@ func CreateUser(user *string, pasw *string) error {
 		return errors.New("Username darf keine Sonderzeichen enthalten")
 	}
 	users.lock.Lock()
-	users.users[*user] = string(bytes)
 	defer users.lock.Unlock()
+	_, found := users.users[*user]
+	if found {
+		return errors.New("User already created")
+	}
+	users.users[*user] = string(bytes)
 	return nil
+}
+func ChangeUser(olduser *string, newuser *string, oldPassw *string, newPassw *string) (newCookie string, err error) {
+
 }
