@@ -64,8 +64,9 @@ func TestCheckCookieTrue(t *testing.T) {
 	CreateUser(&user, &password)
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users["admin"]), 2)
 	cookie := "admin|" + string(hashedPassword)
-	isAllowed, _ := CheckCookie(&cookie)
+	isAllowed, username := CheckCookie(&cookie)
 	assert.Equal(t, true, isAllowed)
+	assert.Equal(t, "admin", username)
 }
 
 // checks that authenticate user and check cookie work with each other
