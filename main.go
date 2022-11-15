@@ -9,6 +9,7 @@ import (
 
 type RootHandler struct{}
 type ChangeUserHandler struct{}
+type UserHandler struct{}
 
 type CreatUserHandler struct{}
 
@@ -29,9 +30,11 @@ func main() {
 	root := RootHandler{}
 	createUser := CreatUserHandler{}
 	changeUser := ChangeUserHandler{}
+	user := UserHandler{}
 	http.Handle("/", &root)
 	http.Handle("/user/create", &createUser)
 	http.Handle("/user/change", &changeUser)
+	http.Handle("/user", &user)
 
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)

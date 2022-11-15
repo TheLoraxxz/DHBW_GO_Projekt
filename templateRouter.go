@@ -2,6 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -29,7 +30,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			}
 			http.SetCookie(writer, cookie)
 			//redirect to new site
-			http.Redirect(writer, request, "https://"+request.Host+"/user/Create", http.StatusFound)
+			http.Redirect(writer, request, "https://"+request.Host+"/user/create", http.StatusFound)
 			return
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
@@ -88,6 +89,31 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 		mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
 			log.Fatal("Coudnt export Parsefiles")
+			return
+		}
+		err = mainRoute.Execute(writer, nil)
+		if err != nil {
+			log.Fatal("Coudnt Execute Parsefiles")
+			return
+		}
+	} else {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+	}
+}
+
+func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	cookie, err := request.Cookie("SessionID-Kalender")
+	//if cookie is not existing it returns back to the host
+	if err != nil {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+	//if it is not allowed then continue with normal website else redirect to root
+	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
+	if isAllowed {
+		mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
 		err = mainRoute.Execute(writer, nil)
