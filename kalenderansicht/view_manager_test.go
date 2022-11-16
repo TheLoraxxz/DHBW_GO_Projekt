@@ -75,7 +75,6 @@ Hier Folgen die Tests zum Termine erstellen/bearbeiten/löschen
 */
 func testCreateTermin(t *testing.T) {
 	vm := new(ViewManager)
-	vm.InitViewManager("testuser")
 	//Erstellen der Termininfos, die über die Request gesendet werden
 	data := url.Values{}
 	data.Add("title", "Test Termin")

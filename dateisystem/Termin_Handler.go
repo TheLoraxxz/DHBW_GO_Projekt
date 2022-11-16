@@ -34,7 +34,8 @@ func CreateNewTermin(title string, description string, rep Repeat, date time.Tim
 func GetTermine(username string) []Termin { //liefert slice mit allen terminen eines Users zurück
 	var k []Termin
 
-	path := username //öffnet das Verzeichnis des Users
+	var pathBegin, _ = os.Getwd()
+	path := pathBegin + "\\" + username //öffnet das Verzeichnis des Users
 	f, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)

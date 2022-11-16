@@ -2,9 +2,7 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
-	"fmt"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -15,11 +13,13 @@ type ViewManager struct {
 	TerminCache []ds.Termin
 }
 
-func (vm *ViewManager) InitViewManager(username string) {
-	vm.Tv = *InitTableView(vm.TerminCache)
-	vm.Lv = *InitListView(vm.TerminCache)
+func InitViewManager(username string) *ViewManager {
+	vm := new(ViewManager)
 	vm.Username = username
 	vm.TerminCache = ds.GetTermine(vm.Username)
+	vm.Tv = *InitTableView(vm.TerminCache)
+	vm.Lv = *InitListView(vm.TerminCache)
+	return vm
 }
 
 // getMaxDays
@@ -90,6 +90,10 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 	//Erstelle neuen Termin und füge diesen dem Cache hinzu
 	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
+
+	//Anzuzeigende Einträge in den Ansichten aktualisieren
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+	vm.Lv.CreateTerminListEntries(vm.TerminCache)
 }
 
 // EditTermin
@@ -107,39 +111,18 @@ func (vm *ViewManager) EditTermin(r *http.Request, username string) {
 	//Filtern des gewünschten Modus: bearbeiten oder Löschen
 	mode := r.FormValue("editing")
 
-	//Wenn der Modus Bearbeiten ist, müssen die übergebenen Values gelesen werden und der Termin
-	//Wenn der Modus Löschen ist, kann der Termin gleich gelöscht werden (ohne Werteauslesen)
-	if strings.Contains(mode, "Bearbeiten") {
-		title := r.FormValue("title")
-		description := r.FormValue("description")
-		repStr := r.FormValue("repeat")
-
-		//Filter das Wiederholungsintervall aus der Antwort
-		rep := filterRepetition(repStr)
-
-		//Daten in das richtige Format überführen mithilfe eines Layouts
-		layout := "2006-01-02"
-		date, _ := time.Parse(layout, r.FormValue("date"))
-		endDate, _ := time.Parse(layout, r.FormValue("endDate"))
-
-		editetTermin := ds.Termin{
-			title,
-			description,
-			rep,
-			date,
-			endDate,
-		}
-
-		//Lösche Print anweisung
-		fmt.Println(editetTermin)
-
-		//Erstelle neuen Termin mit den geänderten und füge diesen dem Cache hinzu
-		newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
-		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
-
-	}
-	//Löschen des alten Termins
+	//egal ob löschen oder bearbeiten, der Termin muss zunächst gelöscht werden
 	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, oldTitle, vm.Username)
+
+	//Wenn der Modus 2 = Bearbeiten ist, muss der aktualisierte Termin noch erstellt werden
+	if mode == "Bearbeiten: Termin" {
+		vm.CreateTermin(r, username)
+	} else {
+		//Anzuzeigende Einträge in den Ansichten aktualisieren (dies geschieht auch in vm.CreateTermin(r, username))
+		//entfällt deshalb im Bearbeitungsmodus, da sonst doppelter Funktionsaufruf
+		vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+		vm.Lv.CreateTerminListEntries(vm.TerminCache)
+	}
 }
 
 /**********************************************************************************************************************
@@ -178,7 +161,7 @@ func (vm *ViewManager) TvSelectMonth(monat time.Month) {
 // TvJumpToToday
 // Springt in der Webseiten Ansicht auf den heutigen Monat
 func (vm *ViewManager) TvJumpToToday() {
-	vm.Tv.getFirstDayOfMonth(time.Now())
+	vm.Tv.JumpToToday()
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 }
 

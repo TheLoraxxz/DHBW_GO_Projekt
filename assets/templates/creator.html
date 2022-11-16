@@ -1,6 +1,6 @@
 {{ define "creator" }}
 <div id="terminCreation">
-<form action="/tabellenAnsicht?terminErstellen" method="POST" id="terminCreater" role="form" class="row mb-3 p-3  needs-validation" novalidate>
+<form action="?terminErstellen" method="POST" id="terminCreater" role="form" class="row mb-3 p-3  needs-validation" novalidate>
   <h3>Neuen Termin erstellen</h3>
   <div>
     <label for="title" class="col-sm-2 col-form-label ">Titel</label>
@@ -61,14 +61,14 @@
     let edditFormStr = "<h3>Termine berabeiten</h3>\n"
       edditFormStr = edditFormStr +
               "<form action=\"?termineBearbeiten\" method=\"POST\" id=\"terminCreater\" role=\"form\" class=\"row mb-3 p-3  needs-validation\" novalidate>\n" +
-              "<input type=\"hidden\" readonly class=\"form-control-plaintext\" id=\"oldTitle\" name=\"indexInTv\" value=\""+ dayEntry.Title +  "\" >\n"+
+              "<input type=\"hidden\" readonly class=\"form-control-plaintext\" id=\"oldTitle\" name=\"oldTitle\" value=\""+ dayEntry.Title +  "\" >\n"+
               "  <div>\n" +
               "<div class=\"mb-3\">\n" +
               "    <label for=\"editing\">Bearbeitungsmodus</label>\n" +
               "    <select name=\"editing\" id=\"editing\"  class=\"form-select\">\n" +
-              "      <option selected>Bearbeiten: Termin  </option>\n" +
-              "      <option value=\"1\">Löschen: Termin </option>\n" +
-              "      <option value=\"2\">Bearbeiten: Termin </option>\n" +
+              "      <option selected>Bearbeiten: Termin</option>\n" +
+              "      <option value=\"1\">Löschen: Termin</option>\n" +
+              "      <option value=\"2\">Bearbeiten: Termin</option>\n" +
               "    </select>\n" +
               "  </div>"+
               "    <label for=\"title\" class=\"col-sm-2 col-form-label \">Titel</label>\n" +
@@ -88,6 +88,7 @@
               "      <option value=\"5\">jährlich</option>\n" +
               "    </select>\n" +
               "  </div>\n" +
+              "<b>Beim Löschen können beliebige Daten gewählt werden!</b>"+
               "  <div class=\"col-md-12 col-form-label\">\n" +
               "    <label for=\"date\" class=\"col-sm-2 \">Datum: "+ dayEntry.Date +"</label>\n" +
               "    <input type=\"date\" class=\"form-control\" name=\"date\" id=\"date\" required>\n" +

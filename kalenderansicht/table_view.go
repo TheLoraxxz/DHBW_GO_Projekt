@@ -111,7 +111,7 @@ func (tv *TableView) CreateTerminTableEntries(terminCache []ds.Termin) {
 // Parameter: Slice, die alle Termine des Users enthält
 // Rückgabewert: Gefilterte Slice, deren Länge der Monatslänge entspricht und für jeden Tag die Termininfos enthält
 // Der Termintag entspricht dabei dem Index -1 in dem Slice
-func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
+func (tv *TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 
 	monthStartDate := tv.ShownDate
 	monthEndDate := tv.getLastDayOfMonth()
@@ -146,6 +146,7 @@ func (tv TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 		entriesForThisMonth[i].Day = monthStartDate
 		entriesForThisMonth[i].NeedsBreak = NeedsBreak
 		entriesForThisMonth[i].IsToday = IsToday
+
 		//Delete: is just for testing Webview
 		//entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test1", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
 		//entriesForThisMonth[i].Dayentries = append(entriesForThisMonth[i].Dayentries, ds.Termin{Title: "Test2", Description: "boa", Recurring: ds.Repeat((i % 5)), Date: monthStartDate})
