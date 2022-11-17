@@ -84,8 +84,33 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 		return
 	}
 	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
+	isAllowed, user := authentifizierung.CheckCookie(&cookie.Value)
 	if isAllowed {
+		if request.Method == "POST" {
+			//if post request it actually parses the form and trys to change the password and create a new cookie
+			err := request.ParseForm()
+			if err != nil {
+				return
+			}
+			password := request.Form.Get("oldPassword")
+			newPassword := request.Form.Get("newPassword")
+			cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
+			if err != nil {
+				return
+			}
+			cookie := &http.Cookie{
+				Name:     "SessionID-Kalender",
+				Value:    cookies,
+				Path:     "/",
+				MaxAge:   3600,
+				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
+			}
+			http.SetCookie(writer, cookie)
+
+			return
+
+		}
 		mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
 			log.Fatal("Coudnt export Parsefiles")
