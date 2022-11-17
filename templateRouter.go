@@ -179,7 +179,5 @@ func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	cookie.Value = ""
 	cookie.Expires = time.Unix(0, 0)
 	http.SetCookie(writer, cookie)
-
 	http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-
 }
