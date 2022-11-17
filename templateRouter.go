@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -164,4 +165,21 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	} else {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 	}
+}
+
+func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	cookie, err := request.Cookie("SessionID-Kalender")
+	if err != nil {
+		log.Println(err)
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+
+	}
+
+	cookie.Value = ""
+	cookie.Expires = time.Unix(0, 0)
+	http.SetCookie(writer, cookie)
+
+	http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+
 }
