@@ -15,12 +15,12 @@ type UserData struct {
 
 // struct for user synchronisation
 type usersync struct {
-	lock  sync.Mutex
+	lock  sync.RWMutex
 	users map[string]string
 }
 
 var users = usersync{
-	lock:  sync.Mutex{},
+	lock:  sync.RWMutex{},
 	users: make(map[string]string, 5),
 }
 
@@ -92,10 +92,13 @@ func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie str
 		if err != nil {
 			return "", err
 		}
+		// generate new password
 		newHash, errorHash := bcrypt.GenerateFromPassword([]byte(*newPassw), 14)
 		if errorHash != nil {
 			return "", errorHash
 		}
+		users.lock.Lock()
+		defer users.lock.Unlock()
 		users.users[*user] = string(newHash)
 		_, cookie := AuthenticateUser(user, newPassw)
 		return cookie, nil

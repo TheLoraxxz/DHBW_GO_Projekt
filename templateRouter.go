@@ -60,6 +60,20 @@ func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request
 	//if it is not allowed then continue with normal website else redirect to root
 	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
 	if isAllowed {
+		if request.Method == "POST" {
+			err := request.ParseForm()
+			if err != nil {
+				return
+			}
+			user := request.Form.Get("newUsername")
+			password := request.Form.Get("newPassword")
+			err = authentifizierung.CreateUser(&user, &password)
+			if err != nil {
+				return
+			}
+			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+
+		}
 		mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
 			log.Fatal("Coudnt export Parsefiles")
@@ -107,6 +121,7 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 				SameSite: http.SameSiteLaxMode,
 			}
 			http.SetCookie(writer, cookie)
+			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
 
 			return
 
