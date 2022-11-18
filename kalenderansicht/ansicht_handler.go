@@ -21,7 +21,7 @@ var tabellenTpl, _ = template.New("tbl.html").ParseFiles("../assets/templates/tb
 var listenTpl, _ = template.New("listenAnsicht.html").ParseFiles("../assets/templates/lise.html", "../assets/templates/header.html", "../assets/templates/footer.html")
 
 // Hier wereden all http-Request anfragen geregelt,die im Kontext der Kalenderansicht anfallen
-func tabellenHandler(w http.ResponseWriter, r *http.Request) {
+func TabellenHandler(w http.ResponseWriter, r *http.Request) {
 	//r.RequestURI == /monat -> einträge erstellen
 	switch r.RequestURI {
 	case "/tabellenAnsicht?suche=minusMonat":
