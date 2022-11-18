@@ -127,6 +127,8 @@ func (vm *ViewManager) EditTermin(r *http.Request, username string) {
 
 /**********************************************************************************************************************
 Hier Folgen Funktionen, die dem Handeln der Tabellenansicht/TableView dienen.
+Nach jedem ändern der Ansicht der TableView, müssen die Einträge
+des Users dem neu angezeigten Monat entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 // JumpMonthBack
@@ -145,8 +147,8 @@ func (vm *ViewManager) TvJumpMonthFor() {
 
 // TvJumpToYear
 // Springt zu einem bestimmten Jahr
-func (vm *ViewManager) TvJumpToYear(summand int) {
-	vm.Tv.JumpToYear(summand)
+func (vm *ViewManager) TvJumpYearForOrBack(summand int) {
+	vm.Tv.JumpYearForOrBack(summand)
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 }
 
@@ -167,4 +169,18 @@ func (vm *ViewManager) TvJumpToToday() {
 
 /**********************************************************************************************************************
 Hier Folgen Funktionen, die dem Handeln der Listenansicht/ListView dienen.
+Nach jedem ändern der Ansicht der ListView, müssen die Einträge
+des Users ab dem neu angezeigten Datum entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+func (vm *ViewManager) LvSelectDate(r *http.Request) {
+	//Datum Filtern und in das richtige Format überführen mithilfe eines Layouts
+	layout := "2006-01-02"
+	date, _ := time.Parse(layout, r.FormValue("selDate"))
+	vm.Lv.SelectDate(date)
+	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+}
+
+func (vm *ViewManager) LvSelectEntriesPerPage(amount int) {
+	vm.Lv.SelectEntriesPerPage(amount * 5)
+}

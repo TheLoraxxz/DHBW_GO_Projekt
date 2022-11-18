@@ -48,18 +48,18 @@ Die Funktionen werden mit Hilfe von JavaSkript aufgerufen, wenn das entsprechend
 // JumpMonthBack
 // Springt einen Monat in der Webseiten Ansicht vor
 func (tv *TableView) JumpMonthBack() {
-	tv.ShownDate = tv.ShownDate.AddDate(0, 1, 0)
+	tv.ShownDate = tv.ShownDate.AddDate(0, -1, 0)
 }
 
 // JumpMonthFor
 // Springt einen Monat in der Webseiten Ansicht zurück
 func (tv *TableView) JumpMonthFor() {
-	tv.ShownDate = tv.ShownDate.AddDate(0, -1, 0)
+	tv.ShownDate = tv.ShownDate.AddDate(0, 1, 0)
 }
 
-// JumpToYear
+// JumpYearForOrBack
 // Springt einen in der Webseiten zu einem bestimten Jahr
-func (tv *TableView) JumpToYear(summand int) {
+func (tv *TableView) JumpYearForOrBack(summand int) {
 	tv.ShownDate = tv.ShownDate.AddDate(summand, 0, 0)
 }
 

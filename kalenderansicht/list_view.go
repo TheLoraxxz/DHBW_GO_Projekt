@@ -2,8 +2,6 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
-	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -35,11 +33,7 @@ Ab hier Folgen Funktionen, die den Benutzer Custom-Settings & Navigation innerha
 // SelectDate
 // Parameter: Post Request mit einem spezifischem Datum
 // setzt das Datum der Listenansicht auf das vom Benutzer gewählte
-func (lv *ListView) SelectDate(r *http.Request) {
-
-	//Datum Filtern und in das richtige Format überführen mithilfe eines Layouts
-	layout := "2006-01-02"
-	date, _ := time.Parse(layout, r.FormValue("selDate"))
+func (lv *ListView) SelectDate(date time.Time) {
 	lv.SelectedDate = date
 }
 
@@ -47,8 +41,7 @@ func (lv *ListView) SelectDate(r *http.Request) {
 // Parameter: int, gewünschte Anzahl Einträge pro Seite
 // setzt die Anzahl Einträge pro Seite auf die vom Benutzer gewählte
 func (lv *ListView) SelectEntriesPerPage(amount int) {
-	lv.EntriesPerPage = amount * 5
-	fmt.Println(lv.EntriesPerPage)
+	lv.EntriesPerPage = amount
 }
 
 // JumpPageForward

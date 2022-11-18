@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -17,9 +16,37 @@ import ds "DHBW_GO_Projekt/dateisystem"
 
 /*
 **************************************************************************************************************
-Funktionen zum zufälligen generieren von Testdaten
+Hilfsfunktionen zum zufälligen generieren von Testdaten.
+Diese werden auch in den Tests von TableView und ListView genutzt.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
+// generateRandomDate
+//generiert ein komplett zufälliges Datum (bis zum Jahr 3000)
+func generateRandomDate() time.Time {
+	month := rand.Intn(13-1) + 1
+	var day int
+	switch month {
+	case 1, 3, 5, 7, 8, 10, 12:
+		day = rand.Intn(32-1) + 1
+	case 4, 6, 9, 11:
+		day = rand.Intn(31-1) + 1
+	case 2:
+		day = rand.Intn(29-1) + 1
+	}
+	return time.Date(
+		rand.Intn(3000),
+		time.Month(month),
+		day,
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
+}
+
+// generateRandomDateInSpecificMonth
+// generiert ein zufälliges Datum in einem spezifischem Monat und Jahr
 func generateRandomDateInSpecificMonth(year int, month time.Month) time.Time {
 	var day int
 	switch month {
@@ -43,18 +70,32 @@ func generateRandomDateInSpecificMonth(year int, month time.Month) time.Time {
 	fmt.Println(randomDate)
 	return randomDate
 }
-func createTestTermins() {
-	var k []ds.Termin
-	i := 0
-	for i < 50 {
-		i += 1
-		k = ds.AddToCache(ds.NewTerminObj("testa"+strconv.Itoa(i), "test", dateisystem.Repeat(ds.Never), generateRandomDateInSpecificMonth(2022, 11), generateRandomDateInSpecificMonth(2022, 11)), k)
-		k = ds.AddToCache(ds.NewTerminObj("testb"+strconv.Itoa(i), "test", dateisystem.Repeat(ds.YEARLY), generateRandomDateInSpecificMonth(2022, 10), generateRandomDateInSpecificMonth(2022, 10)), k)
-		k = ds.AddToCache(ds.NewTerminObj("testc"+strconv.Itoa(i), "test", dateisystem.Repeat(ds.WEEKLY), generateRandomDateInSpecificMonth(2022, 12), generateRandomDateInSpecificMonth(2022, 12)), k)
-		ds.StoreCache(k, "mik")
+
+// createWeeklyTestTermin
+// generiert eines wöchentlichen Termins, damit diese im Kalender anzeigbar sind,
+// um die Funktion der Navigation der Webseite zu testen
+func createTestTermin(repeat ds.Repeat) *ViewManager {
+	vm := InitViewManager("testuser")
+	//Zunächst leeren des Caches, falls schon termine für testuser hinterlegt sind
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
+
+	switch repeat {
+	case ds.WEEKLY:
+		newTermin := ds.CreateNewTermin("test Title", "test", dateisystem.Repeat(ds.WEEKLY), createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
+		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
+	case ds.YEARLY:
+		newTermin := ds.CreateNewTermin("test Title", "test", dateisystem.Repeat(ds.YEARLY), createSpecificDate(2020, 2, 11), createSpecificDate(2024, 2, 11), vm.Username)
+		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
+	case ds.MONTHLY:
+		newTermin := ds.CreateNewTermin("test Title", "test", dateisystem.Repeat(ds.MONTHLY), createSpecificDate(2021, 2, 11), createSpecificDate(time.Now().Year(), 30, 12), vm.Username)
+		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
+	return vm
 }
-func createTestDate(year, day int, month time.Month) time.Time {
+
+// createSpecificDate
+// generiert ein spezifisches Datum
+func createSpecificDate(year, day int, month time.Month) time.Time {
 	testDate := time.Date(
 		year,
 		month,
@@ -79,12 +120,12 @@ func testCreateTermin(t *testing.T) {
 	data := url.Values{}
 	data.Add("title", "Test Termin")
 	data.Add("description", "Spaßiger Termin")
-	data.Add("repeat", "täglich")
+	data.Add("repeat", "2") //Der Wert 2 entspricht der Wiederholung "täglich"
 	data.Add("date", "2022-11-11")
 	data.Add("endDate", "2030-11-11")
 
 	//Erstellen der Request
-	r, _ := http.NewRequest("POST", "/tabellenAnsicht?terminErstellen", strings.NewReader(data.Encode()))
+	r, _ := http.NewRequest("POST", "?terminErstellen", strings.NewReader(data.Encode()))
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -92,22 +133,265 @@ func testCreateTermin(t *testing.T) {
 		Title:       "Test Termin",
 		Description: "Spaßiger Termin",
 		Recurring:   ds.DAILY,
-		Date:        createTestDate(2022, 11, 11),
-		EndDate:     createTestDate(2030, 11, 11),
+		Date:        createSpecificDate(2022, 11, 11),
+		EndDate:     createSpecificDate(2030, 11, 11),
 	}
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
 	vm.CreateTermin(r, vm.Username)
+
+	//Testen, ob ein Termin dem Cache hinzugefügt worden ist
 	assert.Equal(t, oldLen+1, len(vm.TerminCache), "Die Länge sollte um eins erhöht worden sein.")
+	//Testen, ob Termin im Cache dem neuen Termin entspricht
 	assert.Equal(t, termin, vm.TerminCache[0], "Die Termine sollten überein stimmen.")
 
 }
-func testEditTermin(t *testing.T) {
-	//r *http.Request, username string, monthEntries []dayInfos
+func testEditTerminDelete(t *testing.T) {
+	vm := new(ViewManager)
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	data := url.Values{}
+	data.Add("title", "Test Termin")
+	data.Add("description", "Spaßiger Termin")
+	data.Add("repeat", "2") //Der Wert 2 entspricht der Wiederholung "täglich"
+	data.Add("date", "2022-11-11")
+	data.Add("endDate", "2030-11-11")
+
+	//Erstellen der Request
+	r, _ := http.NewRequest("POST", "?terminErstellen", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	//Termin dem TerminCaches hinzufügen
+	vm.CreateTermin(r, vm.Username)
+
+	//Erstellen der Lösch-Request
+	data = url.Values{}
+	data.Add("oldTitle", "Test Termin")
+	data.Add("editing", "Löschen: Termin")
+	data.Add("title", "Test Termin")
+	data.Add("description", "Spaßiger Termin")
+	data.Add("repeat", "4") //Der Wert 1 entspricht der Wiederholung "niemals"
+	data.Add("date", "2022-11-11")
+	data.Add("endDate", "2030-11-11")
+
+	//Erstellen der Request
+	r, _ = http.NewRequest("POST", "?termineBearbeiten", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
+	oldLen := len(vm.TerminCache)
+
+	//Termin bearbeiten
+	vm.EditTermin(r, vm.Username)
+
+	//Testen, ob der Termin aus dem Cache gelöscht worden ist
+	assert.Equal(t, oldLen-1, len(vm.TerminCache), "Die Länge sollte um 1 reduziert worden sein.")
+}
+func testEditTerminEdit(t *testing.T) {
+	vm := new(ViewManager)
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	data := url.Values{}
+	data.Add("title", "Test Termin")
+	data.Add("description", "Spaßiger Termin")
+	data.Add("repeat", "täglich")
+	data.Add("date", "2022-11-11")
+	data.Add("endDate", "2030-11-11")
+
+	//Erstellen der Request
+	r, _ := http.NewRequest("POST", "?terminErstellen", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	//Termin dem TerminCaches hinzufügen
+	vm.CreateTermin(r, vm.Username)
+
+	//Erstellen der Lösch-Request
+	data = url.Values{}
+	data.Add("oldTitle", "Test Termin")
+	data.Add("editing", "Bearbeiten: Termin")
+	data.Add("title", "Bearbeiteter Test Termin")
+	data.Add("description", "Spaßiger bearbeiteter Termin")
+	data.Add("repeat", "1") //Der Wert 1 entspricht der Wiederholung "niemals"
+	data.Add("date", "2022-11-11")
+	data.Add("endDate", "2032-11-11")
+
+	//Erstellen der Request
+	r, _ = http.NewRequest("POST", "?termineBearbeiten", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	//bearbeiteter Termin zum Überprüfen
+	editetTermin := ds.Termin{
+		Title:       "Bearbeiteter Test Termin",
+		Description: "Spaßiger bearbeiteter Termin",
+		Recurring:   ds.Never,
+		Date:        createSpecificDate(2022, 11, 11),
+		EndDate:     createSpecificDate(2032, 11, 11),
+	}
+	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
+	oldLen := len(vm.TerminCache)
+
+	//Termin bearbeiten
+	vm.EditTermin(r, vm.Username)
+
+	//Testen, ob ein Termin dem Cache hinzugefügt worden ist
+	assert.Equal(t, oldLen, len(vm.TerminCache), "Die Länge sollte gleich geblieben sein.")
+	//Testen, ob Termin im Cache dem neuen Termin entspricht
+	assert.Equal(t, editetTermin, vm.TerminCache[0], "Die Termine sollten überein stimmen.")
 }
 
+/*
+**************************************************************************************************************
+Hier Folgen die Tests zum Managen der TableView:
+	Es wird getestet, ob die Termine richtig neu gefiltert werden, wenn sich etwas an der darstellenden Zeit ändert.
+	Das die Termine sich ändern wurde bereits in den Tests zur TableView sicher gestellt.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+
+func testTvJumpMonthBack(t *testing.T) {
+
+	//Erstelle einen wöchentlichen Termin zum Testen
+	vm := createTestTermin(ds.WEEKLY)
+
+	//Der in der TableView angezeigte Monat ist November 2022
+	vm.Tv.ShownDate = createSpecificDate(2022, 01, 11)
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+
+	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	//Der Termin startet am 2.11.2022 und findet wöchentlich statt
+	//Monat ist nun November 2022
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[9-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[16-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[23-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[30-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Springe einen Monat vor
+	vm.TvJumpMonthFor()
+
+	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	//Der Termin startet am 2.11.2022 und findet wöchentlich statt
+	//Monat ist nun Dezember 2022
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[7-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[14-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[21-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[28-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+}
+
+func testTvJumpYearForOrBack(t *testing.T) {
+	//Jährlichen testtermin erstellen 2.11.2020-  2.11.2024
+	vm := createTestTermin(ds.YEARLY)
+
+	//Der in der TableView angezeigte Monat ist November 2022
+	vm.Tv.ShownDate = createSpecificDate(2022, 01, 11)
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+
+	//Kontrollieren, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Springe ein Jahr vor (zu 2023)
+	vm.TvJumpYearForOrBack(1)
+
+	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Springe ein Jahr zurück (zu 2022)
+	vm.TvJumpYearForOrBack(1)
+
+	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+}
+
+func testTvSelectMonth(t *testing.T) {
+	//Monatlichen testtermin erstellen 2.11.2021 - 30.12 des heutigen Jahres
+	vm := createTestTermin(ds.MONTHLY)
+
+	//Der in der TableView angezeigte Monat ist November 2022
+	vm.Tv.ShownDate = createSpecificDate(2022, 01, 11)
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+
+	//Kontrollieren, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Springe zu einem beliebigen Monat des Jahres 2022
+	month := time.Month(rand.Intn(13))
+	vm.TvSelectMonth(month)
+
+	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+}
+
+func testTvJumpToToday(t *testing.T) {
+	//Monatlichen testtermin erstellen: 2.11.2021 - 30.12. des heutigen Jahres
+	vm := createTestTermin(ds.MONTHLY)
+
+	//Der in der TableView angezeigte Monat wird auf einen Tag in der Vergangenheit gesetzt (-> 1.1.2022)
+	vm.Tv.ShownDate = createSpecificDate(2022, 01, 01)
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+
+	//Kontrollieren, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Springe zu heute
+	vm.TvJumpToToday()
+
+	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
+	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+}
+
+/*
+**************************************************************************************************************
+Hier Folgen die Tests zum Managen der ListView
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+
+func testLvSelectDate(t *testing.T) {
+	vm := new(ViewManager)
+	newDate := generateRandomDate()
+
+	//Erstellen des Datums als POST-Value
+	data := url.Values{}
+	layout := "2006-01-02"
+	data.Add("selDate", newDate.Format(layout))
+
+	//Erstellen der Request
+	r, _ := http.NewRequest("POST", "/listenAnsicht?selDatum=Datum\"", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	vm.LvSelectDate(r)
+	assert.Equal(t, newDate, vm.Lv.SelectedDate, "Die zwei Daten sollten identisch sein.")
+}
+
+func testLvSelectEntriesPerPage(t *testing.T) {
+	vm := new(ViewManager)
+	entriesPerPage := 1
+	vm.LvSelectEntriesPerPage(entriesPerPage)
+	assert.Equal(t, entriesPerPage*5, vm.Lv.EntriesPerPage, "Die Anzahl der Einträge pro Seite sollte 5 sein.")
+}
+
+/*
+**************************************************************************************************************
+Aufrufen aller Tests
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+
 func TestViewManager(t *testing.T) {
-	//createTestTermins()
+	//createWeeklyTestTermin()
+	//Tests zum Erstellens/Bearbeitens/Löschens eines Termin
 	t.Run("testRuns CreateTermin", testCreateTermin)
-	t.Run("testRuns EditTermin", testEditTermin)
+	t.Run("testRuns EditTermin-Delete", testEditTerminDelete)
+	t.Run("testRuns EditTermin-Edit", testEditTerminEdit)
+
+	//Tests zum Managen der TableView
+	t.Run("testRuns TvJumpMonthBack", testTvJumpMonthBack)
+	t.Run("testRuns TvJumpYearForOrBack", testTvJumpYearForOrBack)
+	t.Run("testRuns TvSelectMonth", testTvSelectMonth)
+	t.Run("testRuns TvJumpToToday", testTvJumpToToday)
+
+	//Tests zum Managen der ListView
+	t.Run("testRuns LvSelectDate", testLvSelectDate)
+	t.Run("testRuns LvSelectEntriesPerPage", testLvSelectEntriesPerPage)
 }

@@ -10,34 +10,6 @@ import (
 
 /*
 **************************************************************************************************************
-Funktionen zum zufälligen generieren von Testdaten
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
-func generateRandomDate() time.Time {
-	month := rand.Intn(13-1) + 1
-	var day int
-	switch month {
-	case 1, 3, 5, 7, 8, 10, 12:
-		day = rand.Intn(32-1) + 1
-	case 4, 6, 9, 11:
-		day = rand.Intn(31-1) + 1
-	case 2:
-		day = rand.Intn(29-1) + 1
-	}
-	return time.Date(
-		rand.Intn(3000),
-		time.Month(month),
-		day,
-		0,
-		0,
-		0,
-		0,
-		time.UTC,
-	)
-}
-
-/*
-**************************************************************************************************************
 Test zur Datenbeschaffung für die Tabellenansicht (um Jahr und Monat anzuzeigen)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
@@ -60,22 +32,6 @@ func testShowMonth(t *testing.T) {
 Test zur Navigation innerhalb der Tabellenansicht
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
-func testJumpMonthBack(t *testing.T) {
-	i := 100
-	var tv TableView
-	for i > 0 {
-		i -= 1
-		tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDate())
-		aktuellerMonat := (int(tv.ShownDate.Month()))
-		tv.JumpMonthBack()
-		neuerMonat := (int(tv.ShownDate.Month()))
-		if aktuellerMonat < 12 {
-			assert.Equal(t, aktuellerMonat+1, neuerMonat, "Die Monate müssen identisch sein")
-		} else {
-			assert.Equal(t, 1, neuerMonat, "Die Monate müssen identisch sein")
-		}
-	}
-}
 func testJumpMonthFor(t *testing.T) {
 	i := 100
 	var tv TableView
@@ -84,6 +40,22 @@ func testJumpMonthFor(t *testing.T) {
 		tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDate())
 		aktuellerMonat := (int(tv.ShownDate.Month()))
 		tv.JumpMonthFor()
+		neuerMonat := (int(tv.ShownDate.Month()))
+		if aktuellerMonat < 12 {
+			assert.Equal(t, aktuellerMonat+1, neuerMonat, "Die Monate müssen identisch sein")
+		} else {
+			assert.Equal(t, 1, neuerMonat, "Die Monate müssen identisch sein")
+		}
+	}
+}
+func testJumpMonthBack(t *testing.T) {
+	i := 100
+	var tv TableView
+	for i > 0 {
+		i -= 1
+		tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDate())
+		aktuellerMonat := (int(tv.ShownDate.Month()))
+		tv.JumpMonthBack()
 		neuerMonat := (int(tv.ShownDate.Month()))
 		if aktuellerMonat == 1 {
 			assert.Equal(t, 12, neuerMonat, "Die Monate sollten identisch sein.")
@@ -96,9 +68,9 @@ func testJumpToYear(t *testing.T) {
 	var tv TableView
 	tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDate())
 	aktuellesJahr := tv.ShownDate.Year()
-	tv.JumpToYear(1)
+	tv.JumpYearForOrBack(1)
 	assert.Equal(t, aktuellesJahr+1, tv.ShownDate.Year(), "Die Jahre sollten identisch sein.")
-	tv.JumpToYear(-1)
+	tv.JumpYearForOrBack(-1)
 	assert.Equal(t, aktuellesJahr, tv.ShownDate.Year(), "Die Jahre sollten identisch sein.")
 }
 
@@ -185,12 +157,12 @@ func testIsToday(t *testing.T) {
 func testFilterCalendarEntriesCorrectAppending(t *testing.T) {
 	var tv TableView
 	//Hier wird August als Monat von Interesse gesetzt
-	tv.ShownDate = createTestDate(2022, 1, 8)
+	tv.ShownDate = createSpecificDate(2022, 1, 8)
 
 	//Datum für Testtermine erstellen
-	testTermin1 := createTestDate(2022, 15, 8)
-	testTermin2 := createTestDate(2022, 10, 8)
-	testTermin3 := createTestDate(2022, 20, 8)
+	testTermin1 := createSpecificDate(2022, 15, 8)
+	testTermin2 := createSpecificDate(2022, 10, 8)
+	testTermin3 := createSpecificDate(2022, 20, 8)
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 3)
@@ -211,20 +183,20 @@ func testFilterCalendarEntriesCorrectAppending(t *testing.T) {
 func testFilterCalendarEntriesCorrectRecurring(t *testing.T) {
 	var tv TableView
 	//Hier wird November 2022 als Monat von Interesse gesetzt
-	tv.ShownDate = createTestDate(2022, 1, 11)
+	tv.ShownDate = createSpecificDate(2022, 1, 11)
 
 	//Datum für Testtermine erstellen
-	testTermin1Starts := createTestDate(2022, 9, 11)
-	testTermin1Ends := createTestDate(2022, 29, 11)
+	testTermin1Starts := createSpecificDate(2022, 9, 11)
+	testTermin1Ends := createSpecificDate(2022, 29, 11)
 
-	testTermin2Starts := createTestDate(2022, 27, 10)
-	testTermin2Ends := createTestDate(2023, 27, 10)
+	testTermin2Starts := createSpecificDate(2022, 27, 10)
+	testTermin2Ends := createSpecificDate(2023, 27, 10)
 
-	testTermin3Starts := createTestDate(2021, 9, 11)
-	testTermin3Ends := createTestDate(2023, 9, 11)
+	testTermin3Starts := createSpecificDate(2021, 9, 11)
+	testTermin3Ends := createSpecificDate(2023, 9, 11)
 
-	testTermin4Starts := createTestDate(2022, 10, 10)
-	testTermin4Ends := createTestDate(2023, 10, 10)
+	testTermin4Starts := createSpecificDate(2022, 10, 10)
+	testTermin4Ends := createSpecificDate(2023, 10, 10)
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 4)
@@ -268,7 +240,7 @@ func TestTableView(t *testing.T) {
 	//Tests zum Navigieren in der Tabellenansicht
 	t.Run("testRuns JumpMonthBack", testJumpMonthBack)
 	t.Run("testRuns JumpMonthFor", testJumpMonthFor)
-	t.Run("testRuns JumpToYear", testJumpToYear)
+	t.Run("testRuns JumpYearForOrBack", testJumpToYear)
 	t.Run("testRuns SelectMonth", testSelectMonth)
 	t.Run("testRuns JumpToToday", testJumpToToday)
 
