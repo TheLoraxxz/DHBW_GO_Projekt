@@ -204,6 +204,12 @@ func TestSaveUserData_WriteToRightFunction(t *testing.T) {
 	path = filepath.Join(path, "user-data.json")
 
 	file, err := os.Open(path)
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			assert.Fail(t, "coudn't close file")
+		}
+	}(file)
 	assert.Equal(t, nil, err)
 
 	bytes, err := io.ReadAll(file)
@@ -213,4 +219,42 @@ func TestSaveUserData_WriteToRightFunction(t *testing.T) {
 	assert.Equal(t, nil, err)
 
 	assert.Equal(t, 10, len(user_test))
+	for _, element := range user_test {
+		assert.NotEmpty(t, element)
+	}
+
+}
+
+func TestLoadUserData(t *testing.T) {
+	user := "admin"
+	err := LoadUserData(&user, &user)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 10, len(users.users))
+	for key, element := range users.users {
+		assert.NotEmpty(t, key)
+		assert.NotEmpty(t, element)
+	}
+	path, _ := filepath.Abs("../data/user")
+	path = filepath.Join(path, "user-data.json")
+	err = os.Remove(path)
+	assert.Equal(t, nil, err)
+}
+
+func TestLoadUserData_FileNotExists(t *testing.T) {
+	user := "admin"
+	err := LoadUserData(&user, &user)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 1, len(users.users))
+}
+
+func TestLoadUserData_WrongFile(t *testing.T) {
+	user := "admin"
+	path, _ := filepath.Abs("../data/user")
+	path = filepath.Join(path, "user-data.json")
+	file := "test"
+	err := os.WriteFile(path, []byte(file), 0644)
+	assert.Equal(t, nil, err)
+	err = LoadUserData(&user, &user)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 1, len(users.users))
 }

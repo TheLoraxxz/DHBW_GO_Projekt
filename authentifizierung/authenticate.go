@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -109,10 +111,50 @@ func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie str
 	return "", errors.New("Wrong User")
 }
 
-func LoadUserData(Firstuser *string, FirstPassword *string) {
-	if len(users.users) == 0 {
-
+func LoadUserData(firstuser *string, firstPassword *string) (err error) {
+	userLoaded := []UserJSON{}
+	path, _ := filepath.Abs("../data/user")
+	path = filepath.Join(path, "user-data.json")
+	file, err := os.Open(path)
+	if err != nil {
+		err := CreateUser(firstuser, firstPassword)
+		if err != nil {
+			return fmt.Errorf("Error on creating user %w", err)
+		}
+		return nil
 	}
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("Problem with Reading %w", err)
+	}
+	err = json.Unmarshal(bytes, &userLoaded)
+	if err != nil {
+		err := CreateUser(firstuser, firstPassword)
+		if err != nil {
+			return fmt.Errorf("Error on creating user %w", err)
+		}
+		err = file.Close()
+		if err != nil {
+			log.Fatal("coudnt close file")
+		}
+		err = os.Remove(path)
+		if err != nil {
+			return fmt.Errorf("Error on deleting file %w", err)
+		}
+		return nil
+	}
+	for _, element := range userLoaded {
+		users.users[element.User] = element.Passw
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Fatal("coudnt close file")
+		}
+	}(file)
+	return nil
+
 }
 
 func SaveUserData() error {

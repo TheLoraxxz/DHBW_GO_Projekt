@@ -3,6 +3,7 @@ package main
 import (
 	"DHBW_GO_Projekt/authentifizierung"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -20,7 +21,11 @@ func main() {
 	port := flag.String("port", "80", "define the port for the application")
 	adminUserName := flag.String("user", "admin", "Define Admin username for first login")
 	adminPassword := flag.String("passw", "admin", "Define Admin Password for first login to application")
-	authentifizierung.CreateUser(adminUserName, adminPassword)
+	err := authentifizierung.LoadUserData(adminUserName, adminPassword)
+	if err != nil {
+		fmt.Println(err)
+		log.Fatal("Coudn't load users")
+	}
 	Server = http.Server{
 		Addr: ":" + *port,
 	}
