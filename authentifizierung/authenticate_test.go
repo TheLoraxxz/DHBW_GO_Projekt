@@ -241,6 +241,10 @@ func TestLoadUserData(t *testing.T) {
 }
 
 func TestLoadUserData_FileNotExists(t *testing.T) {
+	users.users = make(map[string]string)
+	path, _ := filepath.Abs("../data/user")
+	path = filepath.Join(path, "user-data.json")
+	_ = os.Remove(path)
 	user := "admin"
 	err := LoadUserData(&user, &user)
 	assert.Equal(t, nil, err)
@@ -248,9 +252,11 @@ func TestLoadUserData_FileNotExists(t *testing.T) {
 }
 
 func TestLoadUserData_WrongFile(t *testing.T) {
-	user := "admin"
+	users.users = make(map[string]string)
 	path, _ := filepath.Abs("../data/user")
 	path = filepath.Join(path, "user-data.json")
+	_ = os.Remove(path)
+	user := "admin"
 	file := "test"
 	err := os.WriteFile(path, []byte(file), 0644)
 	assert.Equal(t, nil, err)
