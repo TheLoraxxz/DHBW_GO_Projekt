@@ -1,8 +1,12 @@
 package authentifizierung
 
 import (
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
+	"io"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -171,4 +175,42 @@ func TestChangeUser_WrongOldPassword(t *testing.T) {
 	newPassword := "bla"
 	_, err := ChangeUser(&username, &newPassword, &password)
 	assert.NotEqual(t, nil, err)
+}
+
+func TestSaveUserData(t *testing.T) {
+	users.users = make(map[string]string)
+	wg := sync.WaitGroup{}
+	wg.Add(10)
+	for i := 0; i < 10; i++ {
+		j := i
+		go func() {
+			username := "test" + strconv.Itoa(j)
+			password := "test" + strconv.Itoa(j)
+			_ = CreateUser(&username, &password)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	err := SaveUserData()
+	assert.Equal(t, nil, err)
+}
+
+func TestSaveUserData_WriteToRightFunction(t *testing.T) {
+	user_test := []UserJSON{}
+
+	path, err := filepath.Abs("../data/user")
+	assert.Equal(t, err, nil)
+
+	path = filepath.Join(path, "user-data.json")
+
+	file, err := os.Open(path)
+	assert.Equal(t, nil, err)
+
+	bytes, err := io.ReadAll(file)
+	assert.Equal(t, nil, err)
+
+	err = json.Unmarshal(bytes, &user_test)
+	assert.Equal(t, nil, err)
+
+	assert.Equal(t, 10, len(user_test))
 }

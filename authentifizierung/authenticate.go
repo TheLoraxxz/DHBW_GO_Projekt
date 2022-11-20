@@ -1,16 +1,19 @@
 package authentifizierung
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
 
-// UserData used for dateisystem
-type UserData struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
+type UserJSON struct {
+	User  string `json:"user"`
+	Passw string `json:"password"`
 }
 
 // struct for user synchronisation
@@ -104,4 +107,34 @@ func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie str
 		return cookie, nil
 	}
 	return "", errors.New("Wrong User")
+}
+
+func LoadUserData(Firstuser *string, FirstPassword *string) {
+	if len(users.users) == 0 {
+
+	}
+}
+
+func SaveUserData() error {
+	users.lock.Lock()
+	user := []UserJSON{}
+	defer users.lock.Unlock()
+	for key, elem := range users.users {
+		user = append(user, UserJSON{User: key, Passw: elem})
+	}
+	path, err := filepath.Abs("../data/user")
+	if err != nil {
+		return fmt.Errorf("Error on trying to get Path: %w", err)
+	}
+	path = filepath.Join(path, "user-data.json")
+	file, err := json.MarshalIndent(user, "", "")
+	if err != nil {
+		return fmt.Errorf("Error on creating json file %w", err)
+	}
+	err = os.WriteFile(path, file, 0644)
+	if err != nil {
+		return fmt.Errorf("Error on writing to Json file %w", err)
+	}
+
+	return err
 }
