@@ -483,7 +483,7 @@ Aufrufen aller Tests
 
 func TestViewManager(t *testing.T) {
 	//createWeeklyTestTermin()
-	//Tests zum Erstellens/Bearbeitens/Löschens eines Termin
+	//Tests zum Erstellens/Bearbeitens/Löschens eines Termins
 	t.Run("testRuns filterRepetition", testfilterRepetition)
 	t.Run("testRuns CreateTermin", testCreateTermin)
 	t.Run("testRuns CreateTerminLogicCheck", testCreateTerminLogicCheck)
