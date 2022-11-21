@@ -152,6 +152,15 @@ func testIsToday(t *testing.T) {
 	assert.Equal(t, false, IsToday(dateToday), "Die Funktion sollte false zurückgeben.")
 }
 
+func testNeedsBreak(t *testing.T) {
+
+	testDate := createSpecificDate(2022, 21, 11)
+	assert.False(t, NeedsBreak(testDate), "Das Ergebnis sollte false sein, da der Tag kein Sonntag ist.")
+
+	testDate = createSpecificDate(2022, 20, 11)
+	assert.True(t, NeedsBreak(testDate), "Das Ergebnis sollte true sein, da der Tag ein Sonntag ist.")
+}
+
 // testFilterCalendarEntriesCorrectAppending
 // Testen ob Daten sortiert am richtigen Tag eingefügt werden
 func testFilterCalendarEntriesCorrectAppending(t *testing.T) {
@@ -253,4 +262,5 @@ func TestTableView(t *testing.T) {
 	t.Run("testRuns GetLastDayOfMonth", testGetLastDayOfMonth)
 	t.Run("testRuns MonthStarts", testMonthStarts)
 	t.Run("testRuns IsToday", testIsToday)
+	t.Run("testRuns NeedsBreak", testNeedsBreak)
 }

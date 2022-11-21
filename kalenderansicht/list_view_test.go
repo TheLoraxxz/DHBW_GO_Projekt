@@ -2,6 +2,7 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -25,19 +26,208 @@ func testSelectEntriesPerPage(t *testing.T) {
 	entriesAmountValue := 5
 	lv.SelectEntriesPerPage(entriesAmountValue)
 	assert.Equal(t, entriesAmountValue, lv.EntriesPerPage, "Die Nummern sollten identisch sein.")
+	assert.Equal(t, 1, lv.CurrentPage, "Die aktuelle Seite sollte Seite 1 sein.")
+
 }
 
 /*
 **************************************************************************************************************
-Test zur Navigation innerhalb der Listenansicht
+Test zur Navigation innerhalb der Listenansicht und für die Anzeige der richtigen Anzahl an Einträgen
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
-func testJumPageFor(t *testing.T) {
-	//lv := InitListView()
+//testJumPageForLastPage
+//Hier wird der Fall abgedeckt, dass der Benutzer sich bereits auf der letzten, zur Darstellung der Termine benötigten Seite
+//befindet und dennoch eine Seite vorspringen möchte
+func testJumPageForLastPage(t *testing.T) {
+	//Liste erstellen, angezeigte Seite ist 1, keine Einträge vorhanden -> nur eine Seite benötigt
+	lv := InitListView([]ds.Termin{})
 
+	lv.JumpPageForward()
+	assert.Equal(t, 1, lv.CurrentPage, "Die aktuelle Seite muss 1 sein, da nicht mehr Seiten erforderlich sind!")
 }
-func testJumpPageback(t *testing.T) {
-	//lv := InitListView()
+
+// testJumpPageBackFirstPage
+// Hier wird der Fall abgedeckt, falls nue eine Seite zud Darstellung der Termine benötigt wird
+// und der Benutzer dennoch eine Seite vor springen möchte
+func testJumpPageBackFirstPage(t *testing.T) {
+	//Liste erstellen, angezeigte Seite ist 1, keine Einträge vorhanden -> nur eine Seite benötigt
+	lv := InitListView([]ds.Termin{})
+
+	lv.JumpPageBack()
+	assert.Equal(t, 1, lv.CurrentPage, "Die aktuelle Seite muss 1 sein, da diese nicht negativ sein kann!")
+}
+func testJumPageFor(t *testing.T) {
+
+	//Datum für Testtermine erstellen
+	testTerminStarts := createSpecificDate(2022, 1, 11)
+	testTerminEnds := createSpecificDate(2022, 30, 11)
+
+	//Slice mit Testterminen erstellen
+	testTermine := make([]ds.Termin, 0, 30)
+	for i := 0; i < 30; i++ {
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+	}
+	//Liste erstellen, angezeigte Seite ist 1
+	lv := InitListView(testTermine)
+
+	//5 Einträge pro Tag -> das heißt es muss 6 Seiten geben
+	lv.SelectEntriesPerPage(5)
+	assert.Equal(t, 6, lv.RequiredPages(), "Es sollten 6 Seiten benötigt werden.")
+	for pageJump := 1; pageJump <= 6; pageJump++ {
+		assert.Equal(t, pageJump, lv.CurrentPage, "Es sollten Seite "+fmt.Sprint(pageJump)+" angezeigt werden.")
+		lv.JumpPageForward()
+	}
+
+	// Angezeigte Seite wieder auf Seite 1 setzten
+	lv.CurrentPage = 1
+
+	//10 Einträge pro Tag -> das heißt es muss 3 Seiten geben
+	lv.SelectEntriesPerPage(10)
+	assert.Equal(t, 3, lv.RequiredPages(), "Es sollten 3 Seiten benötigt werden.")
+	for pageJump := 1; pageJump <= 3; pageJump++ {
+		assert.Equal(t, pageJump, lv.CurrentPage, "Es sollten Seite "+fmt.Sprint(pageJump)+" angezeigt werden.")
+		lv.JumpPageForward()
+	}
+	// Angezeigte Seite wieder auf Seite 1 setzten
+	lv.CurrentPage = 1
+
+	//15 Einträge pro Tag -> das heißt es muss 2 Seiten geben
+	lv.SelectEntriesPerPage(15)
+	assert.Equal(t, 2, lv.RequiredPages(), "Es sollten 2 Seiten benötigt werden.")
+	for pageJump := 1; pageJump <= 2; pageJump++ {
+		assert.Equal(t, pageJump, lv.CurrentPage, "Es sollten Seite "+fmt.Sprint(pageJump)+" angezeigt werden.")
+		lv.JumpPageForward()
+	}
+}
+func testJumpPageBack(t *testing.T) {
+
+	//Datum für Testtermine erstellen
+	testTerminStarts := createSpecificDate(2022, 1, 11)
+	testTerminEnds := createSpecificDate(2022, 30, 11)
+
+	//Slice mit Testterminen erstellen
+	testTermine := make([]ds.Termin, 0, 30)
+	for i := 0; i < 30; i++ {
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+	}
+
+	//Liste erstellen
+	lv := InitListView(testTermine)
+
+	//5 Einträge pro Tag -> das heißt es muss 6 Seiten geben
+	lv.SelectEntriesPerPage(5)
+
+	// Angezeigte Seite wird auf letzte Seite gesetzt
+	lv.CurrentPage = lv.RequiredPages()
+	assert.Equal(t, 6, lv.CurrentPage, "Es sollten 6 Seiten benötigt werden.")
+	for pageJump := 6; pageJump > 0; pageJump-- {
+		assert.Equal(t, pageJump, lv.CurrentPage, "Es sollten Seite "+fmt.Sprint(pageJump)+" angezeigt werden.")
+		lv.JumpPageBack()
+	}
+
+	//10 Einträge pro Tag -> das heißt es muss 3 Seiten geben
+	lv.SelectEntriesPerPage(10)
+	// Angezeigte Seite wieder auf letzte Seite setzten
+	lv.CurrentPage = lv.RequiredPages()
+	assert.Equal(t, 3, lv.CurrentPage, "Es sollten 3 Seiten benötigt werden.")
+	for pageJump := 3; pageJump > 0; pageJump-- {
+		assert.Equal(t, pageJump, lv.CurrentPage, "Es sollten Seite "+fmt.Sprint(pageJump)+" angezeigt werden.")
+		lv.JumpPageBack()
+	}
+
+	//15 Einträge pro Tag -> das heißt es muss 2 Seiten geben
+	lv.SelectEntriesPerPage(15)
+	// Angezeigte Seite wieder auf letzte Seite setzten
+	lv.CurrentPage = lv.RequiredPages()
+	assert.Equal(t, 2, lv.CurrentPage, "Es sollten 2 Seiten benötigt werden.")
+	for pageJump := 2; pageJump > 0; pageJump-- {
+		assert.Equal(t, pageJump, lv.CurrentPage, "Es sollten Seite "+fmt.Sprint(pageJump)+" angezeigt werden.")
+		lv.JumpPageBack()
+	}
+}
+
+// testGetEntriesCorrectNumber
+// hier wird getestet, ob die Anzahl der Einträge mit der eingestellten überein stimmt
+func testGetEntriesCorrectNumber(t *testing.T) {
+
+	//Datum für Testtermine erstellen
+	testTerminStarts := createSpecificDate(2022, 1, 11)
+	testTerminEnds := createSpecificDate(2022, 30, 11)
+
+	//Slice mit Testterminen erstellen
+	testTermine := make([]ds.Termin, 0, 30)
+	for i := 0; i < 30; i++ {
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+	}
+
+	//Liste erstellen
+	lv := InitListView(testTermine)
+	//Hier wird der 1.11.2022 als Startdatum gesetzt
+	lv.SelectedDate = createSpecificDate(2022, 1, 11)
+
+	assert.Equal(t, 30, len(lv.EntriesSinceSelDate), "Es sollten 30 Termine in dem Slice sein")
+
+	//5 Einträge pro Tag
+	lv.SelectEntriesPerPage(5)
+	sliceWithEntries := lv.GetEntries()
+	assert.Equal(t, 5, len(sliceWithEntries), "Es sollten 5 Termine in dem Slice sein")
+
+	//10 Einträge pro Tag
+	lv.SelectEntriesPerPage(10)
+	sliceWithEntries = lv.GetEntries()
+	assert.Equal(t, 10, len(sliceWithEntries), "Es sollten 10 Termine in dem Slice sein")
+
+	//15 Einträge pro Tag
+	lv.SelectEntriesPerPage(15)
+	sliceWithEntries = lv.GetEntries()
+	assert.Equal(t, 15, len(sliceWithEntries), "Es sollten 15 Termine in dem Slice sein")
+}
+
+// testGetCorrectEntries
+// hier wird getestet, ob die Einträge stimmen, wenn die nächste Seite aufgerufen wird
+func testGetEntriesCorrectEntries(t *testing.T) {
+
+	//Datum für Testtermine erstellen
+	testTerminStarts := createSpecificDate(2022, 1, 11)
+	testTerminEnds := createSpecificDate(2022, 30, 11)
+
+	//Slice mit Testterminen erstellen
+	testTermine := make([]ds.Termin, 0, 30)
+	for i := 0; i < 30; i++ {
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+	}
+	//Liste erstellen
+	lv := InitListView(testTermine)
+	//Hier wird der 1.11.2022 als Startdatum gesetzt
+	lv.SelectedDate = createSpecificDate(2022, 1, 11)
+
+	//Termine filtern
+	filteredSlice := lv.FilterCalendarEntries(testTermine)
+	assert.Equal(t, 30, len(filteredSlice), "Es sollten 30 Termine in dem Slice sein")
+
+	//5 Einträge pro Tag, Test mit Seite vor und zurück springen
+	lv.SelectEntriesPerPage(5)
+	assert.Equal(t, filteredSlice[:5], lv.GetEntries(), "Es sollten die ersten 5 Termine in dem Slice sein")
+	lv.JumpPageForward()
+	assert.Equal(t, filteredSlice[5:10], lv.GetEntries(), "Es sollten die nächsten 5 Termine in dem Slice sein")
+	lv.JumpPageBack()
+	assert.Equal(t, filteredSlice[:5], lv.GetEntries(), "Es sollten die ersten 5 Termine in dem Slice sein")
+
+	//10 Einträge pro Tag, Test mit Seite vor und zurück springen
+	lv.SelectEntriesPerPage(10)
+	assert.Equal(t, filteredSlice[:10], lv.GetEntries(), "Es sollten die ersten 10 Termine in dem Slice sein")
+	lv.JumpPageForward()
+	assert.Equal(t, filteredSlice[10:20], lv.GetEntries(), "Es sollten die nächsten 10 Termine in dem Slice sein")
+	lv.JumpPageBack()
+	assert.Equal(t, filteredSlice[:10], lv.GetEntries(), "Es sollten die ersten 10 Termine in dem Slice sein")
+
+	//15 Einträge pro Tag, Test mit Seite vor und zurück springen
+	lv.SelectEntriesPerPage(15)
+	assert.Equal(t, filteredSlice[:15], lv.GetEntries(), "Es sollten die ersten 15 Termine in dem Slice sein")
+	lv.JumpPageForward()
+	assert.Equal(t, filteredSlice[15:30], lv.GetEntries(), "Es sollten die nächsten 15 Termine in dem Slice sein")
+	lv.JumpPageBack()
+	assert.Equal(t, filteredSlice[:15], lv.GetEntries(), "Es sollten die ersten 15 Termine in dem Slice sein")
 }
 
 /*
@@ -145,8 +335,12 @@ func TestListView(t *testing.T) {
 	t.Run("testRuns SelectEntriesPerPage", testSelectEntriesPerPage)
 
 	//Test zur Navigation innerhalb der Listenansicht
+	t.Run("testRuns JumPageForLastPage", testJumPageForLastPage)
+	t.Run("testRuns JumpPageBackFirstPage", testJumpPageBackFirstPage)
 	t.Run("testRuns JumPageFor", testJumPageFor)
-	t.Run("testRuns JumpPageback", testJumpPageback)
+	t.Run("testRuns JumpPageBack", testJumpPageBack)
+	t.Run("test Run GetEntries", testGetEntriesCorrectNumber)
+	t.Run("test Run GetEntriesCorrectEntries", testGetEntriesCorrectEntries)
 
 	//Tests zum Filtern und tests für Infos für die Darstellung der Termine in der Listenansicht
 	t.Run("testRuns FilterCalendarEntries", testFilterCalendarEntries)

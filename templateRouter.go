@@ -135,7 +135,7 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 		case strings.Contains(r.RequestURI, "/user/view/table?jahr="):
 			summandStr := r.RequestURI[22:]
 			summand, _ := strconv.Atoi(summandStr)
-			v.vm.TvJumpToYear(summand)
+			v.vm.TvJumpYearForOrBack(summand)
 		case r.RequestURI == "/user/view/table?datum=heute":
 			v.vm.TvJumpToToday()
 		}
@@ -163,16 +163,22 @@ func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 		case strings.Contains(r.RequestURI, "/user/view/list?Eintraege="):
 			amountStr := r.RequestURI[26:]
 			amount, _ := strconv.Atoi(amountStr)
-			v.vm.Lv.SelectEntriesPerPage(amount)
+			v.vm.LvSelectEntriesPerPage(amount)
+		case r.RequestURI == "/user/view/list?Seite=+1":
+			v.vm.LvJumpPageForward()
+		case r.RequestURI == "/user/view/list?Seite=-1":
+			v.vm.LvJumpPageBack()
 		}
 	}
 
 	if r.Method == "POST" {
 		switch {
 		case r.RequestURI == "/user/view/list?selDatum":
-			v.vm.Lv.SelectDate(r)
+			v.vm.LvSelectDate(r)
 		case r.RequestURI == "/user/view/list?termineBearbeiten":
 			v.vm.EditTermin(r, v.vm.Username)
+		case r.RequestURI == "/user/view/list?terminErstellen":
+			v.vm.CreateTermin(r, v.vm.Username)
 		}
 	}
 

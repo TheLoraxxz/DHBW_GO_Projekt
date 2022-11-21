@@ -132,14 +132,14 @@ des Users dem neu angezeigten Monat entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 // JumpMonthBack
-// Springt einen Monat in der Webseiten Ansicht vor
+// Springt einen Monat in der Webseiten Ansicht zurück
 func (vm *ViewManager) TvJumpMonthBack() {
 	vm.Tv.JumpMonthBack()
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 }
 
 // TvJumpMonthFor
-// Springt einen Monat in der Webseiten Ansicht zurück
+// Springt einen Monat in der Webseiten Ansicht vor
 func (vm *ViewManager) TvJumpMonthFor() {
 	vm.Tv.JumpMonthFor()
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
@@ -183,4 +183,12 @@ func (vm *ViewManager) LvSelectDate(r *http.Request) {
 
 func (vm *ViewManager) LvSelectEntriesPerPage(amount int) {
 	vm.Lv.SelectEntriesPerPage(amount * 5)
+}
+
+func (vm *ViewManager) LvJumpPageForward() {
+	vm.Lv.JumpPageForward()
+}
+
+func (vm *ViewManager) LvJumpPageBack() {
+	vm.Lv.JumpPageBack()
 }

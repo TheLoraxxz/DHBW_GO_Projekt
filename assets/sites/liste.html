@@ -1,12 +1,12 @@
 {{ template "header" }}
 <hr>
-<div class="row">
+<div class="row ">
     <div class="col">
       {{ template "creator" . }}
     </div>
     <div class="col-6 text-light bg-secondary">
        <h3 class="sticky-sm-top">Deine Termine ab dem {{.SelectedDate.Format "2006-01-02"}}</h3>
-        <form action="/listenAnsicht?selDatum" method="POST" id="dateSelector" role="form" class="row mb-3 p-3  needs-validation" novalidate>
+        <form action="/user/view/list?selDatum" method="POST" id="dateSelector" role="form" class="row mb-3 p-3  needs-validation" novalidate>
             <div>
                 <label for="selDate" class="col-sm-2 ">Wähle Datum</label>
                 <input type="date" class="form-control" name="selDate" id="selDate" required>
@@ -15,7 +15,7 @@
                 </div>
             </div>
         </form>
-        {{range $index, $dayEntry := .EntriesSinceSelDate}}
+        {{range $index, $dayEntry := .GetEntries}}
         <div  class="card text-dark bg-light mb-3">
             <div class="card-body">
                 <h5 class="card-title">{{.Title}}</h5>
@@ -61,9 +61,16 @@
             </div>
         </div>
         {{end}}
+        <div>
+            <ul class="pagination ml-2">
+                <li><button type="button" class="btn btn-sm btn-light" onclick="JumpPageBack()"> Zurück </button></li>
+                <li> {{.CurrentPage}} von {{.RequiredPages}} </li>
+                <li><button type="button" class="btn btn-sm btn-light" onclick="JumpPageForward()"> Vor </button></li>
+            </ul>
+        </div>
     </div>
 
-
+<!----------Rechte Spalte: wählen der Einträge pro Seite------------>
     <div class="col">
         <div class="dropdown  p-2">
             <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -83,7 +90,7 @@
 <script>
 
     // entrySelection
-    // hier wird eine Get request gestellt, um die gewünschten Einträge pro Seit zu erhalten
+    // hier wird eine Get request gestellt, um die gewünschte Anzahl an Einträgen pro Seite zu erhalten
     function entrySelection(amount) {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -93,6 +100,29 @@
         xhttp.open("GET", requestString);
         xhttp.send();
     }
+    // JumpPageBack
+    // hier wird eine Get request gestellt, um eine Seite zurück zu springen
+    function JumpPageBack() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            location.reload();
+        }
+        requestString = String("?Seite=-1")
+        xhttp.open("GET", requestString);
+        xhttp.send();
+    }
+    // JumpPageForward
+    // hier wird eine Get request gestellt, um eine Seite vor zu springen
+    function JumpPageForward() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            location.reload();
+        }
+        requestString = String("?Seite=+1")
+        xhttp.open("GET", requestString);
+        xhttp.send();
+    }
+
 
     // Termin
     // hier wird ein Objekt Termin erstellt, welches für die Terminbearbeitung benötigt wird
