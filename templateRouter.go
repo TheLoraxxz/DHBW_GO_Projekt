@@ -150,14 +150,14 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
+	isAllowed, username := authentifizierung.CheckCookie(&cookie.Value)
 	if isAllowed {
 		mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		err = mainRoute.Execute(writer, nil)
+		err = mainRoute.Execute(writer, username)
 		if err != nil {
 			log.Fatal("Coudnt Execute Parsefiles")
 			return
