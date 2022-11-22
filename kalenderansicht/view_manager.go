@@ -114,8 +114,8 @@ func (vm *ViewManager) EditTermin(r *http.Request, username string) {
 	//egal ob löschen oder bearbeiten, der Termin muss zunächst gelöscht werden
 	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, oldTitle, vm.Username)
 
-	//Wenn der Modus 2 = Bearbeiten ist, muss der aktualisierte Termin noch erstellt werden
-	if mode == "Bearbeiten: Termin" {
+	//Wenn der Modus 1 = Bearbeiten ist, muss der aktualisierte Termin noch erstellt werden
+	if mode == "1" {
 		vm.CreateTermin(r, username)
 	} else {
 		//Anzuzeigende Einträge in den Ansichten aktualisieren (dies geschieht auch in vm.CreateTermin(r, username))

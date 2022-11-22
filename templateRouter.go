@@ -23,7 +23,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		// cookie authentifizieren checken
 		isUser, cookieText := authentifizierung.AuthenticateUser(&username, &password)
 		if isUser == true {
-			// wenn user authentifiziert ist dann wird cookie erstellt und
+			// wenn user authentifiziert ist, dann wird cookie erstellt und
 			cookie := &http.Cookie{
 				Name:     "SessionID-Kalender",
 				Value:    cookieText,
@@ -37,7 +37,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			http.Redirect(writer, request, "https://"+request.Host+"/user/Create", http.StatusFound)
 			return
 		} else {
-			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
+			// wenn nicht authentifiziert ist, wird weiter geleitet oder bei problemen gibt es ein 500 status
 			if len(cookieText) == 0 {
 				writer.WriteHeader(500)
 			} else {
@@ -80,14 +80,9 @@ func (c CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Re
 
 }
 
-// Templates für die Tabellensansicht sowie die Listenansicht
-var path, _ = os.Getwd()
-var tableTpl, _ = template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
-var listTpl, _ = template.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html")
-
 // ServeHTTP
-// Hier werden all http-Request anfragen geregelt, die im Kontext der Terminasnichten anfallen
-// Zunächst wird der Cookie geprüft und ggf. die Termine/Infos des Users geladen
+// Hier werden all http-Request anfragen geregelt, die im Kontext der Terminasnichten anfallen.
+// Zunächst wird der Cookie geprüft und ggf. die Termine/Infos des Users geladen.
 // Nach erfolgreicher Prüfung, wird die Anfrage an entweder den ListViewHandler oder den TableViewHandler weitergeleitet.
 func (v *ViewmanagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("SessionID-Kalender")
@@ -102,8 +97,18 @@ func (v *ViewmanagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if cookie.Value != v.cookie {
 		isAllowed, username := authentifizierung.CheckCookie(&cookieVal)
 		if isAllowed {
+
 			v.vm = ka.InitViewManager(username)
 			v.cookie = cookie.Value
+
+			// Templates für die Tabellenansicht sowie die Listenansicht erstellen
+			path, err := os.Getwd()
+			if err != nil {
+				log.Fatal("Couldn't get rooted path name corresponding to the current directory")
+			}
+			v.viewmanagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+			template.Must(v.viewmanagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+
 		} else {
 			http.Redirect(w, r, "https://"+r.Host, http.StatusContinue)
 			return
@@ -125,9 +130,9 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 	if r.Method == "GET" {
 		switch {
 		case r.RequestURI == "/user/view/table?suche=minusMonat":
-			v.vm.TvJumpMonthFor()
-		case r.RequestURI == "/user/view/table?suche=plusMonat":
 			v.vm.TvJumpMonthBack()
+		case r.RequestURI == "/user/view/table?suche=plusMonat":
+			v.vm.TvJumpMonthFor()
 		case strings.Contains(r.RequestURI, "/user/view/table?monat="):
 			monatStr := r.RequestURI[23:]
 			monat, _ := strconv.Atoi(monatStr)
@@ -149,7 +154,8 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 			v.vm.EditTermin(r, v.vm.Username)
 		}
 	}
-	er := tableTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
+
+	er := v.viewmanagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
 	if er != nil {
 		log.Fatalln(er)
 	}
@@ -181,8 +187,7 @@ func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 			v.vm.CreateTermin(r, v.vm.Username)
 		}
 	}
-
-	er := listTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
+	er := v.viewmanagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
 	if er != nil {
 		log.Fatalln(er)
 	}

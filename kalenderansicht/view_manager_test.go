@@ -46,7 +46,7 @@ func generateRandomDate() time.Time {
 }
 
 // generateRandomDateInSpecificMonth
-// generiert ein zufälliges Datum in einem spezifischem Monat und Jahr
+// generiert ein zufälliges Datum eines spezifischen Monats und Jahres
 func generateRandomDateInSpecificMonth(year int, month time.Month) time.Time {
 	var day int
 	switch month {
@@ -76,8 +76,6 @@ func generateRandomDateInSpecificMonth(year int, month time.Month) time.Time {
 // um die Funktion der Navigation der Webseite zu testen
 func createTestTermin(repeat ds.Repeat) *ViewManager {
 	vm := InitViewManager("testuser")
-	//Zunächst leeren des Caches, falls schon termine für testuser hinterlegt sind
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 
 	switch repeat {
 	case ds.WEEKLY:
@@ -114,6 +112,7 @@ func createSpecificDate(year, day int, month time.Month) time.Time {
 Hier Folgen die Tests zum Termine erstellen/bearbeiten/löschen und die dafür benötigte Hilfsfunktion filterRepetioition
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
+
 func testfilterRepetition(t *testing.T) {
 	assert.Equal(t, ds.Never, filterRepetition("1"))
 	assert.Equal(t, ds.DAILY, filterRepetition("2"))
@@ -322,6 +321,9 @@ func testTvJumpMonthFor(t *testing.T) {
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[14-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[21-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[28-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 func testTvJumpMonthBack(t *testing.T) {
 
@@ -344,6 +346,8 @@ func testTvJumpMonthBack(t *testing.T) {
 	//Der Termin startet ab 02.11.2021 und findet moantlich statt
 	//Monat ist nun Oktober 2022
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testTvJumpYearForOrBack(t *testing.T) {
@@ -369,6 +373,8 @@ func testTvJumpYearForOrBack(t *testing.T) {
 	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
 
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testTvSelectMonth(t *testing.T) {
@@ -388,6 +394,9 @@ func testTvSelectMonth(t *testing.T) {
 
 	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testTvJumpToToday(t *testing.T) {
@@ -406,6 +415,9 @@ func testTvJumpToToday(t *testing.T) {
 
 	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[2-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 /*
@@ -454,6 +466,9 @@ func testLvJumpPageForward(t *testing.T) {
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
 	vm.LvJumpPageForward()
 	assert.Equal(t, 2, vm.Lv.CurrentPage, "Die Seite sollte 2 sein.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testLvJumpPageBack(t *testing.T) {
@@ -473,6 +488,9 @@ func testLvJumpPageBack(t *testing.T) {
 	vm.Lv.CurrentPage = 2
 	vm.LvJumpPageBack()
 	assert.Equal(t, 1, vm.Lv.CurrentPage, "Die Seite sollte 1sein.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 /*

@@ -4,14 +4,16 @@ import (
 	"DHBW_GO_Projekt/authentifizierung"
 	ka "DHBW_GO_Projekt/kalenderansicht"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 )
 
 type RootHandler struct{}
 type ViewmanagerHandler struct {
-	vm     *ka.ViewManager
-	cookie string
+	vm             *ka.ViewManager
+	cookie         string
+	viewmanagerTpl *template.Template
 }
 type CreatUserHandler struct {
 }

@@ -18,6 +18,7 @@ func testSelectDate(t *testing.T) {
 	newDate := time.Date(2030, 11, 11, 0, 0, 0, 0, time.UTC)
 	lv.SelectDate(newDate)
 	assert.Equal(t, newDate, lv.SelectedDate, "Die zwei Daten sollten identisch sein.")
+	assert.Equal(t, 1, lv.CurrentPage, "Die aktuelle Seite sollte Seite 1 sein.")
 }
 
 func testSelectEntriesPerPage(t *testing.T) {

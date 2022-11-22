@@ -148,17 +148,19 @@
         <div class="col text-light">
         </div>
         <!--------------Hier werden die Termininforamtionen angezeigt (erscheint links im Bildschirm) ----------->
-            <div class="offcanvas offcanvas-start" tabindex="-1" id="showTermins" aria-labelledby="offcanvasExampleLabel">
+            <div class="offcanvas offcanvas-start overflow-auto" tabindex="-1" id="showTermins" aria-labelledby="offcanvasExampleLabel">
             </div>
         </div>
     </div>
 
 {{ template "footer" . }}
-
+{{template "creatorScript" .}}
 
 <!--------------------Hier folgt benötigter JavaScript-Code--------------------------->
 
 <script>
+    // back
+    // sorgt dafür, dass der vorherige Monat angezeigt wird
     function back() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -168,6 +170,8 @@
         xhttp.send();
     }
 
+    // forward
+    // sorgt dafür, dass der nächste Monat angezeigt wird
     function forward() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -177,6 +181,8 @@
         xhttp.send();
     }
 
+    // monthSelection
+    // sorgt dafür, dass der gewählte Monat angezeigt wird
     function monthSelection(monat) {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -187,6 +193,8 @@
         xhttp.send();
     }
 
+    // year
+    // sorgt dafür, dass das entweder ein Jahr vor oder zurückgesprungen wird
     function year(summand) {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -197,6 +205,9 @@
         xhttp.send();
     }
 
+
+    // jumpToToday
+    // sorgt dafür, dass der Monat des heutigen Tages angezeigt wird
     function jumpToToday() {
         var xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
@@ -206,13 +217,19 @@
         xhttp.send();
     }
 
+    // showTermin
+    // Parameter: 3 int Werte, Liste mit den Terminen eines bestimmten Tages
+    // Es wird Tag, Monat und Jahr und die Termineinträge des Tages übergeben, von dem die Termine angezeigt werden sollen.
+    // Die Funktion sorgt dafür, dass die Informationen im linken Teil des Bildschirms angezeigt werden.
     function showTermin(day,month, year, dayentries) {
-        let terminStr = "";
-        document.getElementById("showTermins").innerHTML = "Deine Termine am: <br>" + day +" " + month +" " +year;
+        let terminStr = "Deine Termine am: <br>" + day +" " + month +" " +year;
+
         for (let i = 0; i < dayentries.length; i++) {
+            terminNr = i +1
             entrie = dayentries;
-            terminStr = terminStr + "<b>" + dayentries[i].Title.toString() + "</b>"
+            terminStr = terminStr + "<b>" +"Termin-Nr.: "+ terminNr + "</b>"
                 + "<ul>" +
+                "<li> <b>Titel: " + dayentries[i].Title + "</b></li>" +
                 "<li> <b>Beschreibung:</b> " + dayentries[i].Description + "</li>" +
                 "<li><b> Wiederholung: </b>" + getRecurring(dayentries[i].Recurring) + "</li>" +
                 "<li> <b>Starttermin: </b>" + dayentries[i].Date + "</li>" +
@@ -224,27 +241,22 @@
         document.getElementById("showTermins").innerHTML = terminStr;
     }
 
+    // askForTerminToEditing
+    // Parameter: Liste mit den Terminen eines bestimmten Tages
+    // diese Funktion erstellt ein Popup, indem der Nutzer die Nummer des Termins eingeben kann,
+    // den er bearbeiten möchte.
     function askForTerminToEditing(dayentries) {
-        var selTermin;
-        var termineStr = "";
+        let selTermin;
 
-        for (let i = 0; i < dayentries.length; i++) {
-            terminNr = i +1
-            termin = dayentries[i]
-            termineStr = termineStr + terminNr +". Termin: " + termin.Title + "\n Beschreibung: " + termin.Description +
-                "\n Wiederholung: " + getRecurring(termin.Recurring) +  "\n Start-Datum: " + termin.Date +
-                "\n End-Datum: " + termin.EndDate +
-            "\n-------------------------------------------\n"
-        }
-        selTermin = prompt(termineStr + "GIB DIE NUMMER DES ZU BEARBEITENDEN TERMINS EIN:");
+        const termineEdditStr = "Gebe die Termin-Nummer des Termins ein, den Du bearbeiten möchtest." +
+            "Diese findest Du, wenn du auf das Feld \"anzeigen\" des gewünschten Tages klickst. \n" +
+            "Das Feld zum bearbeiten erscheint dort, wo zuvor Termine erstellbar waren.\n";
+        selTermin = prompt(termineEdditStr + "TERMIN-NUMMER:");
 
         //Hier folgt eine Überprüfung der Gültigkeit der Eingabe
-        var terminEditable = false;
-        for (let i = 0; i < dayentries.length; i++) {
-            terminNr = i+1
-            if (selTermin == terminNr){
+        let terminEditable = false;
+        if (selTermin <= dayentries.length) {
                 terminEditable = true;
-            }
         }
         if (!terminEditable) {
             confirm("Diese Eingabe ist nicht gültig!");
@@ -253,6 +265,12 @@
         }
     }
 
+    // getRecurring
+    // Parameter: zahl
+    // Rückgabewert: der zahl entsprechende Wiederholung des Termins
+    // getRecurring dient dazu, dass dem Nutzer auf der Seite statt der Terminwiederholung entsprechende Zahl,
+    // die Wiederholung als String gezeigt wird.
+    // Die Funktion wird benötigt, wenn der User auf ein "anzeigen" Feld klickt.
     function getRecurring(rec){
         var recurring
         switch(rec) {

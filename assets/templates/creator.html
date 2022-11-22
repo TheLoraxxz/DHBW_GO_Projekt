@@ -25,7 +25,7 @@
     <input type="date" class="form-control" name="date" id="date" required>
   </div>
   <div class="col-md-6 col-form-label">
-    <label class="col-sm-2 ">Enddatum</label>
+    <label for="endDate" class="col-sm-2 ">Enddatum</label>
     <input type="date" class="form-control" name="endDate" id="endDate" required>
   </div>
   <div class="col-12  p-3">
@@ -33,9 +33,17 @@
   </div>
 </form>
 </div>
+<!----end of template Creator------>
+{{end}}
+
+<!---hier erfolgt ein weiteres Template für den Javascript-Code.
+Dies wird benötigt, damit der Javascript-Code nicht mittem im HTML-Code eingefügt wird.--->
+{{ define "creatorScript" }}
 <!-----------------------------------Hier folgt benötigter javaScript Code------------------------------>
 <script>
-  //Hier wird das Formular auf vollständigkeit überprüft
+  // validateForm
+  // Parameter: id des Formulars, welches auf Vollständigkeit geprüft wird.
+  // Hier wird das Formular auf vollständigkeit überprüft
   function validateForm(id) {
     var form = document.getElementById(id);
     form.addEventListener('submit', function (event) {
@@ -50,12 +58,9 @@
     }, false);
   }
 
-  //edditTermin
-  //Funktion erstellt Formular für eine Post-Anfrage, um Termine zu bearbeiten/löschen
-  // Parameter:
-  //      indexInMonthEntriesTV -> Index, von dem Termin in der TableView
- //       index -> Index innerhalb der DayEntries bei der Tv oder der Index der Terminposition in der Listenansicht
-  //       dayEntry -> der zu bearbeitende Termin
+  // edditTermin
+  // Parameter: Termin, welcher bearbeitet wird
+  // Funktion erstellt Formular für eine Post-Anfrage, um Termine zu bearbeiten oder zu löschen
   function editTermin(dayEntry) {
 
     let edditFormStr = "<h3>Termine berabeiten</h3>\n"
@@ -66,9 +71,8 @@
               "<div class=\"mb-3\">\n" +
               "    <label for=\"editing\">Bearbeitungsmodus</label>\n" +
               "    <select name=\"editing\" id=\"editing\"  class=\"form-select\">\n" +
-              "      <option selected>Bearbeiten: Termin</option>\n" +
-              "      <option value=\"1\">Löschen: Termin</option>\n" +
-              "      <option value=\"2\">Bearbeiten: Termin</option>\n" +
+              "      <option value=\"1\">Bearbeiten: Termin</option>\n" +
+              "      <option value=\"2\">Löschen: Termin</option>\n" +
               "    </select>\n" +
               "  </div>"+
               "    <label for=\"title\" class=\"col-sm-2 col-form-label \">Titel</label>\n" +
@@ -103,9 +107,8 @@
     "</form>";
 
     document.getElementById("terminCreation").innerHTML = edditFormStr;
-  };
-
+  }
 
 </script>
-<!----end of template------>
+<!----end of template creatorScript------>
 {{end}}

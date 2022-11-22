@@ -33,8 +33,10 @@ Ab hier Folgen Funktionen, die den Benutzer Custom-Settings & Navigation innerha
 // SelectDate
 // Parameter: Post Request mit einem spezifischem Datum
 // setzt das Datum der Listenansicht auf das vom Benutzer gewählte
+// Die aktuelle Seite wird wieder auf 1 gesetzt
 func (lv *ListView) SelectDate(date time.Time) {
 	lv.SelectedDate = date
+	lv.CurrentPage = 1
 }
 
 // SelectEntriesPerPage
