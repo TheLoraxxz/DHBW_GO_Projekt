@@ -1,31 +1,33 @@
 package dateisystem
 
+//ToDo Funktion Dateiname durch ID ersetzen
 //Mat-Nr. 8689159
 import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
-	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // NewTerminObj erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
-func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time) Termin {
-
+func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time, id string) Termin {
 	T := Termin{
 		Title:       title,
 		Description: description,
 		Recurring:   rep,
 		Date:        date,
-		EndDate:     endDate}
+		EndDate:     endDate,
+		ID:          id}
 	return T
 }
 
 // CreateNewTermin erzeugt einen persistenten Termin
-func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string) Termin {
-	t := NewTerminObj(title, description, rep, date, endDate)
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string, id string) Termin {
+	t := NewTerminObj(title, description, rep, date, endDate, id)
 	StoreTerminObj(t, username)
 	return t
 }
@@ -34,7 +36,7 @@ func CreateNewTermin(title string, description string, rep Repeat, date time.Tim
 func GetTermine(username string) []Termin {
 	var k []Termin
 
-	path := getDirectory(username)
+	path := GetDirectory(username)
 
 	f, err := os.Open(path) //öffnet das Verzeichnis des Users
 	if err != nil {
@@ -49,8 +51,8 @@ func GetTermine(username string) []Termin {
 	}
 
 	for _, v := range files { //lädt der Reihe nach alle Dateien ein
-		title := strings.Split(v.Name(), ".")
-		k = append(k, LoadTermin(title[0], username))
+		id := strings.Split(v.Name(), ".")
+		k = append(k, LoadTermin(id[0], username))
 	}
 	defer func(f *os.File) { //schließt Pointer auf die json
 		err := f.Close()
@@ -63,15 +65,14 @@ func GetTermine(username string) []Termin {
 
 // StoreTerminObj exportiert Termine zu json, "username" mapped Termine und Nutzer
 func StoreTerminObj(termin Termin, username string) {
-	path := getFileNameByTerminObj(termin, username)
-	directory, _ := filepath.Split(path)
-
 	ter := termin
+	count, _ := ioutil.ReadDir(GetDirectory(username))
+	i := len(count) + 1
+	id := strconv.Itoa(i)
 
-	err := os.MkdirAll(directory, 755) //erzeugt Verzeichnis passend zum User, falls noch nicht existent
-	if err != nil {
-		fmt.Println(err)
-	}
+	ter.setID(&ter, id)
+
+	path := getFile(id, username)
 
 	p, _ := json.MarshalIndent(ter, "", " ") //erzeugt die json
 	_ = os.WriteFile(path, p, 0755)          //schreibt json in Datei
@@ -79,6 +80,7 @@ func StoreTerminObj(termin Termin, username string) {
 
 // AddToCache fügt Termin dem Caching hinzu
 func AddToCache(termin Termin, kalender []Termin) []Termin {
+	termin.setID(&termin, strconv.Itoa(len(kalender)+1))
 	k := append(kalender, termin)
 	return k
 }
@@ -93,8 +95,8 @@ func StoreCache(kalender []Termin, username string) {
 }
 
 // LoadTermin kreiert Termin aus json, "username" mapped Termine und Nutzer
-func LoadTermin(title string, username string) Termin {
-	file := getFileNameByTitle(title, username)
+func LoadTermin(id string, username string) Termin {
+	file := getFile(id, username)
 
 	open, err := os.Open(file) //öffnet json
 	if err != nil {
@@ -117,8 +119,8 @@ func LoadTermin(title string, username string) Termin {
 }
 
 // deleteTermin löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
-func deleteTermin(title string, username string) {
-	file := getFileNameByTitle(title, username)
+func deleteTermin(id string, username string) {
+	file := getFile(id, username)
 	err := os.Remove(file)
 	if err != nil {
 		fmt.Println(err)
@@ -130,7 +132,7 @@ func DeleteAll(kalender []Termin, username string) []Termin {
 	k := kalender
 
 	for i := 0; i < len(k); i++ {
-		deleteTermin(k[i].Title, username)
+		deleteTermin(k[i].ID, username)
 	}
 
 	k = GetTermine(username)
@@ -138,17 +140,17 @@ func DeleteAll(kalender []Termin, username string) []Termin {
 }
 
 // DeleteFromCache löscht einzelnes Element aus dem Cache und ggf. die dazugehörige json
-func DeleteFromCache(kalender []Termin, title string, username string) []Termin {
+func DeleteFromCache(kalender []Termin, id string, username string) []Termin {
 	kOld := kalender
 	var kNew []Termin
-	file := getFileNameByTerminObj(kalender[0], username)
+	file := getFile(kalender[0].ID, username)
 
 	for i := 0; i < len(kOld); i++ {
-		if kOld[i].Title != title {
+		if kOld[i].ID != id {
 			kNew = append(kNew, kOld[i])
 		} else { //prüft, ob der Termin persistent, oder transitiv ist
 			if _, err := os.Stat(file); err == nil {
-				deleteTermin(title, username)
+				deleteTermin(id, username)
 			}
 		}
 	}

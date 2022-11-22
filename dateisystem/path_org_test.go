@@ -9,27 +9,19 @@ import (
 )
 
 func init() {
-	CreateNewTermin("test", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), "mik")
+	CreateNewTermin("test", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), "mik", "0")
 }
 
 func TestGetDirectory(t *testing.T) {
-	directory := getDirectory("mik")
+	directory := GetDirectory("mik")
 	directory = filepath.Dir(directory)
 	con, _ := os.Getwd()
 
 	assert.Equal(t, con, directory)
 }
 
-func TestGetFilenameByTitle(t *testing.T) {
-	file := getFileNameByTitle("test", "mik")
-	_, file = filepath.Split(file)
-
-	assert.Equal(t, "test.json", file)
-}
-
-func TestGetFilenameByTerminObj(t *testing.T) {
-	ter := NewTerminObj("test", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC))
-	file := getFileNameByTerminObj(ter, "mik")
+func TestGetFile(t *testing.T) {
+	file := getFile("test", "mik")
 	_, file = filepath.Split(file)
 
 	assert.Equal(t, "test.json", file)

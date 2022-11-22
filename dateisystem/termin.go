@@ -25,6 +25,7 @@ type Termin struct {
 	Recurring   Repeat    `json:"Recurring"`
 	Date        time.Time `json:"Date"`
 	EndDate     time.Time `json:"EndDate"`
+	ID          string    `json:"ID"`
 }
 
 func (Termin) SetTitle(t *Termin, newTitle string) {
@@ -45,4 +46,8 @@ func (Termin) SetDate(t *Termin, newDate time.Time) {
 
 func (Termin) SetEndeDate(t *Termin, newDate time.Time) {
 	t.EndDate = newDate
+}
+
+func (Termin) setID(t *Termin, id string) {
+	t.ID = id
 }
