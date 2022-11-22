@@ -1,7 +1,6 @@
 package kalenderansicht
 
 import (
-	"DHBW_GO_Projekt/dateisystem"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -79,13 +78,13 @@ func createTestTermin(repeat ds.Repeat) *ViewManager {
 
 	switch repeat {
 	case ds.WEEKLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", dateisystem.Repeat(ds.WEEKLY), createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title", "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	case ds.YEARLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", dateisystem.Repeat(ds.YEARLY), createSpecificDate(2020, 2, 11), createSpecificDate(2024, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title", "test", ds.YEARLY, createSpecificDate(2020, 2, 11), createSpecificDate(2024, 2, 11), vm.Username)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	case ds.MONTHLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", dateisystem.Repeat(ds.MONTHLY), createSpecificDate(2021, 2, 11), createSpecificDate(time.Now().Year(), 30, 12), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title", "test", ds.MONTHLY, createSpecificDate(2021, 2, 11), createSpecificDate(time.Now().Year(), 30, 12), vm.Username)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
 	return vm
@@ -459,7 +458,7 @@ func testLvJumpPageForward(t *testing.T) {
 
 	//dem Cache mehrere Termine hinzufügen
 	for i := 0; i < 30; i++ {
-		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", dateisystem.Repeat(ds.WEEKLY), createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
 
@@ -479,7 +478,7 @@ func testLvJumpPageBack(t *testing.T) {
 
 	//dem Cache mehrere Termine hinzufügen
 	for i := 0; i < 30; i++ {
-		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", dateisystem.Repeat(ds.WEEKLY), createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)

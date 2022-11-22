@@ -12,7 +12,7 @@ type ListView struct {
 	CurrentPage         int
 }
 
-// initTableView
+// InitListView initTableView
 // Rückgabewert: Pointer auf ein Objekt ListView
 // Dient zur Initialisierung der ListView zum Start des Programms.
 // Zu Begin wird diese auf das aktuelle Datum gesetzt, die Seitenanzahl Terminen wird die Seite mehrseitig.

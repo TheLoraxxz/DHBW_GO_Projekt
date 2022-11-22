@@ -162,7 +162,7 @@
     // back
     // sorgt dafür, dass der vorherige Monat angezeigt wird
     function back() {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
@@ -173,7 +173,7 @@
     // forward
     // sorgt dafür, dass der nächste Monat angezeigt wird
     function forward() {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
@@ -184,11 +184,11 @@
     // monthSelection
     // sorgt dafür, dass der gewählte Monat angezeigt wird
     function monthSelection(monat) {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
-        requestString = String("?monat=" + monat)
+        const requestString = String("?monat=" + monat);
         xhttp.open("GET", requestString);
         xhttp.send();
     }
@@ -196,11 +196,11 @@
     // year
     // sorgt dafür, dass das entweder ein Jahr vor oder zurückgesprungen wird
     function year(summand) {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
-        requestString = String("?jahr=" + summand)
+        const requestString = String("?jahr=" + summand);
         xhttp.open("GET", requestString);
         xhttp.send();
     }
@@ -209,7 +209,7 @@
     // jumpToToday
     // sorgt dafür, dass der Monat des heutigen Tages angezeigt wird
     function jumpToToday() {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
@@ -222,12 +222,14 @@
     // Es wird Tag, Monat und Jahr und die Termineinträge des Tages übergeben, von dem die Termine angezeigt werden sollen.
     // Die Funktion sorgt dafür, dass die Informationen im linken Teil des Bildschirms angezeigt werden.
     function showTermin(day,month, year, dayentries) {
-        let terminStr = "Deine Termine am: <br>" + day +" " + month +" " +year;
+        let terminStr = "<h5> Deine Termine am: <br>" + day +" " + month +" " +year +"</h5>";
 
+        let terminNr;
+        let entry;
         for (let i = 0; i < dayentries.length; i++) {
-            terminNr = i +1
-            entrie = dayentries;
-            terminStr = terminStr + "<b>" +"Termin-Nr.: "+ terminNr + "</b>"
+            terminNr = i + 1
+            entry = dayentries;
+            terminStr = terminStr + "<b>" + "Termin-Nr.: " + terminNr + "</b>"
                 + "<ul>" +
                 "<li> <b>Titel: " + dayentries[i].Title + "</b></li>" +
                 "<li> <b>Beschreibung:</b> " + dayentries[i].Description + "</li>" +
@@ -272,7 +274,7 @@
     // die Wiederholung als String gezeigt wird.
     // Die Funktion wird benötigt, wenn der User auf ein "anzeigen" Feld klickt.
     function getRecurring(rec){
-        var recurring
+        let recurring;
         switch(rec) {
             case 0:
                 recurring = "täglich"

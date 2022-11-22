@@ -93,33 +93,33 @@
     // entrySelection
     // hier wird eine Get request gestellt, um die gewünschte Anzahl an Einträgen pro Seite zu erhalten
     function entrySelection(amount) {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
-        requestString = String("?Eintraege=" + amount)
+        const requestString = String("?Eintraege=" + amount);
         xhttp.open("GET", requestString);
         xhttp.send();
     }
     // JumpPageBack
     // hier wird eine Get request gestellt, um eine Seite zurück zu springen
     function JumpPageBack() {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
-        requestString = String("?Seite=-1")
+        const requestString = String("?Seite=-1");
         xhttp.open("GET", requestString);
         xhttp.send();
     }
     // JumpPageForward
     // hier wird eine Get request gestellt, um eine Seite vor zu springen
     function JumpPageForward() {
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             location.reload();
         }
-        requestString = String("?Seite=+1")
+        const requestString = String("?Seite=+1");
         xhttp.open("GET", requestString);
         xhttp.send();
     }

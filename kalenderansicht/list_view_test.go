@@ -259,12 +259,12 @@ func testFilterCalendarEntries(t *testing.T) {
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 5)
-	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.Repeat(ds.DAILY), testTermin1Starts, testTermin1Ends)
-	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.Repeat(ds.WEEKLY), testTermin2Starts, testTermin2Ends)
-	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.Repeat(ds.YEARLY), testTermin3Starts, testTermin3Ends)
-	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.Repeat(ds.MONTHLY), testTermin4Starts, testTermin4Ends)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends)
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends)
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends)
+	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends)
 	//Termin sollte nicht hinzugefügt werden
-	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.Repeat(ds.MONTHLY), testTermin5Starts, testTermin5Ends)
+	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.MONTHLY, testTermin5Starts, testTermin5Ends)
 
 	//Testen ob Daten in Slice eingefügt wurden
 	filteredSlice := lv.FilterCalendarEntries(testTermine)
@@ -311,11 +311,11 @@ func testNextOccurrences(t *testing.T) {
 
 	//Slice mit Testterminen erstellen, jeder Wiederholungstyp dabei
 	testTermine := make([]ds.Termin, 5)
-	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.Repeat(ds.DAILY), testTermin1Starts, testTermin1Ends)
-	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.Repeat(ds.WEEKLY), testTermin2Starts, testTermin2Ends)
-	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.Repeat(ds.YEARLY), testTermin3Starts, testTermin3Ends)
-	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.Repeat(ds.MONTHLY), testTermin4Starts, testTermin4Ends)
-	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.Repeat(ds.Never), testTermin5Starts, testTermin5Ends)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends)
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends)
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends)
+	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends)
+	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.Never, testTermin5Starts, testTermin5Ends)
 
 	assert.Equal(t, expectedResults[0], lv.NextOccurrences(testTermine[0]), "Daten-in den Slices sollten identisch sein")
 	assert.Equal(t, expectedResults[1], lv.NextOccurrences(testTermine[1]), "Daten-in den Slices sollten identisch sein")

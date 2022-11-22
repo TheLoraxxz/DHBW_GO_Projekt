@@ -41,18 +41,16 @@ Dies wird benötigt, damit der Javascript-Code nicht mittem im HTML-Code eingef�
 {{ define "creatorScript" }}
 <!-----------------------------------Hier folgt benötigter javaScript Code------------------------------>
 <script>
+  // EXTERNE QUELLE: https://getbootstrap.com/docs/5.0/forms/validation/ (Code angepasst)
   // validateForm
   // Parameter: id des Formulars, welches auf Vollständigkeit geprüft wird.
   // Hier wird das Formular auf vollständigkeit überprüft
   function validateForm(id) {
-    var form = document.getElementById(id);
+    const form = document.getElementById(id);
     form.addEventListener('submit', function (event) {
       if (!form.checkValidity()) {
         event.preventDefault()
         event.stopPropagation()
-      }
-      if (form.checkValidity()) {
-        sendData()
       }
       form.classList.add('was-validated')
     }, false);
@@ -63,7 +61,7 @@ Dies wird benötigt, damit der Javascript-Code nicht mittem im HTML-Code eingef�
   // Funktion erstellt Formular für eine Post-Anfrage, um Termine zu bearbeiten oder zu löschen
   function editTermin(dayEntry) {
 
-    let edditFormStr = "<h3>Termine berabeiten</h3>\n"
+    let edditFormStr = "<h3>Termine bearbeiten</h3>\n"
       edditFormStr = edditFormStr +
               "<form action=\"?termineBearbeiten\" method=\"POST\" id=\"terminCreater\" role=\"form\" class=\"row mb-3 p-3  needs-validation\" novalidate>\n" +
               "<input type=\"hidden\" readonly class=\"form-control-plaintext\" id=\"oldTitle\" name=\"oldTitle\" value=\""+ dayEntry.Title +  "\" >\n"+
