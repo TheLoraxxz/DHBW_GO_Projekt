@@ -107,12 +107,14 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 			if err != nil {
 				return
 			}
+			//change the user to new user
 			password := request.Form.Get("oldPassword")
 			newPassword := request.Form.Get("newPassword")
 			cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
 			if err != nil {
 				return
 			}
+			// set cookie so it automaticalyl updates and it doesnt throw one back to the login site
 			cookie := &http.Cookie{
 				Name:     "SessionID-Kalender",
 				Value:    cookies,
@@ -170,7 +172,6 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	cookie, err := request.Cookie("SessionID-Kalender")
 	if err != nil {
-		log.Println(err)
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 
