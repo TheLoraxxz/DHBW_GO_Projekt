@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time) Termin { //erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
+// NewTerminObj erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
+func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time) Termin {
 
 	T := Termin{
 		Title:       title,
@@ -22,13 +23,15 @@ func NewTerminObj(title string, description string, rep Repeat, date time.Time, 
 	return T
 }
 
-func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string) Termin { //erzeugt einen persistenten Termin
+// CreateNewTermin erzeugt einen persistenten Termin
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string) Termin {
 	t := NewTerminObj(title, description, rep, date, endDate)
 	StoreTerminObj(t, username)
 	return t
 }
 
-func GetTermine(username string) []Termin { //liefert slice mit allen terminen eines Users zurück
+// GetTermine liefert slice mit allen terminen eines Users zurück
+func GetTermine(username string) []Termin {
 	var k []Termin
 
 	path := getDirectory(username)
@@ -58,7 +61,8 @@ func GetTermine(username string) []Termin { //liefert slice mit allen terminen e
 	return k
 }
 
-func StoreTerminObj(termin Termin, username string) { //exportiert Termine zu json, "username" mapped Termine und Nutzer
+// StoreTerminObj exportiert Termine zu json, "username" mapped Termine und Nutzer
+func StoreTerminObj(termin Termin, username string) {
 	path := getFileNameByTerminObj(termin, username)
 	directory, _ := filepath.Split(path)
 
@@ -73,12 +77,14 @@ func StoreTerminObj(termin Termin, username string) { //exportiert Termine zu js
 	_ = os.WriteFile(path, p, 0755)          //schreibt json in Datei
 }
 
-func AddToCache(termin Termin, kalender []Termin) []Termin { //fügt Termin dem Caching hinzu
+// AddToCache fügt Termin dem Caching hinzu
+func AddToCache(termin Termin, kalender []Termin) []Termin {
 	k := append(kalender, termin)
 	return k
 }
 
-func StoreCache(kalender []Termin, username string) { //speichert alle Elemente Caches von User "username"
+// StoreCache speichert alle Elemente Caches von User "username"
+func StoreCache(kalender []Termin, username string) {
 	k := kalender
 
 	for i := 0; i < len(k); i++ {
@@ -86,7 +92,8 @@ func StoreCache(kalender []Termin, username string) { //speichert alle Elemente 
 	}
 }
 
-func LoadTermin(title string, username string) Termin { //kreiert Termin aus json, "username" mapped Termine und Nutzer
+// LoadTermin kreiert Termin aus json, "username" mapped Termine und Nutzer
+func LoadTermin(title string, username string) Termin {
 	file := getFileNameByTitle(title, username)
 
 	open, err := os.Open(file) //öffnet json
@@ -109,7 +116,8 @@ func LoadTermin(title string, username string) Termin { //kreiert Termin aus jso
 	return t
 }
 
-func deleteTermin(title string, username string) { //löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
+// deleteTermin löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
+func deleteTermin(title string, username string) {
 	file := getFileNameByTitle(title, username)
 	err := os.Remove(file)
 	if err != nil {
@@ -117,7 +125,8 @@ func deleteTermin(title string, username string) { //löscht json mit den Inform
 	}
 }
 
-func DeleteAll(kalender []Termin, username string) []Termin { //löscht alle Termine eines Users, liefert []Termin(nil) zurück
+// DeleteAll löscht alle Termine eines Users, liefert []Termin(nil) zurück
+func DeleteAll(kalender []Termin, username string) []Termin {
 	k := kalender
 
 	for i := 0; i < len(k); i++ {
@@ -128,7 +137,8 @@ func DeleteAll(kalender []Termin, username string) []Termin { //löscht alle Ter
 	return k
 }
 
-func DeleteFromCache(kalender []Termin, title string, username string) []Termin { //Löscht einzelnes Element aus dem Cache
+// DeleteFromCache löscht einzelnes Element aus dem Cache und ggf. die dazugehörige json
+func DeleteFromCache(kalender []Termin, title string, username string) []Termin {
 	kOld := kalender
 	var kNew []Termin
 	file := getFileNameByTerminObj(kalender[0], username)
