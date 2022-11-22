@@ -20,9 +20,9 @@ var Server http.Server
 
 func main() {
 	//flags and configuration of application
-	port := flag.String("port", "80", "define the port for the application")
-	adminUserName := flag.String("user", "admin", "Define Admin username for first login")
-	adminPassword := flag.String("passw", "admin", "Define Admin Password for first login to application")
+	port := flag.String("port", "80", "define the port for the application. Default:80")
+	adminUserName := flag.String("user", "admin", "Define Admin username for first login. Default: admin")
+	adminPassword := flag.String("passw", "admin", "Define Admin Password for first login to application. Defualt: admin")
 	basepath, err := os.Getwd()
 	err = authentifizierung.LoadUserData(adminUserName, adminPassword, &basepath)
 	timerSaveData := time.NewTimer(1 * time.Minute)
