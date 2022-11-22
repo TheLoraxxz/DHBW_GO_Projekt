@@ -2,6 +2,7 @@ package authentifizierung
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -191,7 +192,8 @@ func TestSaveUserData(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	err := SaveUserData()
+	path, err := filepath.Abs("../")
+	err = SaveUserData(&path)
 	assert.Equal(t, nil, err)
 }
 
@@ -226,16 +228,17 @@ func TestSaveUserData_WriteToRightFunction(t *testing.T) {
 }
 
 func TestLoadUserData(t *testing.T) {
+	path, _ := filepath.Abs("../")
 	user := "admin"
-	err := LoadUserData(&user, &user)
+	err := LoadUserData(&user, &user, &path)
+	path = filepath.Join(path, "data", "user", "user-data.json")
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 10, len(users.users))
 	for key, element := range users.users {
 		assert.NotEmpty(t, key)
 		assert.NotEmpty(t, element)
 	}
-	path, _ := filepath.Abs("../data/user")
-	path = filepath.Join(path, "user-data.json")
+
 	err = os.Remove(path)
 	assert.Equal(t, nil, err)
 }
@@ -246,7 +249,8 @@ func TestLoadUserData_FileNotExists(t *testing.T) {
 	path = filepath.Join(path, "user-data.json")
 	_ = os.Remove(path)
 	user := "admin"
-	err := LoadUserData(&user, &user)
+	path, _ = filepath.Abs("../")
+	err := LoadUserData(&user, &user, &path)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(users.users))
 }
@@ -260,7 +264,12 @@ func TestLoadUserData_WrongFile(t *testing.T) {
 	file := "test"
 	err := os.WriteFile(path, []byte(file), 0644)
 	assert.Equal(t, nil, err)
-	err = LoadUserData(&user, &user)
+	err = LoadUserData(&user, &user, &path)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(users.users))
+}
+
+func TestTest(t *testing.T) {
+	fmt.Println(os.Getwd())
+
 }

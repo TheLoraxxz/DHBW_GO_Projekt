@@ -13,6 +13,7 @@ Tests whether web server works even on Port 80
 */
 
 // test routine um ssl zertifikat zuu testen
+
 func TestCertificateWorks(t *testing.T) {
 	go main()
 	time.Sleep(1 * time.Second)

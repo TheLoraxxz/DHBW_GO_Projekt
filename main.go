@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 )
 
 type RootHandler struct{}
@@ -21,7 +23,16 @@ func main() {
 	port := flag.String("port", "80", "define the port for the application")
 	adminUserName := flag.String("user", "admin", "Define Admin username for first login")
 	adminPassword := flag.String("passw", "admin", "Define Admin Password for first login to application")
-	err := authentifizierung.LoadUserData(adminUserName, adminPassword)
+	basepath, err := os.Getwd()
+	err = authentifizierung.LoadUserData(adminUserName, adminPassword, &basepath)
+	timerSaveData := time.NewTimer(1 * time.Minute)
+	go func() {
+		<-timerSaveData.C
+		err := authentifizierung.SaveUserData(&basepath)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal("Coudn't load users")

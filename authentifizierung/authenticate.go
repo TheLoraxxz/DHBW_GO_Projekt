@@ -111,11 +111,13 @@ func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie str
 	return "", errors.New("Wrong User")
 }
 
-func LoadUserData(firstuser *string, firstPassword *string) (err error) {
+// TODO: relative to current path of file so it doesn't
+func LoadUserData(firstuser *string, firstPassword *string, path *string) (err error) {
+	ex, err := os.Getwd()
+	fmt.Println(ex)
 	userLoaded := []UserJSON{}
-	path, _ := filepath.Abs("../data/user")
-	path = filepath.Join(path, "user-data.json")
-	file, err := os.Open(path)
+	pathAbs := filepath.Join(*path, "data", "user", "user-data.json")
+	file, err := os.Open(pathAbs)
 	if err != nil {
 		err := CreateUser(firstuser, firstPassword)
 		if err != nil {
@@ -138,7 +140,7 @@ func LoadUserData(firstuser *string, firstPassword *string) (err error) {
 		if err != nil {
 			log.Fatal("coudnt close file")
 		}
-		err = os.Remove(path)
+		err = os.Remove(pathAbs)
 		if err != nil {
 			return fmt.Errorf("Error on deleting file %w", err)
 		}
@@ -157,23 +159,19 @@ func LoadUserData(firstuser *string, firstPassword *string) (err error) {
 
 }
 
-func SaveUserData() error {
+func SaveUserData(path *string) error {
 	users.lock.Lock()
 	user := []UserJSON{}
 	defer users.lock.Unlock()
 	for key, elem := range users.users {
 		user = append(user, UserJSON{User: key, Passw: elem})
 	}
-	path, err := filepath.Abs("../data/user")
-	if err != nil {
-		return fmt.Errorf("Error on trying to get Path: %w", err)
-	}
-	path = filepath.Join(path, "user-data.json")
+	pathAbs := filepath.Join(*path, "data", "user", "user-data.json")
 	file, err := json.MarshalIndent(user, "", "")
 	if err != nil {
 		return fmt.Errorf("Error on creating json file %w", err)
 	}
-	err = os.WriteFile(path, file, 0644)
+	err = os.WriteFile(pathAbs, file, 0644)
 	if err != nil {
 		return fmt.Errorf("Error on writing to Json file %w", err)
 	}
