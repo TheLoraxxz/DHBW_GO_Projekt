@@ -173,16 +173,16 @@ Nach jedem ändern der Ansicht der ListView, müssen die Einträge
 des Users ab dem neu angezeigten Datum entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-func (vm *ViewManager) LvSelectDate(r *http.Request) {
+func (vm *ViewManager) LvSelectDate(dateStr string) {
 	//Datum Filtern und in das richtige Format überführen mithilfe eines Layouts
 	layout := "2006-01-02"
-	date, _ := time.Parse(layout, r.FormValue("selDate"))
+	date, _ := time.Parse(layout, dateStr)
 	vm.Lv.SelectDate(date)
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
 }
 
 func (vm *ViewManager) LvSelectEntriesPerPage(amount int) {
-	vm.Lv.SelectEntriesPerPage(amount * 5)
+	vm.Lv.SelectEntriesPerPage(amount)
 }
 
 func (vm *ViewManager) LvJumpPageForward() {

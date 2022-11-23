@@ -87,22 +87,66 @@ Ab hier Folgen Funktionen, die dem Filtern und Anzeigen der Termine in der Liste
 // Die Funktion weist dem Feld EntriesSinceSelDate des Listview Objektes eine Slice mit allen Terminen des Users seit dem
 // gewünschten Datum zu.
 func (lv *ListView) CreateTerminListEntries(terminCache []ds.Termin) {
-	lv.EntriesSinceSelDate = lv.FilterCalendarEntries(terminCache)
+	entries := lv.FilterCalendarEntries(terminCache)
+	lv.SortEntries(entries)
+	lv.EntriesSinceSelDate = entries
 }
 
 // FilterCalendarEntries
 // Parameter: Slice mit allen Terminen des Nutzers
-// Rückgabewert: Ein Slice mit allen Terminen des Users seit dem gewünschten Datum
+// Rückgabewert: Ein Slice mit allen Terminen des Users seit dem gewünschten Datum.
+// Die Funktion schaut, ob das Enddatum des Termins nach dem auf der Seite gezeigtem Datum liegt.
+// Falls es sich bei den Terminwiederholungen um wöchentliche, monatliche oder jährliche Termine handelt,
+// wird zusätzlich geprüft, ob der Termin nach dem gezeigten Datum auch nochmal vorkommt, oder ob nur das Enddatum
+// weiter hinten liegt. Kommt der Termin nicht nochmal vor, wird er aussortiert.
 func (lv *ListView) FilterCalendarEntries(termins []ds.Termin) []ds.Termin {
 	startDate := lv.SelectedDate
-
-	entriesSinnceSelDate := make([]ds.Termin, 0, len(termins))
+	entriesSinceSelDate := make([]ds.Termin, 0, len(termins))
 	for _, termin := range termins {
 		if termin.EndDate.After(startDate) || termin.EndDate.Equal(startDate) {
-			entriesSinnceSelDate = append(entriesSinnceSelDate, termin)
+			if (termin.Recurring == ds.DAILY) || (termin.Recurring == ds.Never) {
+				entriesSinceSelDate = append(entriesSinceSelDate, termin)
+			} else {
+				date := termin.Date
+				lastOccuring := date
+				for date.Before(termin.EndDate) || date.Equal(termin.EndDate) {
+					lastOccuring = date
+					switch termin.Recurring {
+					case ds.WEEKLY:
+						date = date.AddDate(0, 0, 7)
+					case ds.MONTHLY:
+						date = date.AddDate(0, 1, 0)
+					case ds.YEARLY:
+						date = date.AddDate(1, 0, 0)
+					}
+				}
+				if lastOccuring.After(startDate) {
+					entriesSinceSelDate = append(entriesSinceSelDate, termin)
+				}
+			}
 		}
 	}
-	return entriesSinnceSelDate
+	return entriesSinceSelDate
+}
+
+// SortEntries
+// Parameter: Slice mit den Terminen des Nutzers, die ab dem auf der Seite gezeigten Datum vorkommen
+// Rückgabewert: ein sortiertes Slice, welches die Termine nach ihrem nächsten Vorkommen zeitlich sortiert
+// Sortieralgorithmus: Bubble-Sort
+// QUELLE: https://www.linux-magazin.de/ausgaben/2020/02/snapshot-23/
+func (lv ListView) SortEntries(entries []ds.Termin) {
+	sortedEntries := entries
+
+	for i := range sortedEntries {
+		for j := i + 1; j < len(sortedEntries); j++ {
+			nextOccurringOld := lv.NextOccurrences(sortedEntries[i])[0]
+			nextOccurringNew := lv.NextOccurrences(sortedEntries[j])[0]
+			if nextOccurringOld.After(nextOccurringNew) {
+				sortedEntries[i], sortedEntries[j] =
+					sortedEntries[j], sortedEntries[i]
+			}
+		}
+	}
 }
 
 // RequiredPages
@@ -119,7 +163,7 @@ func (lv ListView) RequiredPages() int {
 // NextOccurrences
 // Parameter: ein Termin
 // Rückgabewert: drei Instanzen des Typs time.Time
-// Berechnet je nach Wiederholung des Termins und des gewählten Datums, die nächsten drei Vorkommen des Termins.
+// berechnet je nach Wiederholung des Termins und des gewählten Datums, die nächsten drei Vorkommen des Termins.
 func (lv ListView) NextOccurrences(termin ds.Termin) []time.Time {
 	selDate := lv.SelectedDate
 	nextOccurrences := make([]time.Time, 0, 3)

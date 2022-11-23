@@ -60,7 +60,6 @@ Dies wird benötigt, damit der Javascript-Code nicht mittem im HTML-Code eingef�
   // Parameter: Termin, welcher bearbeitet wird
   // Funktion erstellt Formular für eine Post-Anfrage, um Termine zu bearbeiten oder zu löschen
   function editTermin(dayEntry) {
-
     let edditFormStr = "<h3>Termine bearbeiten</h3>\n"
       edditFormStr = edditFormStr +
               "<form action=\"?termineBearbeiten\" method=\"POST\" id=\"terminCreater\" role=\"form\" class=\"row mb-3 p-3  needs-validation\" novalidate>\n" +
@@ -101,12 +100,22 @@ Dies wird benötigt, damit der Javascript-Code nicht mittem im HTML-Code eingef�
               "  </div>\n";
     edditFormStr = edditFormStr + "  <div class=\"col-12  p-3\">\n" +
             "    <button type=\"submit\" class=\"btn btn-secondary\" onclick=\"validateForm('terminCreater')\">Bestätigen</button>\n" +
-            "  </div>\n"
+            "  </div>\n"+
     "</form>";
 
     document.getElementById("terminCreation").innerHTML = edditFormStr;
+
   }
 
+  // Termin
+  // hier wird ein Objekt Termin erstellt, welches für die Terminbearbeitung benötigt wird
+  function Termin(title, description, recurring, date, endDate) {
+    this.Title = title;
+    this.Description = description;
+    this.Recurring = recurring;
+    this.Date = date;
+    this.EndDate = endDate;
+  }
 </script>
 <!----end of template creatorScript------>
 {{end}}

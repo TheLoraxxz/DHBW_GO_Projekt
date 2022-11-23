@@ -134,13 +134,13 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 		case r.RequestURI == "/user/view/table?suche=plusMonat":
 			v.vm.TvJumpMonthFor()
 		case strings.Contains(r.RequestURI, "/user/view/table?monat="):
-			monatStr := r.RequestURI[23:]
+			monatStr := r.FormValue("monat")
 			monat, _ := strconv.Atoi(monatStr)
 			v.vm.TvSelectMonth(time.Month(monat))
-		case strings.Contains(r.RequestURI, "/user/view/table?jahr="):
-			summandStr := r.RequestURI[22:]
-			summand, _ := strconv.Atoi(summandStr)
-			v.vm.TvJumpYearForOrBack(summand)
+		case r.RequestURI == "/user/view/table?jahr=Zurueck":
+			v.vm.TvJumpYearForOrBack(-1)
+		case r.RequestURI == "/user/view/table?jahr=Vor":
+			v.vm.TvJumpYearForOrBack(1)
 		case r.RequestURI == "/user/view/table?datum=heute":
 			v.vm.TvJumpToToday()
 		}
@@ -166,21 +166,22 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		switch {
+		case strings.Contains(r.RequestURI, "/user/view/list?selDate="):
+			dateStr := r.FormValue("selDate")
+			v.vm.LvSelectDate(dateStr)
 		case strings.Contains(r.RequestURI, "/user/view/list?Eintraege="):
-			amountStr := r.RequestURI[26:]
+			amountStr := r.FormValue("Eintraege")
 			amount, _ := strconv.Atoi(amountStr)
 			v.vm.LvSelectEntriesPerPage(amount)
-		case r.RequestURI == "/user/view/list?Seite=+1":
+		case r.RequestURI == "/user/view/list?Seite=Vor":
 			v.vm.LvJumpPageForward()
-		case r.RequestURI == "/user/view/list?Seite=-1":
+		case r.RequestURI == "/user/view/list?Seite=Zurueck":
 			v.vm.LvJumpPageBack()
 		}
 	}
 
 	if r.Method == "POST" {
 		switch {
-		case r.RequestURI == "/user/view/list?selDatum":
-			v.vm.LvSelectDate(r)
 		case r.RequestURI == "/user/view/list?termineBearbeiten":
 			v.vm.EditTermin(r, v.vm.Username)
 		case r.RequestURI == "/user/view/list?terminErstellen":

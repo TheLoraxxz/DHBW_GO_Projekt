@@ -38,9 +38,9 @@ func testJumpMonthFor(t *testing.T) {
 	for i > 0 {
 		i -= 1
 		tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDate())
-		aktuellerMonat := (int(tv.ShownDate.Month()))
+		aktuellerMonat := int(tv.ShownDate.Month())
 		tv.JumpMonthFor()
-		neuerMonat := (int(tv.ShownDate.Month()))
+		neuerMonat := int(tv.ShownDate.Month())
 		if aktuellerMonat < 12 {
 			assert.Equal(t, aktuellerMonat+1, neuerMonat, "Die Monate müssen identisch sein")
 		} else {
@@ -54,9 +54,9 @@ func testJumpMonthBack(t *testing.T) {
 	for i > 0 {
 		i -= 1
 		tv.ShownDate = tv.getFirstDayOfMonth(generateRandomDate())
-		aktuellerMonat := (int(tv.ShownDate.Month()))
+		aktuellerMonat := int(tv.ShownDate.Month())
 		tv.JumpMonthBack()
-		neuerMonat := (int(tv.ShownDate.Month()))
+		neuerMonat := int(tv.ShownDate.Month())
 		if aktuellerMonat == 1 {
 			assert.Equal(t, 12, neuerMonat, "Die Monate sollten identisch sein.")
 		} else {

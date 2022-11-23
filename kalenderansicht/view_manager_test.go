@@ -252,7 +252,7 @@ func testEditTerminEdit(t *testing.T) {
 	//Erstellen der Lösch-Request
 	data = url.Values{}
 	data.Add("oldTitle", "Test Termin")
-	data.Add("editing", "Bearbeiten: Termin")
+	data.Add("editing", "1")
 	data.Add("title", "Bearbeiteter Test Termin")
 	data.Add("description", "Spaßiger bearbeiteter Termin")
 	data.Add("repeat", "1") //Der Wert 1 entspricht der Wiederholung "niemals"
@@ -428,18 +428,7 @@ Hier Folgen die Tests zum Managen der ListView
 func testLvSelectDate(t *testing.T) {
 	vm := new(ViewManager)
 	newDate := generateRandomDate()
-
-	//Erstellen des Datums als POST-Value
-	data := url.Values{}
-	layout := "2006-01-02"
-	data.Add("selDate", newDate.Format(layout))
-
-	//Erstellen der Request
-	r, _ := http.NewRequest("POST", "/listenAnsicht?selDatum=Datum\"", strings.NewReader(data.Encode()))
-	r.Header.Add("", "")
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	vm.LvSelectDate(r)
+	vm.LvSelectDate(newDate.Format("2006-01-02"))
 	assert.Equal(t, newDate, vm.Lv.SelectedDate, "Die zwei Daten sollten identisch sein.")
 }
 

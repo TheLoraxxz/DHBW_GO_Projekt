@@ -23,12 +23,10 @@ func testSelectDate(t *testing.T) {
 
 func testSelectEntriesPerPage(t *testing.T) {
 	var lv = new(ListView)
-	//Die Values der Webseite gehen von 1 bis 3, wobei 1 für 5 Einträge steht und 3 für 15
 	entriesAmountValue := 5
 	lv.SelectEntriesPerPage(entriesAmountValue)
 	assert.Equal(t, entriesAmountValue, lv.EntriesPerPage, "Die Nummern sollten identisch sein.")
 	assert.Equal(t, 1, lv.CurrentPage, "Die aktuelle Seite sollte Seite 1 sein.")
-
 }
 
 /*
@@ -60,13 +58,15 @@ func testJumpPageBackFirstPage(t *testing.T) {
 func testJumPageFor(t *testing.T) {
 
 	//Datum für Testtermine erstellen
-	testTerminStarts := createSpecificDate(2022, 1, 11)
-	testTerminEnds := createSpecificDate(2022, 30, 11)
+	testTerminStarts := time.Now().AddDate(-1, 0, 0)
+	testTerminEnds := time.Now().AddDate(1, 0, 0)
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
-	for i := 0; i < 30; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+	for i := 0; i < 10; i++ {
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.MONTHLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.YEARLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
 	}
 	//Liste erstellen, angezeigte Seite ist 1
 	lv := InitListView(testTermine)
@@ -103,13 +103,15 @@ func testJumPageFor(t *testing.T) {
 func testJumpPageBack(t *testing.T) {
 
 	//Datum für Testtermine erstellen
-	testTerminStarts := createSpecificDate(2022, 1, 11)
-	testTerminEnds := createSpecificDate(2022, 30, 11)
+	testTerminStarts := time.Now().AddDate(-1, 0, 0)
+	testTerminEnds := time.Now().AddDate(1, 0, 0)
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
-	for i := 0; i < 30; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+	for i := 0; i < 10; i++ {
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.MONTHLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.YEARLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
 	}
 
 	//Liste erstellen
@@ -158,7 +160,7 @@ func testGetEntriesCorrectNumber(t *testing.T) {
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
 	for i := 0; i < 30; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
 	}
 
 	//Liste erstellen
@@ -195,7 +197,7 @@ func testGetEntriesCorrectEntries(t *testing.T) {
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
 	for i := 0; i < 30; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.Repeat(i%5), testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
 	}
 	//Liste erstellen
 	lv := InitListView(testTermine)
@@ -275,6 +277,53 @@ func testFilterCalendarEntries(t *testing.T) {
 	assert.Equal(t, 4, len(filteredSlice), "4 Termine sollten sich in der Slice befinden")
 
 }
+func testSortEntries(t *testing.T) {
+	var lv ListView
+	//Hier wird der 1.11.2022 als Startdatum gesetzt
+	lv.SelectedDate = createSpecificDate(2022, 1, 11)
+
+	//Datum für Testtermine erstellen
+	testTermin1Starts := createSpecificDate(2022, 9, 11)
+	testTermin1Ends := createSpecificDate(2022, 29, 11)
+
+	testTermin2Starts := createSpecificDate(2022, 27, 10)
+	testTermin2Ends := createSpecificDate(2023, 27, 10)
+
+	testTermin3Starts := createSpecificDate(2021, 9, 11)
+	testTermin3Ends := createSpecificDate(2023, 9, 11)
+
+	testTermin4Starts := createSpecificDate(2022, 2, 10)
+	testTermin4Ends := createSpecificDate(2023, 2, 10)
+
+	//Slice mit Testterminen erstellen
+	testTermine := make([]ds.Termin, 4)
+
+	// nächstes Vorkommen ab  1.11.2022: 9.11.2022
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends)
+
+	// nächstes Vorkommen  1.11.2022: 3.11.2022
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends)
+
+	// nächstes Vorkommen  1.11.2022: 9.11.2022
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends)
+
+	// nächstes Vorkommen  1.11.2022: 2.11.2022
+	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends)
+
+	//Daten für die Tests in ein Slice mit Terminen kopieren
+	controlTermins := make([]ds.Termin, len(testTermine))
+	copy(controlTermins, testTermine)
+
+	//Testen ob Daten in Slice eingefügt wurden:
+	lv.SortEntries(testTermine)
+	assert.Equal(t, controlTermins[3], testTermine[0], "Termine an diesen Positionen sollten identisch sein")
+	assert.Equal(t, controlTermins[1], testTermine[1], "Termine an diesen Positionen sollten identisch sein")
+	assert.Equal(t, controlTermins[2], testTermine[2], "Termine an diesen Positionen sollten identisch sein")
+	assert.Equal(t, controlTermins[0], testTermine[3], "Termine an diesen Positionen sollten identisch sein")
+	assert.Equal(t, 4, len(testTermine), "4 Termine sollten sich in der Slice befinden")
+
+}
+
 func testNextOccurrences(t *testing.T) {
 	var lv ListView
 	//Hier wird der 1.11.2022 als Startdatum gesetzt
@@ -345,5 +394,6 @@ func TestListView(t *testing.T) {
 
 	//Tests zum Filtern und tests für Infos für die Darstellung der Termine in der Listenansicht
 	t.Run("testRuns FilterCalendarEntries", testFilterCalendarEntries)
+	t.Run("testRuns SortEntries", testSortEntries)
 	t.Run("testRuns  NextOccurrences", testNextOccurrences)
 }
