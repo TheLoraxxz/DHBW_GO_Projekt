@@ -20,8 +20,8 @@ func updateTermin(termin *Termin) { //führt die setter aus
 	termin.SetTitle(termin, "testTerminj")
 	termin.SetDescription(termin, "testo yeet")
 	termin.SetRecurring(termin, Repeat(WEEKLY))
-	termin.SetDate(termin, "2007-03-02T14:02:05 UTC")
-	termin.SetEndeDate(termin, "2007-03-02T15:02:05 UTC")
+	termin.SetDate(termin, time.Date(2007, 3, 2, 14, 2, 5, 0, time.UTC))
+	termin.SetEndeDate(termin, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC))
 }
 
 func TestTermin(t *testing.T) { //prüft ob der dummy Termin nicht Leer ist
