@@ -24,19 +24,23 @@ func main() {
 	adminUserName := flag.String("user", "admin", "Define Admin username for first login. Default: admin")
 	adminPassword := flag.String("passw", "admin", "Define Admin Password for first login to application. Defualt: admin")
 	basepath, err := os.Getwd()
+	// load user data from plate and if not create a new user
 	err = authentifizierung.LoadUserData(adminUserName, adminPassword, &basepath)
+	//set a timer to write all users to plate every minute
 	timerSaveData := time.NewTimer(1 * time.Minute)
 	go func() {
+		// timer waits until one minute is over and then saves the new data
 		<-timerSaveData.C
-		err := authentifizierung.SaveUserData(&basepath)
-		if err != nil {
-			fmt.Println(err)
+		errOnSave := authentifizierung.SaveUserData(&basepath)
+		if errOnSave != nil {
+			fmt.Println(errOnSave)
 		}
 	}()
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal("Coudn't load users")
 	}
+	// setup server
 	Server = http.Server{
 		Addr: ":" + *port,
 	}
@@ -53,7 +57,7 @@ func main() {
 	http.Handle("/user/change", &changeUser)
 	http.Handle("/user", &user)
 	http.Handle("/logout", &logout)
-
+	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
 	}
