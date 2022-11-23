@@ -119,6 +119,9 @@ func TestCreateUser_MultipleUserAtOnce(t *testing.T) {
 	assert.Equal(t, 20, len(users.users))
 }
 
+// TestCreateUser_NoSpecialChractersInUsername
+// tests that if there are special characters in username that it automatically
+// returns an error
 func TestCreateUser_NoSpecialChractersInUsername(t *testing.T) {
 	users.users = make(map[string]string)
 	username := "test|"
@@ -128,6 +131,8 @@ func TestCreateUser_NoSpecialChractersInUsername(t *testing.T) {
 	assert.Equal(t, 0, len(users.users))
 }
 
+// TestCreateUser_SpecialCharacktersInPasswordAllowed
+// it tests that it is allowed to put in special characters in the password
 func TestCreateUser_SpecialCharacktersInPasswordAllowed(t *testing.T) {
 	users.users = make(map[string]string)
 	username := "test"
@@ -177,10 +182,13 @@ func TestChangeUser_WrongOldPassword(t *testing.T) {
 	assert.NotEqual(t, nil, err)
 }
 
+// TestSaveUserData
+// tests that it correcelty saves if there are no complications
 func TestSaveUserData(t *testing.T) {
 	users.users = make(map[string]string)
 	wg := sync.WaitGroup{}
 	wg.Add(10)
+	// make multiple usernames to paralize it
 	for i := 0; i < 10; i++ {
 		j := i
 		go func() {
@@ -192,13 +200,17 @@ func TestSaveUserData(t *testing.T) {
 	}
 	wg.Wait()
 	path, err := filepath.Abs("../")
+	// the saving the user should not return any errors
 	err = SaveUserData(&path)
 	assert.Equal(t, nil, err)
 }
 
+// TestSaveUserData_WriteToRightFunction
+// checks that all users from the previous test have been saved correctly
 func TestSaveUserData_WriteToRightFunction(t *testing.T) {
+	//create user to load in
 	user_test := []UserJSON{}
-
+	//open files and check that it checks out
 	path, err := filepath.Abs("../data/user")
 	assert.Equal(t, err, nil)
 
@@ -215,33 +227,42 @@ func TestSaveUserData_WriteToRightFunction(t *testing.T) {
 
 	bytes, err := io.ReadAll(file)
 	assert.Equal(t, nil, err)
-
+	//derefering it and out it in the right json file
 	err = json.Unmarshal(bytes, &user_test)
 	assert.Equal(t, nil, err)
-
+	//it should be of length 10
 	assert.Equal(t, 10, len(user_test))
+	//all 10 elements shoudnt be empty
 	for _, element := range user_test {
 		assert.NotEmpty(t, element)
 	}
 
 }
 
+// TestLoadUserData
+// tests the right functionality for the loada user data (uses data from 2 tests before)
 func TestLoadUserData(t *testing.T) {
+	//set the path so it doesn't fuck up because os.getwd doesnt return the dir the file is in
 	path, _ := filepath.Abs("../")
 	user := "admin"
+	//load user in
 	err := LoadUserData(&user, &user, &path)
 	path = filepath.Join(path, "data", "user", "user-data.json")
+	//loaduserdata should run without error and load 10 users created 2 tests before
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 10, len(users.users))
+	//the key and the element shoudnt be empty
 	for key, element := range users.users {
 		assert.NotEmpty(t, key)
 		assert.NotEmpty(t, element)
 	}
-
+	// preparing for the next input
 	err = os.Remove(path)
 	assert.Equal(t, nil, err)
 }
 
+// TestLoadUserData_FileNotExists
+// tests behaviour if the file in the given directory doesn't exist
 func TestLoadUserData_FileNotExists(t *testing.T) {
 	users.users = make(map[string]string)
 	path, _ := filepath.Abs("../data/user")
@@ -250,10 +271,13 @@ func TestLoadUserData_FileNotExists(t *testing.T) {
 	user := "admin"
 	path, _ = filepath.Abs("../")
 	err := LoadUserData(&user, &user, &path)
+	//it should create one standard user and the error should be null because it is an expected behaviour
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(users.users))
 }
 
+// TestLoadUserData_WrongFile
+// tests the behaviour if the file has the same name but a different file
 func TestLoadUserData_WrongFile(t *testing.T) {
 	users.users = make(map[string]string)
 	path, _ := filepath.Abs("../data/user")
@@ -261,10 +285,76 @@ func TestLoadUserData_WrongFile(t *testing.T) {
 	_ = os.Remove(path)
 	user := "admin"
 	file := "test"
+	//preparing a wrong stated file
+	err := os.WriteFile(path, []byte(file), 0644)
+	assert.Equal(t, nil, err)
+	path = "../"
+	err = LoadUserData(&user, &user, &path)
+	//it should still accept it and just add a new user
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 1, len(users.users))
+	//remove the path to prevent errors on startup of application
+	_ = os.Remove(path)
+}
+
+// TestCheckCookie_WrongCookieFormat
+// tests that if check cookie gets a wrong string it returnss error and not allowed
+func TestCheckCookie_WrongCookieFormat(t *testing.T) {
+	// test first case if cookie is empty string
+	wrongCookie := ""
+	returnval, _ := CheckCookie(&wrongCookie)
+	assert.Equal(t, false, returnval)
+	// second case: cookie is not empty but has no |
+	wrongCookie = "asdasd"
+	returnval, _ = CheckCookie(&wrongCookie)
+	assert.Equal(t, false, returnval)
+	// third case: the pipe is there but at the end
+	wrongCookie = "asdasd|"
+	returnval, _ = CheckCookie(&wrongCookie)
+	assert.Equal(t, false, returnval)
+
+}
+
+// TestCreateUser_PasswordOrUserNotEmpty
+// checks that it returns error if one of the both are empty
+func TestCreateUser_PasswordOrUserNotEmpty(t *testing.T) {
+	user := "admin"
+	empty := ""
+	err := CreateUser(&user, &empty)
+	assert.NotEqual(t, nil, err)
+	err = CreateUser(&empty, &user)
+	assert.NotEqual(t, nil, err)
+}
+
+// TestCheckCookie_UserNotFound
+// checks that if the user is not inside it returns false
+func TestCheckCookie_UserNotFound(t *testing.T) {
+	users.users = make(map[string]string)
+	user := "admin"
+	CreateUser(&user, &user)
+	testCookie := "user|aoishhdoüiashd"
+	isRight, username := CheckCookie(&testCookie)
+	assert.Equal(t, false, isRight)
+	assert.Equal(t, "", username)
+}
+
+// TestLoadUserData_Wrong_Directory
+// similiar to test: TestLoadUserData_WrongFile -->
+// checks what happens if the open gives any other error
+func TestLoadUserData_Wrong_Directory(t *testing.T) {
+	users.users = make(map[string]string)
+	path, _ := filepath.Abs("../data/user")
+	path = filepath.Join(path, "user-data.json")
+	_ = os.Remove(path)
+	user := "admin"
+	file := "test"
+	//preparing a wrong stated file
 	err := os.WriteFile(path, []byte(file), 0644)
 	assert.Equal(t, nil, err)
 	err = LoadUserData(&user, &user, &path)
+	//it should still accept it and just add a new user
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(users.users))
+	//remove the path to prevent errors on startup of application
 	_ = os.Remove(path)
 }
