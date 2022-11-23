@@ -47,6 +47,8 @@ func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie 
 	return false, *pasw
 }
 
+// TODO: if it doesnt find the slice it should return instand zero or error + test cases
+
 // CheckCookie checks whether cookie is the right one/**
 func CheckCookie(cookie *string) (isAllowed bool, userName string) {
 	//get the username and cookie string from the cookie given
@@ -71,6 +73,10 @@ func CreateUser(user *string, pasw *string) error {
 	notAllowed := strings.ContainsAny(*user, "|$")
 	if notAllowed {
 		return errors.New("Username can't contain | or $")
+	}
+	//TODO: setup new test case for this
+	if len(*user) == 0 || len(*pasw) == 0 {
+		return errors.New("Password and User can not be empty")
 	}
 	//lock user because now we are looking into the user and check whether the username is the same
 	users.lock.Lock()
@@ -111,7 +117,6 @@ func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie str
 	return "", errors.New("Wrong User")
 }
 
-// TODO: relative to current path of file so it doesn't
 func LoadUserData(firstuser *string, firstPassword *string, path *string) (err error) {
 	ex, err := os.Getwd()
 	fmt.Println(ex)

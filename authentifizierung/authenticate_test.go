@@ -2,7 +2,6 @@ package authentifizierung
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -267,9 +266,5 @@ func TestLoadUserData_WrongFile(t *testing.T) {
 	err = LoadUserData(&user, &user, &path)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(users.users))
-}
-
-func TestTest(t *testing.T) {
-	fmt.Println(os.Getwd())
-
+	_ = os.Remove(path)
 }
