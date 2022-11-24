@@ -1,8 +1,7 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
+	"DHBW_GO_Projekt/authentifizierung"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -14,14 +13,14 @@ Tests whether web server works even on Port 80
 */
 
 // test routine um ssl zertifikat zuu testen
+
 func TestCertificateWorks(t *testing.T) {
 	go main()
-
 	time.Sleep(1 * time.Second)
-	_, err := tls.Dial("tcp", "localhost:80", &tls.Config{InsecureSkipVerify: true})
-	assert.Equal(t, err, nil)
-
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-	assert.Equal(t, Server.Shutdown(ctx), nil)
-
+	//check that the server has been created
+	assert.NotEmpty(t, Server)
+	// check that the admin user is created
+	user := "admin"
+	createdUser, _ := authentifizierung.AuthenticateUser(&user, &user)
+	assert.Equal(t, true, createdUser)
 }
