@@ -108,7 +108,7 @@ func (v *ViewmanagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			v.viewmanagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
 			template.Must(v.viewmanagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
-			template.Must(v.viewmanagerTpl.New("editor.html").ParseFiles(path + "/assets/templates/editor.html"))
+			template.Must(v.viewmanagerTpl.New("editor.html").ParseFiles(path + "/assets/sites/editor.html"))
 		} else {
 			http.Redirect(w, r, "https://"+r.Host, http.StatusContinue)
 			return
@@ -145,7 +145,10 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 			v.vm.TvJumpToToday()
 		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
 			terminToEdit := v.vm.GetTerminInfos(r)
-			v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if er != nil {
+				log.Fatalln(er)
+			}
 			return
 		}
 	}
@@ -183,7 +186,10 @@ func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 			v.vm.LvJumpPageBack()
 		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
 			terminToEdit := v.vm.GetTerminInfos(r)
-			v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if er != nil {
+				log.Fatalln(er)
+			}
 			return
 		}
 	}

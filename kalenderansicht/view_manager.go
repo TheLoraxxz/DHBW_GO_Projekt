@@ -51,16 +51,16 @@ func getMaxDays(month, year int) int {
 func filterRepetition(repStr string) ds.Repeat {
 	var rep ds.Repeat
 	switch repStr {
-	case "1", "niemals":
-		rep = ds.Never
-	case "2", "täglich":
+	case "täglich":
 		rep = ds.DAILY
-	case "3", "wöchentlich":
+	case "wöchentlich":
 		rep = ds.WEEKLY
-	case "4", "monatlich":
+	case "monatlich":
 		rep = ds.MONTHLY
-	case "5", "jährlich":
+	case "jährlich":
 		rep = ds.YEARLY
+	case "niemals":
+		rep = ds.Never
 	}
 	return rep
 }
@@ -79,8 +79,11 @@ func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
 	//Filter das Wiederholungsintervall aus der Antwort
 	rep := filterRepetition(repStr)
 
+	dateTestStart := r.FormValue("date")
+	dateTestEnd := r.FormValue("date")
+	print(dateTestStart, dateTestEnd)
 	//Daten in das richtige Format überführen mithilfe eines Layouts
-	layout := "2006-02-01T00:00:00Z"
+	layout := "2006-01-02T00:00:00Z"
 	if strings.Contains(r.FormValue("date"), "UTC") {
 		layout = "2006-01-02 00:00:00 +0000 UTC"
 	}

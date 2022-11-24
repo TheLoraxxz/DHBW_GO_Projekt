@@ -120,7 +120,12 @@ func (tv *TableView) FilterCalendarEntries(termins []ds.Termin) []dayInfos {
 	for _, termin := range termins {
 		if (termin.Date.Before(monthEndDate) || termin.Date.Equal(monthEndDate)) && (termin.EndDate.After(monthStartDate) || termin.EndDate.Equal(monthStartDate)) {
 			switch termin.Recurring {
-			case ds.Never, ds.YEARLY, ds.MONTHLY:
+			case ds.YEARLY:
+				monthDay := termin.Date.Day()
+				if termin.Date.Month() == tv.ShowMonth() {
+					entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
+				}
+			case ds.Never, ds.MONTHLY:
 				monthDay := termin.Date.Day()
 				entriesForThisMonth[monthDay-1].Dayentries = append(entriesForThisMonth[monthDay-1].Dayentries, termin)
 				// Vom Start des Termins wird je eine Woche dazu addiert und geprüft, ob dieses neue Datum in den betrachteten Monat fällt
