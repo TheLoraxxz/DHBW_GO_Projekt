@@ -62,11 +62,20 @@
                         </li>
                     </ul>
                 </div>
-                <!---button zum Bearbeiten des Termins--->
-                <button type="button" class="btn btn-link"
-                        onclick="editTermin(new Termin({{.Title}},{{.Description}},{{.Recurring}},{{.Date}},{{.EndDate}}))">
-                    bearbeiten
-                </button>
+                <!---Formular zum Bearbeiten des Termins--->
+                <form action="/user/view/list/editor" method="GET" role="form">
+                    <label for="title"></label>
+                    <input type="hidden" class="form-control" name="title" id="title" value="{{.Title}}">
+                    <label for="description"></label>
+                    <input type="hidden" class="form-control" name="description" id="description" value="{{.Description}}">
+                    <label for="rep"></label>
+                    <input type="hidden" class="form-control" name="rep" id="rep" value="{{.Recurring}}">
+                    <label for="date"></label>
+                    <input type="hidden" class="form-control" name="date" id="date" value="{{.Date}}">
+                    <label for="endDate"></label>
+                    <input type="hidden" class="form-control" name="endDate" id="endDate" value="{{.EndDate}}">
+                    <button type="submit" class="btn btn-link">Bearbeiten</button>
+                </form>
             </div>
         </div>
         {{end}}

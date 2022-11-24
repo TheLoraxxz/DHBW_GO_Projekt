@@ -11,8 +11,8 @@
     <input type="text" class="form-control" id="description" name="description" placeholder="Hier eine Termin Beschreibung eingeben." required>
   </div>
   <div class="col-12 col-form-label">
-    <label for="repeat">Wiederholungsinterrvall</label>
-    <select name="repeat" id="repeat" class="form-select" >
+    <label for="rep">Wiederholungsinterrvall</label>
+    <select name="rep" id="rep" class="form-select" >
       <option value="1">niemals</option>
       <option value="2">täglich</option>
       <option value="3">wöchentlich</option>
@@ -37,7 +37,7 @@
 {{end}}
 
 <!---hier erfolgt ein weiteres Template für den Javascript-Code.
-Dies wird benötigt, damit der Javascript-Code nicht mittem im HTML-Code eingefügt wird.--->
+Dies wird benötigt, damit der Javascript-Code nicht mitten im HTML-Code eingefügt wird.--->
 {{ define "creatorScript" }}
 <!-----------------------------------Hier folgt benötigter javaScript Code------------------------------>
 <script>
@@ -54,67 +54,6 @@ Dies wird benötigt, damit der Javascript-Code nicht mittem im HTML-Code eingef�
       }
       form.classList.add('was-validated')
     }, false);
-  }
-
-  // edditTermin
-  // Parameter: Termin, welcher bearbeitet wird
-  // Funktion erstellt Formular für eine Post-Anfrage, um Termine zu bearbeiten oder zu löschen
-  function editTermin(dayEntry) {
-    let edditFormStr = "<h3>Termine bearbeiten</h3>\n"
-      edditFormStr = edditFormStr +
-              "<form action=\"?termineBearbeiten\" method=\"POST\" id=\"terminCreater\" role=\"form\" class=\"row mb-3 p-3  needs-validation\" novalidate>\n" +
-              "<input type=\"hidden\" readonly class=\"form-control-plaintext\" id=\"oldTitle\" name=\"oldTitle\" value=\""+ dayEntry.Title +  "\" >\n"+
-              "  <div>\n" +
-              "<div class=\"mb-3\">\n" +
-              "    <label for=\"editing\">Bearbeitungsmodus</label>\n" +
-              "    <select name=\"editing\" id=\"editing\"  class=\"form-select\">\n" +
-              "      <option value=\"1\">Bearbeiten: Termin</option>\n" +
-              "      <option value=\"2\">Löschen: Termin</option>\n" +
-              "    </select>\n" +
-              "  </div>"+
-              "    <label for=\"title\" class=\"col-sm-2 col-form-label \">Titel</label>\n" +
-              "    <input type=\"text\" class=\"form-control\" id=\"title\" name=\"title\" value=\""+ dayEntry.Title + "\"required>\n" +
-              "  </div>\n" +
-              "  <div>\n" +
-              "    <label for=\"description\" class=\"col-sm-2 col-form-label\">Beschreibung</label>\n" +
-              "    <input type=\"text\" class=\"form-control\" id=\"description\" name=\"description\" value=\""+ dayEntry.Description +  "\"required>\n" +
-              "  </div>\n" +
-              "  <div class=\"col-12 col-form-label\">\n" +
-              "    <label for=\"repeat\">Wiederholungsinterrvall</label>\n" +
-              "    <select name=\"repeat\" id=\"repeat\" class=\"form-select\" >\n" +
-              "      <option value=\"1\">niemals</option>\n" +
-              "      <option value=\"2\">täglich</option>\n" +
-              "      <option value=\"3\">wöchentlich</option>\n" +
-              "      <option value=\"4\">monatlich</option>\n" +
-              "      <option value=\"5\">jährlich</option>\n" +
-              "    </select>\n" +
-              "  </div>\n" +
-              "<b>Beim Löschen können beliebige Daten gewählt werden!</b>"+
-              "  <div class=\"col-md-12 col-form-label\">\n" +
-              "    <label for=\"date\" class=\"col-sm-2 \">Datum: "+ dayEntry.Date +"</label>\n" +
-              "    <input type=\"date\" class=\"form-control\" name=\"date\" id=\"date\" required>\n" +
-              "  </div>\n" +
-              "  <div class=\"col-md-12 col-form-label\">\n" +
-              "    <label for=\"endDate\" class=\"col-sm-2 \">Enddatum: "+ dayEntry.EndDate +"</label>\n" +
-              "    <input type=\"date\" class=\"form-control\" name=\"endDate\" id=\"endDate\" required>\n" +
-              "  </div>\n";
-    edditFormStr = edditFormStr + "  <div class=\"col-12  p-3\">\n" +
-            "    <button type=\"submit\" class=\"btn btn-secondary\" onclick=\"validateForm('terminCreater')\">Bestätigen</button>\n" +
-            "  </div>\n"+
-    "</form>";
-
-    document.getElementById("terminCreation").innerHTML = edditFormStr;
-
-  }
-
-  // Termin
-  // hier wird ein Objekt Termin erstellt, welches für die Terminbearbeitung benötigt wird
-  function Termin(title, description, recurring, date, endDate) {
-    this.Title = title;
-    this.Description = description;
-    this.Recurring = recurring;
-    this.Date = date;
-    this.EndDate = endDate;
   }
 </script>
 <!----end of template creatorScript------>

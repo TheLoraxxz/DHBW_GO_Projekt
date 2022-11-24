@@ -277,6 +277,38 @@ func testFilterCalendarEntries(t *testing.T) {
 	assert.Equal(t, 4, len(filteredSlice), "4 Termine sollten sich in der Slice befinden")
 
 }
+
+// testFilterCalendarEntriesEdgeCase
+// hier wird getestet, ob die Funktion Termine nicht in das Slice mit aufnimmt,
+// wenn das Enddatum des Termins zwar hinter dem aktuell angezeigtem Datum liegt ABER keine Wiederholung des
+// Termins mehr stattfindet.
+func testFilterCalendarEntriesEdgeCase(t *testing.T) {
+	var lv ListView
+	//Hier wird der 1.11.2022 als Startdatum gesetzt
+	lv.SelectedDate = createSpecificDate(2022, 2, 11)
+
+	//Datum für Testtermine erstellen
+	testTermin1Starts := createSpecificDate(2022, 7, 10)
+	testTermin1Ends := createSpecificDate(2022, 3, 11) //letzte Vorkommen: 28.10.2022
+
+	testTermin2Starts := createSpecificDate(2020, 1, 11)
+	testTermin2Ends := createSpecificDate(2022, 10, 11) //letzte Vorkommen: 1.11.2022
+
+	testTermin3Starts := createSpecificDate(2021, 1, 10)
+	testTermin3Ends := createSpecificDate(2022, 9, 11) //letzte Vorkommen: 1.11.2022
+
+	//Slice mit Testterminen erstellen
+	testTermine := make([]ds.Termin, 5)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.WEEKLY, testTermin1Starts, testTermin1Ends)
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.YEARLY, testTermin2Starts, testTermin2Ends)
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.MONTHLY, testTermin3Starts, testTermin3Ends)
+
+	//Testen, ob keine Daten in das Slice eingefügt wurden
+	filteredSlice := lv.FilterCalendarEntries(testTermine)
+	assert.Equal(t, 0, len(filteredSlice), "Es sollten keine Termine in der Slice sein.")
+
+}
+
 func testSortEntries(t *testing.T) {
 	var lv ListView
 	//Hier wird der 1.11.2022 als Startdatum gesetzt
@@ -394,6 +426,7 @@ func TestListView(t *testing.T) {
 
 	//Tests zum Filtern und tests für Infos für die Darstellung der Termine in der Listenansicht
 	t.Run("testRuns FilterCalendarEntries", testFilterCalendarEntries)
+	t.Run("testRuns FilterCalendarEntriesEdgeCase", testFilterCalendarEntriesEdgeCase)
 	t.Run("testRuns SortEntries", testSortEntries)
 	t.Run("testRuns  NextOccurrences", testNextOccurrences)
 }

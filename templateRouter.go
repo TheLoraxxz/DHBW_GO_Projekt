@@ -108,20 +108,20 @@ func (v *ViewmanagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			v.viewmanagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
 			template.Must(v.viewmanagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
-
+			template.Must(v.viewmanagerTpl.New("editor.html").ParseFiles(path + "/assets/templates/editor.html"))
 		} else {
 			http.Redirect(w, r, "https://"+r.Host, http.StatusContinue)
 			return
 		}
 	}
 	//leitet Anfrage entsprechend weiter
-
 	switch {
 	case strings.Contains(r.RequestURI, "/user/view/table"):
 		v.handleTableView(w, r)
 	case strings.Contains(r.RequestURI, "/user/view/list"):
 		v.handleListView(w, r)
 	}
+
 }
 
 // handleTableView
@@ -143,6 +143,10 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 			v.vm.TvJumpYearForOrBack(1)
 		case r.RequestURI == "/user/view/table?datum=heute":
 			v.vm.TvJumpToToday()
+		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
+			terminToEdit := v.vm.GetTerminInfos(r)
+			v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			return
 		}
 	}
 
@@ -150,7 +154,7 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 		switch {
 		case r.RequestURI == "/user/view/table?terminErstellen":
 			v.vm.CreateTermin(r, v.vm.Username)
-		case r.RequestURI == "/user/view/table?termineBearbeiten":
+		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
 			v.vm.EditTermin(r, v.vm.Username)
 		}
 	}
@@ -177,15 +181,19 @@ func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 			v.vm.LvJumpPageForward()
 		case r.RequestURI == "/user/view/list?Seite=Zurueck":
 			v.vm.LvJumpPageBack()
+		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+			terminToEdit := v.vm.GetTerminInfos(r)
+			v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			return
 		}
 	}
 
 	if r.Method == "POST" {
 		switch {
-		case r.RequestURI == "/user/view/list?termineBearbeiten":
-			v.vm.EditTermin(r, v.vm.Username)
 		case r.RequestURI == "/user/view/list?terminErstellen":
 			v.vm.CreateTermin(r, v.vm.Username)
+		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+			v.vm.EditTermin(r, v.vm.Username)
 		}
 	}
 	er := v.viewmanagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)

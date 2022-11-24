@@ -436,7 +436,7 @@ func testLvSelectEntriesPerPage(t *testing.T) {
 	vm := new(ViewManager)
 	entriesPerPage := 1
 	vm.LvSelectEntriesPerPage(entriesPerPage)
-	assert.Equal(t, entriesPerPage*5, vm.Lv.EntriesPerPage, "Die Anzahl der Einträge pro Seite sollte 5 sein.")
+	assert.Equal(t, entriesPerPage, vm.Lv.EntriesPerPage, "Die Anzahl der Einträge pro Seite sollte 5 sein.")
 }
 
 func testLvJumpPageForward(t *testing.T) {

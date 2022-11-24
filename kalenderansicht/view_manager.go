@@ -3,6 +3,7 @@ package kalenderansicht
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -50,18 +51,44 @@ func getMaxDays(month, year int) int {
 func filterRepetition(repStr string) ds.Repeat {
 	var rep ds.Repeat
 	switch repStr {
-	case "1":
+	case "1", "niemals":
 		rep = ds.Never
-	case "2":
+	case "2", "täglich":
 		rep = ds.DAILY
-	case "3":
+	case "3", "wöchentlich":
 		rep = ds.WEEKLY
-	case "4":
+	case "4", "monatlich":
 		rep = ds.MONTHLY
-	case "5":
+	case "5", "jährlich":
 		rep = ds.YEARLY
 	}
 	return rep
+}
+
+// GetTerminInfos
+// Parameter: Request mit Termininfos
+// Rückgabewert: Termin, erstellt aus den Infos.
+// Die Funktion wird genutzt, um den Termin zu erhalten, der bearbeitet/gelöscht werden soll
+func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
+
+	//Filtern der Termininfos
+	title := r.FormValue("title")
+	description := r.FormValue("description")
+	repStr := r.FormValue("rep")
+
+	//Filter das Wiederholungsintervall aus der Antwort
+	rep := filterRepetition(repStr)
+
+	//Daten in das richtige Format überführen mithilfe eines Layouts
+	layout := "2006-02-01T00:00:00Z"
+	if strings.Contains(r.FormValue("date"), "UTC") {
+		layout = "2006-01-02 00:00:00 +0000 UTC"
+	}
+
+	date, _ := time.Parse(layout, r.FormValue("date"))
+	endDate, _ := time.Parse(layout, r.FormValue("endDate"))
+
+	return ds.NewTerminObj(title, description, rep, date, endDate)
 }
 
 // CreateTermin
@@ -72,7 +99,7 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 	//Filtern der Termininfos
 	title := r.FormValue("title")
 	description := r.FormValue("description")
-	repStr := r.FormValue("repeat")
+	repStr := r.FormValue("rep")
 
 	//Filter das Wiederholungsintervall aus der Antwort
 	rep := filterRepetition(repStr)
@@ -86,7 +113,6 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 	if repStr == "niemals" || endDate.Before(date) {
 		endDate = date
 	}
-
 	//Erstelle neuen Termin und füge diesen dem Cache hinzu
 	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)

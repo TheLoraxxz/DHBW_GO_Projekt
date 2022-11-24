@@ -1,0 +1,56 @@
+{{ template "header" . }}
+<div class="row justify-content-center align-items-center">
+    <div class="col"></div>
+    <div class="col">
+        <div>
+            <form action="" method="POST" id="terminEditor" role="form"
+                  class="row mb-3 p-3  needs-validation" novalidate>
+                <h3>Termin bearbeiten</h3>
+              <div class="mb-3">
+                  <label for="editing">Bearbeitungsmodus</label>
+                 <select name="editing" id="editing"  class="form-select">
+                     <option value="1">Bearbeiten: Termin</option>
+                     <option value="2">Löschen: Termin</option>
+                  </select>
+               </div>
+                <div>
+                    <label for="title" class="col-sm-2 col-form-label ">Titel</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{.Title}}" required>
+                </div>
+                <div>
+                    <label for="description" class="col-sm-2 col-form-label">Beschreibung</label>
+                    <input type="text" class="form-control" id="description" name="description"
+                           value="{{.Description}}" required>
+                </div>
+                <div class="col-12 col-form-label">
+                    <label for="rep">Wiederholungsinterrvall</label>
+                    <select name="rep" id="rep" class="form-select">
+                        <option value="1">niemals</option>
+                        <option value="2">täglich</option>
+                        <option value="3">wöchentlich</option>
+                        <option value="4">monatlich</option>
+                        <option value="5">jährlich</option>
+                    </select>
+                </div>
+                <b>Beim Löschen eines Termins können die Daten frei gewählt werden!</b>
+                <div class="col-md-6 col-form-label">
+                    <label for="date" class="col-sm-2 ">Datum: {{.Date.Format "2006-01-02"}}</label>
+                    <input type="date" class="form-control" name="date" id="date" required>
+                </div>
+                <div class="col-md-6 col-form-label">
+                    <label for="endDate" class="col-sm-2 ">Enddatum: {{.EndDate.Format "2006-01-02"}}</label>
+                    <input type="date" class="form-control" name="endDate" id="endDate" required>
+                </div>
+                <div class="col-12  p-3">
+                    <button type="submit" class="btn btn-secondary" onclick="validateForm('terminEditor')">Termin
+                        bearbeiten
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col"></div>
+</div>
+{{ template "footer" . }}
+<!-----------Funktion zum Kontrollieren des Formulars importieren----->
+{{ template "creatorScript" .}}
