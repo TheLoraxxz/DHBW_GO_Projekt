@@ -2,7 +2,6 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -61,17 +60,22 @@ func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request
 	//if it is not allowed then continue with normal website else redirect to root
 	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
 	if isAllowed {
+		//if it is post it should process the data
 		if request.Method == "POST" {
+			// if the parseform isnt correct it should return
 			err := request.ParseForm()
 			if err != nil {
-				return
+				http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 			}
+			//get the user from the form request
 			user := request.Form.Get("newUsername")
 			password := request.Form.Get("newPassword")
 			err = authentifizierung.CreateUser(&user, &password)
 			if err != nil {
-				return
+				http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+
 			}
+			//if successfull on post it should return back to the user
 			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
 
 		}
@@ -107,12 +111,15 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 			if err != nil {
 				return
 			}
+			//change the user to new user
 			password := request.Form.Get("oldPassword")
 			newPassword := request.Form.Get("newPassword")
 			cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
 			if err != nil {
+				http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
 				return
 			}
+			// set cookie so it automaticalyl updates and it doesnt throw one back to the login site
 			cookie := &http.Cookie{
 				Name:     "SessionID-Kalender",
 				Value:    cookies,
@@ -121,21 +128,20 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 				Secure:   true,
 				SameSite: http.SameSiteLaxMode,
 			}
+			//set new cookie and redirect
 			http.SetCookie(writer, cookie)
 			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
-
 			return
 
 		}
+		//execute own template from userchange and put in footer and header
 		mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
 			log.Fatal("Coudnt export Parsefiles")
-			return
 		}
 		err = mainRoute.Execute(writer, nil)
 		if err != nil {
 			log.Fatal("Coudnt Execute Parsefiles")
-			return
 		}
 	} else {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
@@ -150,17 +156,16 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
+	isAllowed, username := authentifizierung.CheckCookie(&cookie.Value)
 	if isAllowed {
 		mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
-			fmt.Println(err.Error())
+			http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 			return
 		}
-		err = mainRoute.Execute(writer, nil)
+		err = mainRoute.Execute(writer, username)
 		if err != nil {
 			log.Fatal("Coudnt Execute Parsefiles")
-			return
 		}
 	} else {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
@@ -170,7 +175,6 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	cookie, err := request.Cookie("SessionID-Kalender")
 	if err != nil {
-		log.Println(err)
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 

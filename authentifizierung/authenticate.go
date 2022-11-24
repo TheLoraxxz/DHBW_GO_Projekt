@@ -1,16 +1,21 @@
 package authentifizierung
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
 
-// UserData used for dateisystem
-type UserData struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
+type UserJSON struct {
+	User  string `json:"user"`
+	Passw string `json:"password"`
 }
 
 // struct for user synchronisation
@@ -42,8 +47,13 @@ func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie 
 	return false, *pasw
 }
 
-// CheckCookie checks whether cookie is the right one/**
+// CheckCookie checks whether cookie is the right one
+// returns false if it isnt the cookie to the user
 func CheckCookie(cookie *string) (isAllowed bool, userName string) {
+	//check the cookie to prevent any panics
+	if len(*cookie) == 0 || strings.Index(*cookie, "|") == -1 || strings.Index(*cookie, "|") == len(*cookie)-1 {
+		return false, ""
+	}
 	//get the username and cookie string from the cookie given
 	username := (*cookie)[:strings.Index(*cookie, "|")]
 	cookieString := (*cookie)[strings.Index(*cookie, "|")+1:]
@@ -61,11 +71,16 @@ func CheckCookie(cookie *string) (isAllowed bool, userName string) {
 	return false, ""
 }
 
+// CreateUser
+// checks if the user already exists and if not it creates a new user and hashes the password
 func CreateUser(user *string, pasw *string) error {
 	//check whether it contains $ or | --> | is not allowed because it is used in the cookie
 	notAllowed := strings.ContainsAny(*user, "|$")
 	if notAllowed {
 		return errors.New("Username can't contain | or $")
+	}
+	if len(*user) == 0 || len(*pasw) == 0 {
+		return errors.New("Password and User can not be empty")
 	}
 	//lock user because now we are looking into the user and check whether the username is the same
 	users.lock.Lock()
@@ -85,6 +100,10 @@ func CreateUser(user *string, pasw *string) error {
 	users.users[*user] = string(bytes)
 	return nil
 }
+
+// ChangeUser
+// Function checks whether the user exists, the old password given is the same
+// if so it changes it to the new password
 func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie string, err error) {
 	val, found := users.users[*user]
 	if found {
@@ -104,4 +123,88 @@ func ChangeUser(user *string, oldPassw *string, newPassw *string) (newCookie str
 		return cookie, nil
 	}
 	return "", errors.New("Wrong User")
+}
+
+// LoadUserData
+// function beeing called only once on startup
+// loads up already existing users or if it is the first time
+// it adds admin admin to the user
+func LoadUserData(firstuser *string, firstPassword *string, path *string) (err error) {
+	//loads working direcotry
+	userLoaded := []UserJSON{}
+	pathAbs := filepath.Join(*path, "data", "user", "user-data.json")
+	file, err := os.Open(pathAbs)
+	//if it cant open it because there are any problems it just creates a new user
+	if err != nil {
+		err := CreateUser(firstuser, firstPassword)
+		if err != nil {
+			return fmt.Errorf("Error on creating user %w", err)
+		}
+		return nil
+	}
+	// if it can open it it reads all bytes and tries to convert it to json
+	// to then read it in and load it into the cache
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("Problem with Reading %w", err)
+	}
+	err = json.Unmarshal(bytes, &userLoaded)
+	if err != nil {
+		// if this is not the case and if there are any errors
+		// it just creates per default what is given by the flags and then
+		// continues on
+		err := CreateUser(firstuser, firstPassword)
+		if err != nil {
+			return fmt.Errorf("Error on creating user %w", err)
+		}
+		// it closes the file to prevent any wrong read/right permissions
+		err = file.Close()
+		if err != nil {
+			log.Fatal("coudnt close file")
+		}
+		//it removes the current file which it cant read
+		err = os.Remove(pathAbs)
+		if err != nil {
+			return fmt.Errorf("Error on deleting file %w", err)
+		}
+		return nil
+	}
+	// if it works according to plan it loads everything in which is in the file
+	for _, element := range userLoaded {
+		users.users[element.User] = element.Passw
+	}
+	// should close it  last
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Fatal("coudnt close file")
+		}
+	}(file)
+	return nil
+
+}
+
+// SaveUserData
+// saves the data under ../data/users/user-data.json
+func SaveUserData(path *string) error {
+	//locks all data to prevent any problems
+	user := []UserJSON{}
+	users.lock.Lock()
+	defer users.lock.Unlock()
+	// iterate over and add to user json
+	for key, elem := range users.users {
+		user = append(user, UserJSON{User: key, Passw: elem})
+	}
+	// open path from basepath and save it as json
+	pathAbs := filepath.Join(*path, "data", "user", "user-data.json")
+	file, err := json.MarshalIndent(user, "", "")
+	if err != nil {
+		return fmt.Errorf("Error on creating json file %w", err)
+	}
+	err = os.WriteFile(pathAbs, file, 0644)
+	if err != nil {
+		return fmt.Errorf("Error on writing to Json file %w", err)
+	}
+
+	return err
 }
