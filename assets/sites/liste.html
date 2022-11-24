@@ -64,6 +64,8 @@
                 </div>
                 <!---Formular zum Bearbeiten des Termins--->
                 <form action="/user/view/list/editor" method="GET" role="form">
+                    <label for="ID"></label>
+                    <input type="hidden" class="form-control" name="ID" id="ID" value="{{.ID}}">
                     <label for="title"></label>
                     <input type="hidden" class="form-control" name="title" id="title" value="{{.Title}}">
                     <label for="description"></label>

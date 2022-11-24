@@ -71,7 +71,8 @@ func filterRepetition(repStr string) ds.Repeat {
 // Die Funktion wird genutzt, um den Termin zu erhalten, der bearbeitet/gelöscht werden soll
 func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
 
-	//Filtern der Termininfos
+	//Filtern der Termin-Infos
+	id := r.FormValue("ID")
 	title := r.FormValue("title")
 	description := r.FormValue("description")
 	repStr := r.FormValue("rep")
@@ -91,7 +92,7 @@ func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
 	date, _ := time.Parse(layout, r.FormValue("date"))
 	endDate, _ := time.Parse(layout, r.FormValue("endDate"))
 
-	return ds.NewTerminObj(title, description, rep, date, endDate)
+	return ds.NewTerminObj(title, description, rep, date, endDate, id)
 }
 
 // CreateTermin

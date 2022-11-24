@@ -6,6 +6,9 @@
             <form action="" method="POST" id="terminEditor" role="form"
                   class="row mb-3 p-3  needs-validation" novalidate>
                 <h3>Termin bearbeiten</h3>
+                <label for="ID"></label>
+                <input type="hidden" class="form-control" name="ID" id="ID"
+                       value="{{.ID}}">
               <div class="mb-3">
                   <label for="editing">Bearbeitungsmodus</label>
                  <select name="editing" id="editing"  class="form-select">
