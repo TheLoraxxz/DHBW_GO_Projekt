@@ -15,5 +15,11 @@ type Vorschlag struct {
 	id     int64
 	termin dateisystem.Termin
 }
+type termine struct {
+}
 
 // make(map[string]Id)
+
+func CreateURLToken(termin *dateisystem.Termin, user *string) {
+
+}

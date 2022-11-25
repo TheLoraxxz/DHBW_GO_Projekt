@@ -185,3 +185,19 @@ func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	http.SetCookie(writer, cookie)
 	http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 }
+
+func (t TerminFindingHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	mainRoute, err := template.ParseFiles("./assets/sites/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+	}
+	err = mainRoute.Execute(writer, nil)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
+	}
+}
+
+func (l LinksHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//TODO implement me
+	panic("implement me")
+}

@@ -1,5 +1,49 @@
 {{ template "header" . }}
 
-
+<div class="container-fluid" style="margin-top: 20px">
+    <div class="row">
+        <div class="col">
+            <div class="row">
+                <h2 class="col">Terminvorschlag: </br>Titel</h2>
+                <div class="col-auto">
+                    <button class="btn btn-primary">Neuen Vorschlagtermin erstellen</button>
+                </div>
+            </div>
+            <p style="font-style: italic">Beschreibung</p>
+            <p>Eingeladene Personen:</p>
+            <ul>
+                <li>Person 1</li>
+                <li>Person 2</li>
+            </ul>
+        </div>
+        <div class="col" style="margin-right: 20px; width: 50%">
+            <div class="row" style="display: flex;flex-direction: row;justify-content: space-around">
+                <button class="btn btn-outline-primary" style="width: 200px">Person einladen</button>
+                <button class="btn btn-outline-primary" style="width: 200px">Alle Links anzeigen</button>
+            </div>
+            <table class="table table-striped" style="margin-top: 50px;">
+                <thead>
+                    <th>Termin</th>
+                    <th>Anzahl Pers.</th>
+                    <th>Personen die zugesagt haben</th>
+                    <th></th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>28.11.2022</td>
+                        <td>2</td>
+                        <td>
+                            <ul>
+                                <li>Person 1</li>
+                                <li>Person 2</li>
+                            </ul>
+                        </td>
+                        <td><button class="btn btn-dark">Tag auswählen</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 {{ template "footer" . }}
