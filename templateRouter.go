@@ -187,7 +187,7 @@ func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 }
 
 func (t TerminFindingHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	mainRoute, err := template.ParseFiles("./assets/sites/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		log.Fatal("Coudnt export Parsefiles")
 	}
