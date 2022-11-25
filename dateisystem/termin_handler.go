@@ -13,22 +13,44 @@ import (
 )
 
 // NewTerminObj erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
-func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time, id string) Termin {
+func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time, kalender []Termin) []Termin {
+
 	T := Termin{
 		Title:       title,
 		Description: description,
 		Recurring:   rep,
 		Date:        date,
 		EndDate:     endDate,
-		ID:          id}
-	return T
+		ID:          "0"}
+
+	k := AddToCache(T, kalender)
+
+	return k
+}
+
+// AddToCache fügt Termin dem Caching hinzu
+func AddToCache(termin Termin, kalender []Termin) []Termin {
+	incrementID()
+	termin.setID(&termin, strconv.Itoa(getID()))
+	k := append(kalender, termin)
+	return k
+}
+
+// StoreTerminObj exportiert Termine zu json, "username" mapped Termine und Nutzer
+func StoreTerminObj(termin Termin, username string) {
+
+	path := getFile(termin.ID, username)
+	fmt.Println(path)
+
+	p, _ := json.MarshalIndent(termin, "", " ") //erzeugt die json
+	_ = os.WriteFile(path, p, 0755)             //schreibt json in Datei
 }
 
 // CreateNewTermin erzeugt einen persistenten Termin
-func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string, id string) Termin {
-	t := NewTerminObj(title, description, rep, date, endDate, id)
-	StoreTerminObj(t, username)
-	return t
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string, kalender []Termin) []Termin {
+	k := NewTerminObj(title, description, rep, date, endDate, kalender)
+	StoreTerminObj(k[0], username)
+	return k
 }
 
 // GetTermine liefert slice mit allen terminen eines Users zurück
@@ -62,30 +84,9 @@ func GetTermine(username string) []Termin {
 	return k
 }
 
-// StoreTerminObj exportiert Termine zu json, "username" mapped Termine und Nutzer
-func StoreTerminObj(termin Termin, username string) {
-	ter := termin
-	count, _ := os.ReadDir(GetDirectory(username))
-	i := len(count) + 1
-	id := strconv.Itoa(i)
-
-	ter.setID(&ter, id)
-
-	path := getFile(id, username)
-
-	p, _ := json.MarshalIndent(ter, "", " ") //erzeugt die json
-	_ = os.WriteFile(path, p, 0755)          //schreibt json in Datei
-}
-
-// AddToCache fügt Termin dem Caching hinzu
-func AddToCache(termin Termin, kalender []Termin) []Termin {
-	termin.setID(&termin, strconv.Itoa(len(kalender)+1))
-	k := append(kalender, termin)
-	return k
-}
-
 // StoreCache speichert alle Elemente Caches von User "username"
 func StoreCache(kalender []Termin, username string) {
+	reOrderID(kalender, username)
 	k := kalender
 
 	for i := 0; i < len(k); i++ {
@@ -119,6 +120,7 @@ func LoadTermin(id string, username string) Termin {
 
 // deleteTermin löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
 func deleteTermin(id string, username string) {
+	decrementID()
 	file := getFile(id, username)
 	err := os.Remove(file)
 	if err != nil {
@@ -146,7 +148,7 @@ func DeleteFromCache(kalender []Termin, id string, username string) []Termin {
 
 	for i := 0; i < len(kOld); i++ {
 		if kOld[i].ID != id {
-			kNew = append(kNew, kOld[i])
+			kNew = append(kNew, kOld[i]) //kopiert in neuen Kalender
 		} else { //prüft, ob der Termin persistent, oder transitiv ist
 			if _, err := os.Stat(file); err == nil {
 				deleteTermin(id, username)
@@ -154,5 +156,27 @@ func DeleteFromCache(kalender []Termin, id string, username string) []Termin {
 		}
 	}
 
+	kNew = reOrderID(kNew, username)
+
 	return kNew
+}
+
+func reOrderID(kalender []Termin, username string) []Termin {
+	DeleteAll(kalender, username)
+	decrementID()
+	n := getID()
+
+	if kalender == nil {
+		return nil
+	}
+
+	var k []Termin
+
+	for i := n; i > 0; i-- {
+		ter := &kalender[i]
+		kalender[i].setID(ter, strconv.Itoa(i))
+		k[i] = kalender[i]
+	}
+	StoreCache(k, username)
+	return kalender
 }
