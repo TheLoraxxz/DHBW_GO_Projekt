@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -66,7 +65,7 @@ func GetTermine(username string) []Termin {
 // StoreTerminObj exportiert Termine zu json, "username" mapped Termine und Nutzer
 func StoreTerminObj(termin Termin, username string) {
 	ter := termin
-	count, _ := ioutil.ReadDir(GetDirectory(username))
+	count, _ := os.ReadDir(GetDirectory(username))
 	i := len(count) + 1
 	id := strconv.Itoa(i)
 
