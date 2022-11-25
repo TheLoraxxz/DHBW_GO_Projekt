@@ -33,7 +33,7 @@ var allTermine = Shared{
 	links:  make(map[string]string, 10),
 }
 
-func CreateSharedTermin(termin *dateisystem.Termin, user *string) string {
+func CreateSharedTermin(termin *dateisystem.Termin, user *string) (uuid string) {
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()
 	newTermin := TerminFindung{
@@ -43,5 +43,5 @@ func CreateSharedTermin(termin *dateisystem.Termin, user *string) string {
 		persons:          make(map[string]User, 10),
 	}
 	allTermine.shared[*user+"|"+termin.ID] = newTermin
-	return termin.ID
+	return *user + "|" + termin.ID
 }
