@@ -72,7 +72,7 @@ func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request
 
 		}
 		//if successfull on post it should return back to the user
-		http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 
 	}
 	mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")

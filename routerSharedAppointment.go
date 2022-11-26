@@ -14,7 +14,7 @@ import (
 func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
-		http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+		http.Redirect(writer, request, "https://"+request.Host+"/", http.StatusContinue)
 		return
 	}
 	termin := request.URL.Query().Get("terminID")
@@ -47,10 +47,21 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Request) {
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	isAllowed, _ := checkIfIsAllowed(request)
+	if !isAllowed {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+	termin := request.URL.Query().Get("terminID")
+	if len(termin) == 0 {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+
 	if err != nil {
 		log.Fatal("Coudnt export Parsefiles")
 	}
-	err = mainRoute.Execute(writer, nil)
+	err = mainRoute.Execute(writer, termin)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}

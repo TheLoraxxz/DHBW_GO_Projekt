@@ -13,8 +13,9 @@
             {{if .Persons}}
                 <p>Eingeladene Personen:</p>
                 <ul>
-                    <li>Person 1</li>
-                    <li>Person 2</li>
+                    {{range $index, $element := .Persons}}
+                        <li>{{$element}}</li>
+                    {{end}}
                 </ul>
             {{else}}
                 <p style="font-style: italic">Keine Personen bisher eingeladen</p>

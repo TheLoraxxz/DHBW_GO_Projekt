@@ -12,8 +12,9 @@
       <input required id="enddate" type="date" class="form-control" name="enddate">
     </div>
     <button type="submit" class="btn btn-primary">Erstellen</button>
+    <input style="display: none" name="terminID" value="{{.}}">
   </form>
-    <a style="margin-top: 20px" class="btn btn-dark" href="/shared">Zurück</a>
+    <a style="margin-top: 20px" class="btn btn-dark" href="/shared?terminID={{.}}">Zurück</a>
 </div>
 
 {{ template "footer" . }}
