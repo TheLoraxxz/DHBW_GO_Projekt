@@ -104,20 +104,41 @@ func TestCreateNewProposedDate_StartDateAfterEnddate(t *testing.T) {
 
 }
 
-func TestSelectProposedDate_RightInput(t *testing.T) {
+func TestCreatePerson(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
 	assert.Equal(t, 0, len(allTermine.shared))
 	user := "test"
-	//create termin with proposed termin
+	//create termin
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test")
+		user, "test2")
 	terminId, _ := CreateSharedTermin(&termin, &user)
-	startDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
-	endDate := time.Date(2022, 12, 11, 12, 0, 0, 0, time.UTC)
-	err := CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
+	urlToShare, err := CreatePerson(&user, &terminId, &user)
+	// CreatePerson should return the right values --> the url with all the things and no error
+	assert.Equal(t, err, nil)
+	customUrl := "terminID=" + terminId + "&name=" + user + "&user=" + user
+	assert.Equal(t, customUrl, urlToShare)
+	//the data blocks should be the right and a new user should be added
+	assert.Equal(t, 1, len(allTermine.shared))
+	assert.Equal(t, 1, len(allTermine.shared[user+"|"+terminId].persons))
+
+}
+
+func TestGetAllLinks(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	assert.Equal(t, 0, len(allTermine.shared))
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		user, "test2")
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	_, err := CreatePerson(&user, &terminId, &user)
 	assert.Equal(t, nil, err)
-	//SelectProposedDate(&terminId, &userID, &propTerminId)
+	users, err := GetAllLinks(&user, &terminId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 1, len(users))
 
 }
