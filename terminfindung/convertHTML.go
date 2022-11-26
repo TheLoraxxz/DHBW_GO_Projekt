@@ -12,6 +12,7 @@ type TerminWithVoted struct {
 }
 
 type CorrectForHTML struct {
+	TerminID         string
 	Info             dateisystem.Termin
 	VorschlagTermine []TerminWithVoted
 	Persons          []string
@@ -20,6 +21,7 @@ type CorrectForHTML struct {
 func (t TerminFindung) ChangeToCorrectHTML() (rightHTML CorrectForHTML) {
 	// create correct HTML
 	rightHTML = CorrectForHTML{
+		TerminID:         t.Info.ID,
 		Info:             t.Info,
 		Persons:          []string{},
 		VorschlagTermine: []TerminWithVoted{},

@@ -6,7 +6,7 @@
             <div class="row">
                 <h2 class="col">Terminvorschlag: </br>{{.Info.Title}}</h2>
                 <div class="col-auto">
-                    <a class="btn btn-primary" href="/shared/create/app">Neuen Vorschlagtermin erstellen</a>
+                    <a class="btn btn-primary" href="/shared/create/app?terminID={{.TerminID}}">Neuen Vorschlagtermin erstellen</a>
                 </div>
             </div>
             <p style="font-style: italic">{{.Info.Description}}</p>
@@ -23,8 +23,8 @@
         </div>
         <div class="col" style="margin-right: 20px; width: 50%">
             <div class="row" style="display: flex;flex-direction: row;justify-content: space-around">
-                <a class="btn btn-outline-primary" style="width: 200px" href="/shared/create/link">Person einladen</a>
-                <button class="btn btn-outline-primary" style="width: 200px">Alle Links anzeigen</button>
+                <a class="btn btn-outline-primary" style="width: 200px" href="/shared/create/link?terminID={{.TerminID}}">Person einladen</a>
+                <a class="btn btn-outline-primary" style="width: 200px" href="/shared/showlink?terminID={{.TerminID}}">Alle Links anzeigen</a>
             </div>
             <table class="table table-striped" style="margin-top: 50px;">
                 <thead>
@@ -34,17 +34,25 @@
                     <th></th>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>28.11.2022</td>
-                        <td>2</td>
-                        <td>
-                            <ul>
-                                <li>Person 1</li>
-                                <li>Person 2</li>
-                            </ul>
-                        </td>
-                        <td><button class="btn btn-dark">Tag auswählen</button></td>
-                    </tr>
+                    {{range $index, $element := .VorschlagTermine}}
+                        <tr>
+                            <td>{{$element.Termin.Date.Format "02.01.2006"}} - {{$element.Termin.EndDate.Format "02.01.2006"}}</td>
+                            <td>{{$element.VotesFor}}</td>
+                            <td>
+                                {{if $element.PersonsVoted}}
+                                    <ul>
+                                        {{range $ind, $person := $element.PersonsVoted}}
+                                        <li>{{$person}}</li>
+                                        {{end}}
+                                    </ul>
+                                {{else}}
+                                    -----
+                                {{end}}
+                            </td>
+                            <td><button class="btn btn-dark">Tag auswählen</button></td>
+
+                        </tr>
+                    {{end}}
                 </tbody>
             </table>
         </div>
