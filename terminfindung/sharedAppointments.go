@@ -64,7 +64,6 @@ func CreateSharedTermin(termin *dateisystem.Termin, user *string) (uuid string, 
 		err = errors.New("UserID or Termin id isn't zero")
 		return
 	}
-	// TODO: Change it to only termin.ID --> makes it much easier
 	terminProp := *user + "|" + termin.ID
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()
