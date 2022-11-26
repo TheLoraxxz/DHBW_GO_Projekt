@@ -1,0 +1,15 @@
+{{ template "header" . }}
+
+<div class="container-fluid" style="margin: 40px">
+  <form style="width: 30%">
+    <h2>Neue Person einladen</h2>
+    <div class="mb-3">
+      <label class="form-label" for="startdate">Name</label>
+      <input required id="startdate" type="text" class="form-control" name="startdate">
+    </div>
+    <button type="submit" class="btn btn-primary">Erstellen</button>
+  </form>
+  <a style="margin-top: 20px" class="btn btn-dark" href="/shared">Zurück</a>
+</div>
+
+{{ template "footer" . }}

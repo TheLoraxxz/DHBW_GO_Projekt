@@ -14,6 +14,7 @@ func TestCreateSharedTermin(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
 	assert.Equal(t, 0, len(allTermine.shared))
 	user := "admin"
+	//create termin
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
