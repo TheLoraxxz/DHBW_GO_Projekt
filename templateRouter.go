@@ -108,7 +108,7 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
 			return
 		}
-		// set cookie so it automaticalyl updates and it doesnt throw one back to the login site
+		// set cookie so it automatically updates and it doesnt throw one back to the login site
 		cookie := &http.Cookie{
 			Name:     "SessionID-Kalender",
 			Value:    cookies,

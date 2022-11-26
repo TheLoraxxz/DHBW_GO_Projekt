@@ -16,10 +16,10 @@ type UserTermin struct {
 	Votes map[string]bool
 }
 type TerminFindung struct {
-	user             string
-	info             dateisystem.Termin
+	User             string
+	Info             dateisystem.Termin
 	VorschlagTermine []dateisystem.Termin
-	persons          map[string]UserTermin
+	Persons          map[string]UserTermin
 }
 
 // Shared
@@ -55,9 +55,9 @@ func GetTerminFromShared(user *string, terminID *string) (termin TerminFindung, 
 
 func CreateSharedTermin(termin *dateisystem.Termin, user *string) (uuid string, err error) {
 	newTermin := TerminFindung{
-		user:             *user,
-		info:             *termin,
-		persons:          make(map[string]UserTermin, 10),
+		User:             *user,
+		Info:             *termin,
+		Persons:          make(map[string]UserTermin, 10),
 		VorschlagTermine: []dateisystem.Termin{},
 	}
 	if len(*user) == 0 || len(termin.ID) == 0 {
@@ -117,7 +117,7 @@ func CreatePerson(name *string, terminID *string, user *string) (urlToShow strin
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()
 	termin, err := GetTerminFromShared(user, terminID)
-	for key := range termin.persons {
+	for key := range termin.Persons {
 		if strings.Compare(key, *name) == 0 {
 			err = errors.New("user already existed in Termin")
 			return
@@ -126,7 +126,7 @@ func CreatePerson(name *string, terminID *string, user *string) (urlToShow strin
 	if err != nil {
 		return
 	}
-	termin.persons[*name] = newUser
+	termin.Persons[*name] = newUser
 	urlToShow = "terminID=" + url.QueryEscape(*terminID) + "&name=" + *name + "&user=" + *user
 	allTermine.links[urlToShow] = *user + "|" + *terminID
 	return urlToShow, nil
@@ -140,7 +140,7 @@ func GetAllLinks(user *string, terminId *string) (users []UserTermin, err error)
 		return
 	}
 	//add all the user that are there
-	for _, element := range termin.persons {
+	for _, element := range termin.Persons {
 		users = append(users, element)
 	}
 	return

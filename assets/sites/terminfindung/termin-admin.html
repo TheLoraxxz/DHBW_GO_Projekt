@@ -4,17 +4,22 @@
     <div class="row">
         <div class="col">
             <div class="row">
-                <h2 class="col">Terminvorschlag: </br>Titel</h2>
+                <h2 class="col">Terminvorschlag: </br>{{.Info.Title}}</h2>
                 <div class="col-auto">
                     <a class="btn btn-primary" href="/shared/create/app">Neuen Vorschlagtermin erstellen</a>
                 </div>
             </div>
-            <p style="font-style: italic">Beschreibung</p>
-            <p>Eingeladene Personen:</p>
-            <ul>
-                <li>Person 1</li>
-                <li>Person 2</li>
-            </ul>
+            <p style="font-style: italic">{{.Info.Description}}</p>
+            {{if .Persons}}
+                <p>Eingeladene Personen:</p>
+                <ul>
+                    <li>Person 1</li>
+                    <li>Person 2</li>
+                </ul>
+            {{else}}
+                <p style="font-style: italic">Keine Personen bisher eingeladen</p>
+            {{end}}
+
         </div>
         <div class="col" style="margin-right: 20px; width: 50%">
             <div class="row" style="display: flex;flex-direction: row;justify-content: space-around">
