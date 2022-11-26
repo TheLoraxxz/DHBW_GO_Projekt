@@ -51,124 +51,103 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	// get cookie
-	cookie, err := request.Cookie("SessionID-Kalender")
-	//if cookie is not existing it returns back to the host
-	if err != nil {
+	isallowed, _ := checkIfIsAllowed(request)
+	if !isallowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
-	if isAllowed {
-		//if it is post it should process the data
-		if request.Method == "POST" {
-			// if the parseform isnt correct it should return
-			err := request.ParseForm()
-			if err != nil {
-				http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-			}
-			//get the user from the form request
-			user := request.Form.Get("newUsername")
-			password := request.Form.Get("newPassword")
-			err = authentifizierung.CreateUser(&user, &password)
-			if err != nil {
-				http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-
-			}
-			//if successfull on post it should return back to the user
-			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+	//if it is post it should process the data
+	if request.Method == "POST" {
+		// if the parseform isnt correct it should return
+		err := request.ParseForm()
+		if err != nil {
+			http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		}
+		//get the user from the form request
+		user := request.Form.Get("newUsername")
+		password := request.Form.Get("newPassword")
+		err = authentifizierung.CreateUser(&user, &password)
+		if err != nil {
+			http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 
 		}
-		mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-		if err != nil {
-			log.Fatal("Coudnt export Parsefiles")
-			return
-		}
-		err = mainRoute.Execute(writer, nil)
-		if err != nil {
-			log.Fatal("Coudnt Execute Parsefiles")
-			return
-		}
-	} else {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		//if successfull on post it should return back to the user
+		http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+
+	}
+	mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+		return
+	}
+	err = mainRoute.Execute(writer, nil)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
+		return
 	}
 
 }
 
 func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	cookie, err := request.Cookie("SessionID-Kalender")
-	//if cookie is not existing it returns back to the host
-	if err != nil {
+	isallowed, user := checkIfIsAllowed(request)
+	if !isallowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, user := authentifizierung.CheckCookie(&cookie.Value)
-	if isAllowed {
-		if request.Method == "POST" {
-			//if post request it actually parses the form and trys to change the password and create a new cookie
-			err := request.ParseForm()
-			if err != nil {
-				return
-			}
-			//change the user to new user
-			password := request.Form.Get("oldPassword")
-			newPassword := request.Form.Get("newPassword")
-			cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
-			if err != nil {
-				http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
-				return
-			}
-			// set cookie so it automaticalyl updates and it doesnt throw one back to the login site
-			cookie := &http.Cookie{
-				Name:     "SessionID-Kalender",
-				Value:    cookies,
-				Path:     "/",
-				MaxAge:   3600,
-				Secure:   true,
-				SameSite: http.SameSiteLaxMode,
-			}
-			//set new cookie and redirect
-			http.SetCookie(writer, cookie)
+	if request.Method == "POST" {
+		//if post request it actually parses the form and trys to change the password and create a new cookie
+		err := request.ParseForm()
+		if err != nil {
+			return
+		}
+		//change the user to new user
+		password := request.Form.Get("oldPassword")
+		newPassword := request.Form.Get("newPassword")
+		cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
+		if err != nil {
 			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
 			return
+		}
+		// set cookie so it automaticalyl updates and it doesnt throw one back to the login site
+		cookie := &http.Cookie{
+			Name:     "SessionID-Kalender",
+			Value:    cookies,
+			Path:     "/",
+			MaxAge:   3600,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		}
+		//set new cookie and redirect
+		http.SetCookie(writer, cookie)
+		http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+		return
 
-		}
-		//execute own template from userchange and put in footer and header
-		mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-		if err != nil {
-			log.Fatal("Coudnt export Parsefiles")
-		}
-		err = mainRoute.Execute(writer, nil)
-		if err != nil {
-			log.Fatal("Coudnt Execute Parsefiles")
-		}
-	} else {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+	}
+	//execute own template from userchange and put in footer and header
+	mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+	}
+	err = mainRoute.Execute(writer, nil)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
 	}
 }
 
 func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	cookie, err := request.Cookie("SessionID-Kalender")
-	//if cookie is not existing it returns back to the host
+	isallowed, username := checkIfIsAllowed(request)
+	if !isallowed {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+	mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, username := authentifizierung.CheckCookie(&cookie.Value)
-	if isAllowed {
-		mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-		if err != nil {
-			http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-			return
-		}
-		err = mainRoute.Execute(writer, username)
-		if err != nil {
-			log.Fatal("Coudnt Execute Parsefiles")
-		}
-	} else {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+	err = mainRoute.Execute(writer, username)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
 	}
 }
 
