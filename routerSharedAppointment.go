@@ -8,10 +8,7 @@ import (
 )
 
 func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	isallowed, _ := checkIfIsAllowed(request)
-	if !isallowed {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-	}
+	checkIfIsAllowed(request)
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		log.Fatal("Coudnt export Parsefiles")

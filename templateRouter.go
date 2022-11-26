@@ -51,8 +51,8 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	// get cookie
-	isallowed, _ := checkIfIsAllowed(request)
-	if !isallowed {
+	isAllowed, _ := checkIfIsAllowed(request)
+	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
@@ -89,8 +89,8 @@ func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request
 }
 
 func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	isallowed, user := checkIfIsAllowed(request)
-	if !isallowed {
+	isAllowed, user := checkIfIsAllowed(request)
+	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
@@ -135,8 +135,8 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 }
 
 func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	isallowed, username := checkIfIsAllowed(request)
-	if !isallowed {
+	isAllowed, username := checkIfIsAllowed(request)
+	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
