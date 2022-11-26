@@ -35,40 +35,58 @@ var allTermine = Shared{
 	links:  make(map[string]string, 10),
 }
 
-func GetTerminFromShared(user *string, terminID *string) TerminFindung {
+func GetTerminFromShared(user *string, terminID *string) (termin TerminFindung, err error) {
 	if len(*user) == 0 && len(*terminID) == 0 {
-		return TerminFindung{}
+		err = errors.New("termin id and user is not valid")
+		return
 	}
-	return allTermine.shared[*user+"|"+*terminID]
+	userAppID := *user + "|" + *terminID
+	if _, ok := allTermine.shared[userAppID]; !ok {
+		err = errors.New("can't find SharedTermin")
+		return
+	}
+	return allTermine.shared[userAppID], nil
 }
 
-func CreateSharedTermin(termin *dateisystem.Termin, user *string) (uuid string) {
-	allTermine.mutex.Lock()
-	defer allTermine.mutex.Unlock()
+func CreateSharedTermin(termin *dateisystem.Termin, user *string) (uuid string, err error) {
 	newTermin := TerminFindung{
 		user:             *user,
 		info:             *termin,
-		VorschlagTermine: []dateisystem.Termin{*termin},
 		persons:          make(map[string]User, 10),
+		VorschlagTermine: []dateisystem.Termin{},
 	}
-	allTermine.shared[*user+"|"+termin.ID] = newTermin
-	return *user + "|" + termin.ID
+	if len(*user) == 0 || len(termin.ID) == 0 {
+		err = errors.New("UserID or Termin id isn't zero")
+		return
+	}
+	terminProp := *user + "|" + termin.ID
+	allTermine.mutex.Lock()
+	defer allTermine.mutex.Unlock()
+	allTermine.shared[terminProp] = newTermin
+	err = CreateNewProposedDate(termin.Date, termin.EndDate, user, &termin.ID, true)
+	if err != nil {
+		return
+	}
+	return termin.ID, nil
 }
-func CreateNewProposedDate(startdate time.Time, endDate time.Time, userAppID *string) error {
+func CreateNewProposedDate(startdate time.Time, endDate time.Time, user *string, terminID *string, alreadyLocked bool) (err error) {
 	newProposedTermin := dateisystem.Termin{
 		Date:    startdate,
 		EndDate: endDate,
+		ID:      time.Now().String(),
 	}
 	if startdate.After(endDate) {
 		return errors.New("Can't insert startdate which has the wrong format")
 	}
-	if _, ok := allTermine.shared[*userAppID]; !ok {
-		return errors.New("User ID is not definied")
+	if !alreadyLocked {
+		allTermine.mutex.Lock()
+		defer allTermine.mutex.Unlock()
 	}
-	allTermine.mutex.Lock()
-	defer allTermine.mutex.Unlock()
-	termin := allTermine.shared[*userAppID]
+	termin, err := GetTerminFromShared(user, terminID)
+	if err != nil {
+		return
+	}
 	termin.VorschlagTermine = append(termin.VorschlagTermine, newProposedTermin)
-	allTermine.shared[*userAppID] = termin
+	allTermine.shared[*user+"|"+*terminID] = termin
 	return nil
 }

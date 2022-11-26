@@ -2,6 +2,7 @@ package terminfindung
 
 import (
 	"DHBW_GO_Projekt/dateisystem"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -9,18 +10,114 @@ import (
 
 // TestCreateSharedTermin
 // tests that the shared termin is created correctly without an error and then adds it accordingly
-func TestCreateSharedTermin(t *testing.T) {
+func TestCreateSharedTermin_RightInput(t *testing.T) {
 	// reset to zero
 	allTermine.shared = make(map[string]TerminFindung)
 	assert.Equal(t, 0, len(allTermine.shared))
-	user := "admin"
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		user, "test")
+	terminId, err := CreateSharedTermin(&termin, &user)
+	assert.Equal(t, "test", terminId)
+	assert.Equal(t, 1, len(allTermine.shared))
+
+	//check that it creates automaticaally the first appointment
+	uuid := user + "|" + terminId
+	fmt.Println(allTermine.shared[uuid])
+	assert.Equal(t, 1, len(allTermine.shared[uuid].VorschlagTermine))
+	assert.Equal(t, nil, err)
+
+}
+func TestCreateSharedTerminWrongInput(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	assert.Equal(t, 0, len(allTermine.shared))
+	user := "test"
 	//create termin
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
 		user, "test")
-	id := CreateSharedTermin(&termin, &user)
-	assert.Equal(t, "admin|test", id)
-	assert.Equal(t, 1, len(allTermine.shared))
+	user = ""
+	//should return error if user is empty
+	terminId, err := CreateSharedTermin(&termin, &user)
+	assert.Equal(t, 0, len(allTermine.shared))
+	assert.Equal(t, "", terminId)
+	assert.NotEqual(t, nil, err)
+	//should return error if terminId is not set
+	termin.ID = ""
+	user = "test"
+	terminId, err = CreateSharedTermin(&termin, &user)
+	assert.Equal(t, 0, len(allTermine.shared))
+	assert.Equal(t, "", terminId)
+	assert.NotEqual(t, nil, err)
+}
+
+func TestCreateNewProposedDateRight_SameDate(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	assert.Equal(t, 0, len(allTermine.shared))
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		user, "test")
+	//should return error if user is empty
+	//create an appointment and a new proposed Date
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	startDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
+	endDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
+	err := CreateNewProposedDate(startDate, endDate, &terminId, &user, false)
+	//it should create it and the proposed date should be added
+	assert.Equal(t, nil, err)
+	userTerminId := user + "|" + terminId
+	assert.Equal(t, 2, len(allTermine.shared[userTerminId].VorschlagTermine))
+	proposedTermin := allTermine.shared[userTerminId].VorschlagTermine
+	//everything should be eempty exept the start and enddate
+	assert.Equal(t, true, proposedTermin[1].Date.Equal(startDate))
+	assert.Equal(t, true, proposedTermin[1].EndDate.Equal(endDate))
+	assert.Empty(t, proposedTermin[1].Title)
+	assert.Empty(t, proposedTermin[1].Description)
+	assert.NotEmpty(t, proposedTermin[1].ID)
+}
+
+func TestCreateNewProposedDate_StartDateAfterEnddate(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	assert.Equal(t, 0, len(allTermine.shared))
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		user, "test")
+	//should return error if user is empty
+	//create an appointment and a new proposed Date
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	startDate := time.Date(2022, 12, 10, 12, 0, 0, 1, time.UTC)
+	endDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
+	err := CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
+	assert.NotEqual(t, nil, err)
+	userTerminId := user + "|" + terminId
+	assert.Equal(t, 1, len(allTermine.shared[userTerminId].VorschlagTermine))
+
+}
+
+func TestSelectProposedDate_RightInput(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	assert.Equal(t, 0, len(allTermine.shared))
+	user := "test"
+	//create termin with proposed termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		user, "test")
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	startDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
+	endDate := time.Date(2022, 12, 11, 12, 0, 0, 0, time.UTC)
+	err := CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
+	assert.Equal(t, nil, err)
+	//SelectProposedDate(&terminId, &userID, &propTerminId)
 
 }
