@@ -35,11 +35,26 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 }
 
 func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	isAllowed, user := checkIfIsAllowed(request)
+	if !isAllowed {
+		http.Redirect(writer, request, "https://"+request.Host+"/", http.StatusContinue)
+		return
+	}
+	termin := request.URL.Query().Get("terminID")
+	if request.Method == http.MethodPost {
+		err := request.ParseForm()
+		if err != nil {
+			return
+		}
+		name := request.Form.Get("name")
+		fmt.Println(name)
+		fmt.Println(user)
+	}
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-link.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		log.Fatal("Coudnt export Parsefiles")
 	}
-	err = mainRoute.Execute(writer, nil)
+	err = mainRoute.Execute(writer, termin)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}
@@ -47,12 +62,34 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Request) {
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	isAllowed, _ := checkIfIsAllowed(request)
+	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
 	termin := request.URL.Query().Get("terminID")
+	if request.Method == http.MethodPost {
+		//if is submited the form it pases the request
+		err := request.ParseForm()
+		if err != nil {
+			return
+		}
+		// get start date and enddate and parse it to time format
+		startDate := request.Form.Get("startdate")
+		endDate := request.Form.Get("enddate")
+		startDateFormated, err := time.Parse("2006-01-02", startDate)
+		enddateFormated, err := time.Parse("2006-01-02", endDate)
+		if err != nil {
+			return
+		}
+		//create a new proposed date and redirect to the main website
+		err = terminfindung.CreateNewProposedDate(startDateFormated, enddateFormated, &user, &termin, false)
+		if err != nil {
+			return
+		}
+		http.Redirect(writer, request, "https://"+request.Host+"/shared?terminID="+termin, http.StatusContinue)
+		return
+	}
 	if len(termin) == 0 {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return

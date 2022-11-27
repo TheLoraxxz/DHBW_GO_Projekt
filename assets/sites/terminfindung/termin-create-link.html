@@ -4,12 +4,12 @@
   <form style="width: 30%">
     <h2>Neue Person einladen</h2>
     <div class="mb-3">
-      <label class="form-label" for="startdate">Name</label>
-      <input required id="startdate" type="text" class="form-control" name="startdate">
+      <label class="form-label" for="name">Name</label>
+      <input required id="name" type="text" class="form-control" name="name">
     </div>
     <button type="submit" class="btn btn-primary">Erstellen</button>
   </form>
-  <a style="margin-top: 20px" class="btn btn-dark" href="/shared">Zurück</a>
+  <a style="margin-top: 20px" class="btn btn-dark" href="/shared?terminID={{.}}">Zurück</a>
 </div>
 
 {{ template "footer" . }}
