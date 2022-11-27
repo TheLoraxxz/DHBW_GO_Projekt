@@ -19,12 +19,26 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	termin := request.URL.Query().Get("terminID")
+	selectedDay := request.URL.Query().Get("selected")
 	terminShared, err := terminfindung.GetTerminFromShared(&user, &termin)
-	terminForHTML := terminShared.ChangeToCorrectHTML()
 	if err != nil {
 		log.Fatal("Coudnt find Termin")
 
 	}
+	if len(selectedDay) != 0 {
+		err := terminfindung.SelectDate(&selectedDay, &termin, &user)
+		fmt.Println(selectedDay)
+		if err != nil {
+			return
+		}
+		terminShared, err = terminfindung.GetTerminFromShared(&user, &termin)
+		fmt.Println(terminShared.FinalTermin.ID)
+		if err != nil {
+			return
+		}
+	}
+	terminForHTML := terminShared.ChangeToCorrectHTML()
+
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		log.Fatal(err)

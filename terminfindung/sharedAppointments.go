@@ -3,6 +3,7 @@ package terminfindung
 import (
 	"DHBW_GO_Projekt/dateisystem"
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"net/url"
 	"strings"
@@ -148,12 +149,15 @@ func GetAllLinks(user *string, terminId *string) (users []UserTermin, err error)
 }
 
 func SelectDate(idPropDate *string, terminID *string, user *string) (err error) {
+	fmt.Println(*user)
+	fmt.Println(*terminID)
 	termin, err := GetTerminFromShared(user, terminID)
 	if err != nil {
 		return err
 	}
 	for _, elem := range termin.VorschlagTermine {
-		if elem.ID == *idPropDate {
+		fmt.Println(elem.ID)
+		if strings.Compare(elem.ID, *idPropDate) == 0 {
 			termin.FinalTermin = elem
 		}
 	}
