@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -124,13 +125,38 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 }
 
 func ShowAllLinksServeHttp(writer http.ResponseWriter, request *http.Request) {
-	isAllowed, _ := checkIfIsAllowed(request)
+	isAllowed, userAdmin := checkIfIsAllowed(request)
 	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
 	termin := request.URL.Query().Get("terminID")
-	fmt.Println(termin)
+	links, err := terminfindung.GetAllLinks(&userAdmin, &termin)
+	if err != nil {
+		return
+	}
+	for key, user := range links {
+		links[key].Url = "https://" + request.Host + "/shared/public?terminID=" + url.QueryEscape(termin) + "&name=" + user.Name + "&user=" + userAdmin + "&apiKey=" + user.Url
+
+	}
+	//setup struct for html template
+	type shared struct {
+		Users     []terminfindung.UserTermin
+		Routeback string
+	}
+	forTemplate := shared{
+		Users:     links,
+		Routeback: termin,
+	}
+	linkRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin-showAll.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+	}
+	err = linkRoute.Execute(writer, forTemplate)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
+	}
+	return
 }
 
 func checkIfIsAllowed(request *http.Request) (isAllowed bool, username string) {
