@@ -17,7 +17,7 @@ type CorrectForHTML struct {
 	Info             dateisystem.Termin
 	VorschlagTermine []TerminWithVoted
 	Persons          []string
-	isLocked         bool
+	IsLocked         bool
 }
 
 func (t TerminFindung) ChangeToCorrectHTML() (rightHTML CorrectForHTML) {
@@ -27,7 +27,7 @@ func (t TerminFindung) ChangeToCorrectHTML() (rightHTML CorrectForHTML) {
 		Info:             t.Info,
 		Persons:          []string{},
 		VorschlagTermine: []TerminWithVoted{},
-		isLocked:         false,
+		IsLocked:         false,
 	}
 	//make for to get all the termine
 	for _, elem := range t.VorschlagTermine {
@@ -38,7 +38,7 @@ func (t TerminFindung) ChangeToCorrectHTML() (rightHTML CorrectForHTML) {
 		//if it is the final termin so it highlights it
 		if strings.Compare(elem.ID, t.FinalTermin.ID) == 0 {
 			newTermin.isSelected = true
-			rightHTML.isLocked = true
+			rightHTML.IsLocked = true
 		}
 		rightHTML.VorschlagTermine = append(rightHTML.VorschlagTermine, newTermin)
 	}

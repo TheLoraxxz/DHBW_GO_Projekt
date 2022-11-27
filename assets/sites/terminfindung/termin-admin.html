@@ -50,8 +50,13 @@
                                     -----
                                 {{end}}
                             </td>
-                            <td><button class="btn btn-dark">Tag auswählen</button></td>
-
+                            <td>
+                                {{if $.IsLocked}}
+                                    <button class="btn btn-dark" disabled>Tag auswählen</button>
+                                {{else}}
+                                <a class="btn btn-dark" href="/shared?selected={{$element.Termin.ID}}&terminID={{$.TerminID}}">Tag auswählen</a>
+                                {{end}}
+                            </td>
                         </tr>
                     {{end}}
                 </tbody>

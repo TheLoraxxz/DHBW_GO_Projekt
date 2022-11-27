@@ -146,3 +146,16 @@ func GetAllLinks(user *string, terminId *string) (users []UserTermin, err error)
 	}
 	return
 }
+
+func SelectDate(idPropDate *string, terminID *string, user *string) (err error) {
+	termin, err := GetTerminFromShared(user, terminID)
+	if err != nil {
+		return err
+	}
+	for _, elem := range termin.VorschlagTermine {
+		if elem.ID == *idPropDate {
+			termin.FinalTermin = elem
+		}
+	}
+	return nil
+}
