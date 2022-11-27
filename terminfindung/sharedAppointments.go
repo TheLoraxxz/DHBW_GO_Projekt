@@ -18,6 +18,7 @@ type UserTermin struct {
 type TerminFindung struct {
 	User             string
 	Info             dateisystem.Termin
+	FinalTermin      dateisystem.Termin
 	VorschlagTermine []dateisystem.Termin
 	Persons          map[string]UserTermin
 }

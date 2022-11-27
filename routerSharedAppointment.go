@@ -47,8 +47,27 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 		name := request.Form.Get("name")
-		fmt.Println(name)
-		fmt.Println(user)
+		linkForPerson, err := terminfindung.CreatePerson(&name, &termin, &user)
+		if err != nil {
+			return
+		}
+		type links struct {
+			LinkForUser string
+			LinkBack    string
+		}
+		linksFortemp := links{
+			LinkBack:    "/shared?terminID=" + termin,
+			LinkForUser: "https://" + request.Host + "/shared/public?" + linkForPerson,
+		}
+		postRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-showlink.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+		if err != nil {
+			log.Fatal("Coudnt export Parsefiles")
+		}
+		err = postRoute.Execute(writer, linksFortemp)
+		if err != nil {
+			log.Fatal("Coudnt Execute Parsefiles")
+		}
+		return
 	}
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-link.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
@@ -61,7 +80,6 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 }
 
 func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Request) {
-	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
@@ -94,7 +112,7 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-
+	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		log.Fatal("Coudnt export Parsefiles")
 	}
@@ -104,6 +122,17 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 	}
 
 }
+
+func ShowAllLinksServeHttp(writer http.ResponseWriter, request *http.Request) {
+	isAllowed, _ := checkIfIsAllowed(request)
+	if !isAllowed {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+	termin := request.URL.Query().Get("terminID")
+	fmt.Println(termin)
+}
+
 func checkIfIsAllowed(request *http.Request) (isAllowed bool, username string) {
 	cookie, err := request.Cookie("SessionID-Kalender")
 	//if cookie is not existing it returns back to the host
@@ -114,6 +143,7 @@ func checkIfIsAllowed(request *http.Request) (isAllowed bool, username string) {
 	isAllowed, username = authentifizierung.CheckCookie(&cookie.Value)
 	return
 }
+
 func CreateTest(writer http.ResponseWriter, request *http.Request) {
 	user := "admin"
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
