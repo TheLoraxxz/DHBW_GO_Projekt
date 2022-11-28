@@ -118,7 +118,7 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 		endDate = date
 	}
 	//Erstelle neuen Termin und füge diesen dem Cache hinzu
-	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
+	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, false, username)
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 
 	//Anzuzeigende Einträge in den Ansichten aktualisieren

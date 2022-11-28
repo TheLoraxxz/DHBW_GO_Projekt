@@ -175,9 +175,9 @@ func testFilterCalendarEntriesCorrectAppending(t *testing.T) {
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 3)
-	testTermine = append(testTermine, ds.NewTerminObj("testTermin1", "test", ds.Never, testTermin1, testTermin1))
-	testTermine = append(testTermine, ds.NewTerminObj("testTermin2", "test", ds.Never, testTermin2, testTermin2))
-	testTermine = append(testTermine, ds.NewTerminObj("testTermin3", "test", ds.Never, testTermin3, testTermin3))
+	testTermine = append(testTermine, ds.NewTerminObj("testTermin1", "test", ds.Never, testTermin1, testTermin1, false))
+	testTermine = append(testTermine, ds.NewTerminObj("testTermin2", "test", ds.Never, testTermin2, testTermin2, false))
+	testTermine = append(testTermine, ds.NewTerminObj("testTermin3", "test", ds.Never, testTermin3, testTermin3, false))
 
 	//Testen ob Daten sortiert am richtigen Tag eingefügt werden
 	filteresSlice := tv.FilterCalendarEntries(testTermine)
@@ -209,10 +209,10 @@ func testFilterCalendarEntriesCorrectRecurring(t *testing.T) {
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 4)
-	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends)
-	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends)
-	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends)
-	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends, false)
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends, false)
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends, false)
+	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends, false)
 
 	//Testen ob Daten sortiert am richtigen Tag eingefügt werden
 	filteredSlice := tv.FilterCalendarEntries(testTermine)
