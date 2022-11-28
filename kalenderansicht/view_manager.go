@@ -92,7 +92,7 @@ func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
 	date, _ := time.Parse(layout, r.FormValue("date"))
 	endDate, _ := time.Parse(layout, r.FormValue("endDate"))
 
-	return ds.NewTerminObj(title, description, rep, date, endDate, id)
+	return ds.Termin{Title: title, Description: description, Recurring: rep, Date: date, EndDate: endDate, ID: id}
 }
 
 // CreateTermin
@@ -118,7 +118,7 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 		endDate = date
 	}
 	//Erstelle neuen Termin und füge diesen dem Cache hinzu
-	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username, "dummy")
+	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
