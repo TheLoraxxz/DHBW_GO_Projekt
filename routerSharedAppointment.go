@@ -27,12 +27,10 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 	if len(selectedDay) != 0 {
 		err := terminfindung.SelectDate(&selectedDay, &termin, &user)
-		fmt.Println(selectedDay)
 		if err != nil {
 			return
 		}
 		terminShared, err = terminfindung.GetTerminFromShared(&user, &termin)
-		fmt.Println(terminShared.FinalTermin.ID)
 		if err != nil {
 			return
 		}

@@ -4,11 +4,24 @@
     <div class="row">
         <div class="col">
             <div class="row">
-                <h2 class="col">Terminvorschlag: </br>{{.Info.Title}}</h2>
+                <h2 class="col">
+                {{if .IsLocked}}
+                    {{.Info.Title}}
+                {{else}}
+                    Terminvorschlag: </br>{{.Info.Title}}
+                {{end}}
+                </h2>
                 <div class="col-auto">
-                    <a class="btn btn-primary" href="/shared/create/app?terminID={{.TerminID}}">Neuen Vorschlagtermin erstellen</a>
+                    {{if .IsLocked}}
+                        <button class="btn btn-primary" disabled>Neuen Vorschlagtermin erstellen</button>
+                    {{else}}
+                        <a class="btn btn-primary" href="/shared/create/app?terminID={{.TerminID}}">Neuen Vorschlagtermin erstellen</a>
+                    {{end}}
                 </div>
             </div>
+            {{if .IsLocked}}
+                <p>Von: {{.Info.Date.Format "02.01.2006"}}</br> Bis: {{.Info.EndDate.Format "02.01.2006"}}</p>
+            {{end}}
             <p style="font-style: italic">{{.Info.Description}}</p>
             {{if .Persons}}
                 <p>Eingeladene Personen:</p>
@@ -36,7 +49,7 @@
                 </thead>
                 <tbody>
                     {{range $index, $element := .VorschlagTermine}}
-                        <tr>
+                        <tr {{if $element.IsSelected}} class="table-dark" {{end}}>
                             <td>{{$element.Termin.Date.Format "02.01.2006"}} - {{$element.Termin.EndDate.Format "02.01.2006"}}</td>
                             <td>{{$element.VotesFor}}</td>
                             <td>
@@ -52,7 +65,11 @@
                             </td>
                             <td>
                                 {{if $.IsLocked}}
-                                    <button class="btn btn-dark" disabled>Tag auswählen</button>
+                                    {{if $element.IsSelected}}
+                                        Termin ausgewählt
+                                    {{else}}
+                                        <button class="btn btn-dark" disabled>Tag auswählen</button>
+                                    {{end}}
                                 {{else}}
                                 <a class="btn btn-dark" href="/shared?selected={{$element.Termin.ID}}&terminID={{$.TerminID}}">Tag auswählen</a>
                                 {{end}}

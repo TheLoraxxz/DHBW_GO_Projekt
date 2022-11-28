@@ -141,7 +141,7 @@ func TestGetAllLinks(t *testing.T) {
 
 }
 
-func TestSelectDate(t *testing.T) {
+func TestSelectDate_RightInput(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
 	assert.Equal(t, 0, len(allTermine.shared))
 	user := "test"
@@ -153,12 +153,21 @@ func TestSelectDate(t *testing.T) {
 	//create shared appointment
 	terminId, err := CreateSharedTermin(&termin, &user)
 	assert.Equal(t, nil, err)
-	fmt.Println(allTermine.shared)
 	//create proposed time
 	startDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
 	endDate := time.Date(2022, 12, 12, 12, 0, 0, 0, time.UTC)
-	err = CreateNewProposedDate(startDate, endDate, &terminId, &user, false)
-	fmt.Println(allTermine.shared[user+"|"+terminId])
+	//create another prop date, should work wihtout proble,s
+	err = CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
 	assert.Equal(t, nil, err)
+	//get termin for select date
+	terminObj, _ := GetTerminFromShared(&user, &terminId)
+	propDate := terminObj.VorschlagTermine[0].ID
+	//select date should have the expected outcome
+	err = SelectDate(&propDate, &terminId, &user)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, propDate, allTermine.shared[user+"|"+terminId].FinalTermin.ID)
+}
+
+func TestSelectDate_WrongIDPropDatae(t *testing.T) {
 
 }

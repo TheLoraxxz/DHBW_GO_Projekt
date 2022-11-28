@@ -9,7 +9,7 @@ type TerminWithVoted struct {
 	Termin       dateisystem.Termin
 	VotesFor     int64
 	PersonsVoted []string
-	isSelected   bool
+	IsSelected   bool
 }
 
 type CorrectForHTML struct {
@@ -33,12 +33,18 @@ func (t TerminFindung) ChangeToCorrectHTML() (rightHTML CorrectForHTML) {
 	for _, elem := range t.VorschlagTermine {
 		newTermin := TerminWithVoted{
 			Termin:     elem,
-			isSelected: false,
+			IsSelected: false,
 		}
 		//if it is the final termin so it highlights it
 		if strings.Compare(elem.ID, t.FinalTermin.ID) == 0 {
-			newTermin.isSelected = true
+			//if the final termin is set it copys it to the info so
+			//the right information stands then on the main page
+			newTermin.IsSelected = true
 			rightHTML.IsLocked = true
+			rightHTML.Info.Date = t.FinalTermin.Date
+			rightHTML.Info.EndDate = t.FinalTermin.EndDate
+			rightHTML.Info.Description = t.FinalTermin.Description
+
 		}
 		rightHTML.VorschlagTermine = append(rightHTML.VorschlagTermine, newTermin)
 	}
