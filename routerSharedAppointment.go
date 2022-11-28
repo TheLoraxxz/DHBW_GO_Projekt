@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -172,11 +173,42 @@ func ShowAllLinksServeHttp(writer http.ResponseWriter, request *http.Request) {
 }
 
 func PublicSharedWebsite(writer http.ResponseWriter, request *http.Request) {
+	//because go automatically returns it as unescaped query we need to redo it
+	var apikey string
+	if request.Method == http.MethodPost {
+		err := request.ParseForm()
+		if err != nil {
+			fmt.Println(err)
+		}
+		apikey = url.QueryEscape(request.Form.Get("apiKey"))
+		dateKey := request.Form.Get("dateKey")
+		voted := request.Form.Get("voted")
+		votedBool := false
+		if strings.Compare(voted, "on") == 0 {
+			votedBool = true
+		}
+		termin, user, err := terminfindung.GetTerminViaApiKey(&apikey)
+		if err != nil {
+			return
+		}
+		err = terminfindung.VoteForDay(&termin.Info.ID, &termin.User, &user, &dateKey, votedBool)
+		if err != nil {
+			return
+		}
+	} else {
+		apikey = url.QueryEscape(request.URL.Query().Get("apiKey"))
+	}
+	termin, user, err := terminfindung.GetTerminViaApiKey(&apikey)
+	if err != nil {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+	htmlInput := termin.ConvertUserSiteToRightHTML(&user, &apikey)
 	linkRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-public.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		log.Fatal("Coudnt export Parsefiles")
 	}
-	err = linkRoute.Execute(writer, nil)
+	err = linkRoute.Execute(writer, htmlInput)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}

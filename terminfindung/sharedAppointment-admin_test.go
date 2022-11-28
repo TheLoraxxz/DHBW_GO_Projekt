@@ -170,6 +170,6 @@ func TestSelectDate_RightInput(t *testing.T) {
 	assert.Equal(t, propDate, allTermine.shared[user+"|"+terminId].FinalTermin.ID)
 }
 
-func TestSelectDate_WrongIDPropDatae(t *testing.T) {
+func TestSelectDate_WrongIDPropDate(t *testing.T) {
 
 }

@@ -20,6 +20,18 @@ type AdminHTML struct {
 	IsLocked         bool
 }
 
+type VoteTermin struct {
+	Votedfor int
+	Term     dateisystem.Termin
+}
+
+type UserHTML struct {
+	User    string
+	APIKey  string
+	Info    dateisystem.Termin
+	ToVotes map[string]VoteTermin
+}
+
 func (t TerminFindung) ConvertAdminToHTML() (rightHTML AdminHTML) {
 	// create correct HTML
 	rightHTML = AdminHTML{
@@ -61,6 +73,35 @@ func (t TerminFindung) ConvertAdminToHTML() (rightHTML AdminHTML) {
 				}
 			}
 		}
+	}
+	return
+}
+
+func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *string) (newHTMLObj UserHTML) {
+	if len(*user) == 0 {
+		return
+	}
+	newHTMLObj = UserHTML{
+		Info:    termin.Info,
+		User:    *user,
+		ToVotes: map[string]VoteTermin{},
+		APIKey:  *apikey,
+	}
+	for _, elem := range termin.VorschlagTermine {
+		voteTermin := VoteTermin{
+			Votedfor: 0,
+			Term:     elem,
+		}
+		newHTMLObj.ToVotes[elem.ID] = voteTermin
+	}
+	for vote, bol := range termin.Persons[*user].Votes {
+		voted := newHTMLObj.ToVotes[vote]
+		if bol {
+			voted.Votedfor = 1
+		} else {
+			voted.Votedfor = -1
+		}
+		newHTMLObj.ToVotes[vote] = voted
 	}
 	return
 }
