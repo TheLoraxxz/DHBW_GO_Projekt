@@ -1,6 +1,7 @@
 package dateisystem
 
 //Mat-Nr. 8689159
+//ToDo shared bool ergänzen
 import (
 	"time"
 )

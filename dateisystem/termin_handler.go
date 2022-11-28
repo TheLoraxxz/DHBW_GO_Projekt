@@ -5,33 +5,29 @@ package dateisystem
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
 
 // NewTerminObj erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
-func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time, kalender []Termin) []Termin {
+func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time) Termin {
 
-	T := Termin{
+	t := Termin{
 		Title:       title,
 		Description: description,
 		Recurring:   rep,
 		Date:        date,
 		EndDate:     endDate,
-		ID:          "0"}
+		ID:          createID(date, endDate)}
 
-	k := AddToCache(T, kalender)
-
-	return k
+	return t
 }
 
 // AddToCache fügt Termin dem Caching hinzu
 func AddToCache(termin Termin, kalender []Termin) []Termin {
-	incrementID()
-	termin.setID(&termin, strconv.Itoa(getID()))
 	k := append(kalender, termin)
 	return k
 }
@@ -40,17 +36,16 @@ func AddToCache(termin Termin, kalender []Termin) []Termin {
 func StoreTerminObj(termin Termin, username string) {
 
 	path := getFile(termin.ID, username)
-	fmt.Println(path)
 
 	p, _ := json.MarshalIndent(termin, "", " ") //erzeugt die json
 	_ = os.WriteFile(path, p, 0755)             //schreibt json in Datei
 }
 
 // CreateNewTermin erzeugt einen persistenten Termin
-func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string, kalender []Termin) []Termin {
-	k := NewTerminObj(title, description, rep, date, endDate, kalender)
-	StoreTerminObj(k[0], username)
-	return k
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string) Termin {
+	t := NewTerminObj(title, description, rep, date, endDate)
+	StoreTerminObj(t, username)
+	return t
 }
 
 // GetTermine liefert slice mit allen terminen eines Users zurück
@@ -65,9 +60,9 @@ func GetTermine(username string) []Termin {
 		return nil
 	}
 
-	files, err := f.Readdir(0) //liest alle Dateinamen ein
-	if err != nil {
-		fmt.Println(err)
+	files, err2 := f.Readdir(0) //liest alle Dateinamen ein
+	if err2 != nil {
+		fmt.Println(err2)
 		return nil
 	}
 
@@ -86,7 +81,6 @@ func GetTermine(username string) []Termin {
 
 // StoreCache speichert alle Elemente Caches von User "username"
 func StoreCache(kalender []Termin, username string) {
-	reOrderID(kalender, username)
 	k := kalender
 
 	for i := 0; i < len(k); i++ {
@@ -120,7 +114,6 @@ func LoadTermin(id string, username string) Termin {
 
 // deleteTermin löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
 func deleteTermin(id string, username string) {
-	decrementID()
 	file := getFile(id, username)
 	err := os.Remove(file)
 	if err != nil {
@@ -142,13 +135,12 @@ func DeleteAll(kalender []Termin, username string) []Termin {
 
 // DeleteFromCache löscht einzelnes Element aus dem Cache und ggf. die dazugehörige json
 func DeleteFromCache(kalender []Termin, id string, username string) []Termin {
-	kOld := kalender
 	var kNew []Termin
 	file := getFile(kalender[0].ID, username)
 
-	for i := 0; i < len(kOld); i++ {
-		if kOld[i].ID != id {
-			kNew = append(kNew, kOld[i]) //kopiert in neuen Kalender
+	for i := 0; i < len(kalender); i++ {
+		if kalender[i].ID != id {
+			kNew = append(kNew, kalender[i]) //kopiert in neuen Kalender
 		} else { //prüft, ob der Termin persistent, oder transitiv ist
 			if _, err := os.Stat(file); err == nil {
 				deleteTermin(id, username)
@@ -156,27 +148,37 @@ func DeleteFromCache(kalender []Termin, id string, username string) []Termin {
 		}
 	}
 
-	kNew = reOrderID(kNew, username)
-
 	return kNew
 }
 
-func reOrderID(kalender []Termin, username string) []Termin {
-	DeleteAll(kalender, username)
-	decrementID()
-	n := getID()
+// createID erzeugt neue ID
+func createID(dat time.Time, endDat time.Time) string {
 
-	if kalender == nil {
-		return nil
+	u := time.Now().String()
+
+	id := dat.String() + endDat.String() + u
+
+	bytes, err := bcrypt.GenerateFromPassword([]byte(id), 14)
+	id = string(bytes)
+
+	f, err := os.OpenFile("id.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
 	}
 
-	var k []Termin
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
 
-	for i := n; i > 0; i-- {
-		ter := &kalender[i]
-		kalender[i].setID(ter, strconv.Itoa(i))
-		k[i] = kalender[i]
+		}
+	}(f)
+
+	id = strings.Replace(id, "/", "E", 99)
+	id = strings.Replace(id, ".", "D", 99)
+
+	if _, err = f.WriteString(id + "\n"); err != nil {
+		panic(err)
 	}
-	StoreCache(k, username)
-	return kalender
+
+	return id
 }
