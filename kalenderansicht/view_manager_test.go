@@ -78,13 +78,13 @@ func createTestTermin(repeat ds.Repeat) *ViewManager {
 
 	switch repeat {
 	case ds.WEEKLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title", "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username, "dummy")
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	case ds.YEARLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", ds.YEARLY, createSpecificDate(2020, 2, 11), createSpecificDate(2024, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title", "test", ds.YEARLY, createSpecificDate(2020, 2, 11), createSpecificDate(2024, 2, 11), vm.Username, "dummy")
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	case ds.MONTHLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", ds.MONTHLY, createSpecificDate(2021, 2, 11), createSpecificDate(time.Now().Year(), 30, 12), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title", "test", ds.MONTHLY, createSpecificDate(2021, 2, 11), createSpecificDate(time.Now().Year(), 30, 12), vm.Username, "dummy")
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
 	return vm
@@ -113,11 +113,11 @@ Hier Folgen die Tests zum Termine erstellen/bearbeiten/löschen und die dafür b
 */
 
 func testfilterRepetition(t *testing.T) {
-	assert.Equal(t, ds.Never, filterRepetition("1"))
-	assert.Equal(t, ds.DAILY, filterRepetition("2"))
-	assert.Equal(t, ds.WEEKLY, filterRepetition("3"))
-	assert.Equal(t, ds.MONTHLY, filterRepetition("4"))
-	assert.Equal(t, ds.YEARLY, filterRepetition("5"))
+	assert.Equal(t, ds.Never, filterRepetition("niemals"))
+	assert.Equal(t, ds.DAILY, filterRepetition("täglich"))
+	assert.Equal(t, ds.WEEKLY, filterRepetition("wöchentlich"))
+	assert.Equal(t, ds.MONTHLY, filterRepetition("monatlich"))
+	assert.Equal(t, ds.YEARLY, filterRepetition("jährlich"))
 }
 
 func testCreateTermin(t *testing.T) {
@@ -135,13 +135,8 @@ func testCreateTermin(t *testing.T) {
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	termin := ds.Termin{
-		Title:       "Test Termin",
-		Description: "Spaßiger Termin",
-		Recurring:   ds.DAILY,
-		Date:        createSpecificDate(2022, 11, 11),
-		EndDate:     createSpecificDate(2030, 11, 11),
-	}
+	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2030, 11, 11), "1")
+
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
 	vm.CreateTermin(r, vm.Username)
@@ -172,13 +167,8 @@ func testCreateTerminLogicCheck(t *testing.T) {
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	termin := ds.Termin{
-		Title:       "Test Termin",
-		Description: "Spaßiger Termin",
-		Recurring:   ds.DAILY,
-		Date:        createSpecificDate(2022, 11, 11),
-		EndDate:     createSpecificDate(2022, 11, 11),
-	}
+	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), "1")
+
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
 	vm.CreateTermin(r, vm.Username)
@@ -191,24 +181,17 @@ func testCreateTerminLogicCheck(t *testing.T) {
 }
 func testEditTerminDelete(t *testing.T) {
 	vm := new(ViewManager)
-	//Erstellen der Termininfos, die über die Request gesendet werden
+
+	//Testtermin erstellen und der Request hinzufügen
+	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), "1")
+	vm.TerminCache = append(vm.TerminCache, termin)
+
+	//Erstellen der Termin-infos, die über die Request gesendet werden
 	data := url.Values{}
-	data.Add("title", "Test Termin")
-	data.Add("description", "Spaßiger Termin")
-	data.Add("repeat", "2") //Der Wert 2 entspricht der Wiederholung "täglich"
-	data.Add("date", "2022-11-11")
-	data.Add("endDate", "2030-11-11")
-
-	//Erstellen der Request
-	r, _ := http.NewRequest("POST", "?terminErstellen", strings.NewReader(data.Encode()))
-	r.Header.Add("", "")
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	//Termin dem TerminCaches hinzufügen
-	vm.CreateTermin(r, vm.Username)
 
 	//Erstellen der Lösch-Request
 	data = url.Values{}
+	data.Add("ID", "1")
 	data.Add("oldTitle", "Test Termin")
 	data.Add("editing", "Löschen: Termin")
 	data.Add("title", "Test Termin")
@@ -218,7 +201,7 @@ func testEditTerminDelete(t *testing.T) {
 	data.Add("endDate", "2030-11-11")
 
 	//Erstellen der Request
-	r, _ = http.NewRequest("POST", "?termineBearbeiten", strings.NewReader(data.Encode()))
+	r, _ := http.NewRequest("POST", "../editor", strings.NewReader(data.Encode()))
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -233,52 +216,38 @@ func testEditTerminDelete(t *testing.T) {
 }
 func testEditTerminEdit(t *testing.T) {
 	vm := new(ViewManager)
-	//Erstellen der Termininfos, die über die Request gesendet werden
+
+	//Testtermin erstellen und der Request hinzufügen
+	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), "1")
+	vm.TerminCache = append(vm.TerminCache, termin)
+
+	//Länge des TerminCaches vor dem Bearbeiten
+	oldLen := len(vm.TerminCache)
+
+	//Erstellen der Termin-infos, die über die Request gesendet werden
 	data := url.Values{}
-	data.Add("title", "Test Termin")
-	data.Add("description", "Spaßiger Termin")
-	data.Add("repeat", "täglich")
-	data.Add("date", "2022-11-11")
-	data.Add("endDate", "2030-11-11")
-
-	//Erstellen der Request
-	r, _ := http.NewRequest("POST", "?terminErstellen", strings.NewReader(data.Encode()))
-	r.Header.Add("", "")
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	//Termin dem TerminCaches hinzufügen
-	vm.CreateTermin(r, vm.Username)
-
-	//Erstellen der Lösch-Request
+	//Erstellen der Bearbeiten-Request
 	data = url.Values{}
-	data.Add("oldTitle", "Test Termin")
 	data.Add("editing", "1")
-	data.Add("title", "Bearbeiteter Test Termin")
+	data.Add("title", "Test Termin Bearbeitet")
 	data.Add("description", "Spaßiger bearbeiteter Termin")
-	data.Add("repeat", "1") //Der Wert 1 entspricht der Wiederholung "niemals"
+	data.Add("rep", "wöchentlich")
 	data.Add("date", "2022-11-11")
-	data.Add("endDate", "2032-11-11")
+	data.Add("endDate", "2023-11-01")
+	data.Add("ID", "1")
 
 	//Erstellen der Request
-	r, _ = http.NewRequest("POST", "?termineBearbeiten", strings.NewReader(data.Encode()))
+	r, _ := http.NewRequest("POST", "?termineBearbeiten", strings.NewReader(data.Encode()))
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	//bearbeiteter Termin zum Überprüfen
-	editetTermin := ds.Termin{
-		Title:       "Bearbeiteter Test Termin",
-		Description: "Spaßiger bearbeiteter Termin",
-		Recurring:   ds.Never,
-		Date:        createSpecificDate(2022, 11, 11),
-		EndDate:     createSpecificDate(2032, 11, 11),
-	}
-	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
-	oldLen := len(vm.TerminCache)
+	editetTermin := ds.NewTerminObj("Test Termin Bearbeitet", "Spaßiger bearbeiteter Termin", ds.WEEKLY, createSpecificDate(2022, 11, 11), createSpecificDate(2023, 01, 11), "1")
 
 	//Termin bearbeiten
 	vm.EditTermin(r, vm.Username)
 
-	//Testen, ob ein Termin dem Cache hinzugefügt worden ist
+	//Testen, ob die Terminanzahl in dem Cache gleich geblieben ist
 	assert.Equal(t, oldLen, len(vm.TerminCache), "Die Länge sollte gleich geblieben sein.")
 	//Testen, ob Termin im Cache dem neuen Termin entspricht
 	assert.Equal(t, editetTermin, vm.TerminCache[0], "Die Termine sollten überein stimmen.")
@@ -447,7 +416,7 @@ func testLvJumpPageForward(t *testing.T) {
 
 	//dem Cache mehrere Termine hinzufügen
 	for i := 0; i < 30; i++ {
-		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username, "dummy")
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
 
@@ -467,7 +436,7 @@ func testLvJumpPageBack(t *testing.T) {
 
 	//dem Cache mehrere Termine hinzufügen
 	for i := 0; i < 30; i++ {
-		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username)
+		newTermin := ds.CreateNewTermin("test Title"+fmt.Sprint(i), "test", ds.WEEKLY, createSpecificDate(2022, 2, 11), createSpecificDate(2023, 2, 11), vm.Username, "dummy")
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)

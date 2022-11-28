@@ -64,9 +64,9 @@ func testJumPageFor(t *testing.T) {
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
 	for i := 0; i < 10; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.MONTHLY, testTerminStarts, testTerminEnds))
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.YEARLY, testTerminStarts, testTerminEnds))
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.MONTHLY, testTerminStarts, testTerminEnds, "dummy"))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.YEARLY, testTerminStarts, testTerminEnds, "dummy"))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds, "dummy"))
 	}
 	//Liste erstellen, angezeigte Seite ist 1
 	lv := InitListView(testTermine)
@@ -109,9 +109,9 @@ func testJumpPageBack(t *testing.T) {
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
 	for i := 0; i < 10; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.MONTHLY, testTerminStarts, testTerminEnds))
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.YEARLY, testTerminStarts, testTerminEnds))
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.MONTHLY, testTerminStarts, testTerminEnds, "dummy"))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.YEARLY, testTerminStarts, testTerminEnds, "dummy"))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds, "dummy"))
 	}
 
 	//Liste erstellen
@@ -160,7 +160,7 @@ func testGetEntriesCorrectNumber(t *testing.T) {
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
 	for i := 0; i < 30; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds, "dummy"))
 	}
 
 	//Liste erstellen
@@ -197,7 +197,7 @@ func testGetEntriesCorrectEntries(t *testing.T) {
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 0, 30)
 	for i := 0; i < 30; i++ {
-		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds))
+		testTermine = append(testTermine, ds.NewTerminObj("testTermin"+fmt.Sprint(i), "test"+fmt.Sprint(i), ds.WEEKLY, testTerminStarts, testTerminEnds, "dummy"))
 	}
 	//Liste erstellen
 	lv := InitListView(testTermine)
@@ -261,12 +261,12 @@ func testFilterCalendarEntries(t *testing.T) {
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 5)
-	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends)
-	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends)
-	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends)
-	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends, "dummy")
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends, "dummy")
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends, "dummy")
+	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends, "dummy")
 	//Termin sollte nicht hinzugefügt werden
-	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.MONTHLY, testTermin5Starts, testTermin5Ends)
+	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.MONTHLY, testTermin5Starts, testTermin5Ends, "dummy")
 
 	//Testen ob Daten in Slice eingefügt wurden
 	filteredSlice := lv.FilterCalendarEntries(testTermine)
@@ -299,9 +299,9 @@ func testFilterCalendarEntriesEdgeCase(t *testing.T) {
 
 	//Slice mit Testterminen erstellen
 	testTermine := make([]ds.Termin, 5)
-	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.WEEKLY, testTermin1Starts, testTermin1Ends)
-	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.YEARLY, testTermin2Starts, testTermin2Ends)
-	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.MONTHLY, testTermin3Starts, testTermin3Ends)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.WEEKLY, testTermin1Starts, testTermin1Ends, "dummy")
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.YEARLY, testTermin2Starts, testTermin2Ends, "dummy")
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.MONTHLY, testTermin3Starts, testTermin3Ends, "dummy")
 
 	//Testen, ob keine Daten in das Slice eingefügt wurden
 	filteredSlice := lv.FilterCalendarEntries(testTermine)
@@ -331,16 +331,16 @@ func testSortEntries(t *testing.T) {
 	testTermine := make([]ds.Termin, 4)
 
 	// nächstes Vorkommen ab  1.11.2022: 9.11.2022
-	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends, "dummy")
 
 	// nächstes Vorkommen  1.11.2022: 3.11.2022
-	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends)
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends, "dummy")
 
 	// nächstes Vorkommen  1.11.2022: 9.11.2022
-	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends)
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends, "dummy")
 
 	// nächstes Vorkommen  1.11.2022: 2.11.2022
-	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends)
+	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends, "dummy")
 
 	//Daten für die Tests in ein Slice mit Terminen kopieren
 	controlTermins := make([]ds.Termin, len(testTermine))
@@ -392,11 +392,11 @@ func testNextOccurrences(t *testing.T) {
 
 	//Slice mit Testterminen erstellen, jeder Wiederholungstyp dabei
 	testTermine := make([]ds.Termin, 5)
-	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends)
-	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends)
-	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends)
-	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends)
-	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.Never, testTermin5Starts, testTermin5Ends)
+	testTermine[0] = ds.NewTerminObj("testTermin1", "test", ds.DAILY, testTermin1Starts, testTermin1Ends, "dummy")
+	testTermine[1] = ds.NewTerminObj("testTermin2", "test", ds.WEEKLY, testTermin2Starts, testTermin2Ends, "dummy")
+	testTermine[2] = ds.NewTerminObj("testTermin3", "test", ds.YEARLY, testTermin3Starts, testTermin3Ends, "dummy")
+	testTermine[3] = ds.NewTerminObj("testTermin4", "test", ds.MONTHLY, testTermin4Starts, testTermin4Ends, "dummy")
+	testTermine[4] = ds.NewTerminObj("testTermin5", "test", ds.Never, testTermin5Starts, testTermin5Ends, "dummy")
 
 	assert.Equal(t, expectedResults[0], lv.NextOccurrences(testTermine[0]), "Daten-in den Slices sollten identisch sein")
 	assert.Equal(t, expectedResults[1], lv.NextOccurrences(testTermine[1]), "Daten-in den Slices sollten identisch sein")

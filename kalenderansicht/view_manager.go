@@ -51,15 +51,15 @@ func getMaxDays(month, year int) int {
 func filterRepetition(repStr string) ds.Repeat {
 	var rep ds.Repeat
 	switch repStr {
-	case "täglich":
+	case "täglich", "0":
 		rep = ds.DAILY
-	case "wöchentlich":
+	case "wöchentlich", "1":
 		rep = ds.WEEKLY
-	case "monatlich":
+	case "monatlich", "2":
 		rep = ds.MONTHLY
-	case "jährlich":
+	case "jährlich", "3":
 		rep = ds.YEARLY
-	case "niemals":
+	case "niemals", "4":
 		rep = ds.Never
 	}
 	return rep
@@ -118,7 +118,7 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 		endDate = date
 	}
 	//Erstelle neuen Termin und füge diesen dem Cache hinzu
-	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username)
+	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, username, "dummy")
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
@@ -135,14 +135,14 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 //	-> Löschen: Der Termin wird gelöscht.
 func (vm *ViewManager) EditTermin(r *http.Request, username string) {
 
-	//Den alten Titel zum Löschen ermitteln
-	oldTitle := r.FormValue("oldTitle")
+	//Die ID zum Löschen ermitteln
+	id := r.FormValue("ID")
 
 	//Filtern des gewünschten Modus: bearbeiten oder Löschen
 	mode := r.FormValue("editing")
 
 	//egal ob löschen oder bearbeiten, der Termin muss zunächst gelöscht werden
-	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, oldTitle, vm.Username)
+	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, id, vm.Username)
 
 	//Wenn der Modus 1 = Bearbeiten ist, muss der aktualisierte Termin noch erstellt werden
 	if mode == "1" {

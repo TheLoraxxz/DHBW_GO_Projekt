@@ -1,18 +1,10 @@
 package dateisystem
 
+//Mat-Nr. 8689159
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-)
-
-package dateisystem
-
-//Mat-Nr. 8689159
-import (
-"github.com/stretchr/testify/assert"
-"testing"
-"time"
 )
 
 func init() {

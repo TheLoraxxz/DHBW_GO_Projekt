@@ -220,8 +220,10 @@
         let terminStr = "<h5> Deine Termine am: <br>" + day + " " + month + " " + year + "</h5>";
         for (let i = 0; i < dayentries.length; i++) {
             let terminInfos = dayentries[i]
-            let startDate = new Date(terminInfos.Date).getFullYear() + "-" +new Date(terminInfos.Date).getMonth() + "-" +new Date(terminInfos.Date).getDate()
-            let endDate = new Date(terminInfos.EndDate).getFullYear() + "-" +new Date(terminInfos.EndDate).getMonth() + "-" +new Date(terminInfos.EndDate).getDate()
+            let startMonth = new Date(terminInfos.Date).getMonth() +1
+            let endMonth = new Date(terminInfos.EndDate).getMonth() +1
+            let startDate = new Date(terminInfos.Date).getFullYear() + "-" + startMonth + "-" +new Date(terminInfos.Date).getDate()
+            let endDate = new Date(terminInfos.EndDate).getFullYear() + "-" + endMonth + "-" +new Date(terminInfos.EndDate).getDate()
             terminStr = terminStr +
                 "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">\n" +
                 "<div class=\"form-group row\"> " +
