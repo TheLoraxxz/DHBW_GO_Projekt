@@ -5,33 +5,33 @@ import (
 	"strings"
 )
 
-type TerminWithVoted struct {
+type AdminTerminInfo struct {
 	Termin       dateisystem.Termin
 	VotesFor     int64
 	PersonsVoted []string
 	IsSelected   bool
 }
 
-type CorrectForHTML struct {
+type AdminHTML struct {
 	TerminID         string
 	Info             dateisystem.Termin
-	VorschlagTermine []TerminWithVoted
+	VorschlagTermine []AdminTerminInfo
 	Persons          []string
 	IsLocked         bool
 }
 
-func (t TerminFindung) ChangeToCorrectHTML() (rightHTML CorrectForHTML) {
+func (t TerminFindung) ConvertAdminToHTML() (rightHTML AdminHTML) {
 	// create correct HTML
-	rightHTML = CorrectForHTML{
+	rightHTML = AdminHTML{
 		TerminID:         t.Info.ID,
 		Info:             t.Info,
 		Persons:          []string{},
-		VorschlagTermine: []TerminWithVoted{},
+		VorschlagTermine: []AdminTerminInfo{},
 		IsLocked:         false,
 	}
 	//make for to get all the termine
 	for _, elem := range t.VorschlagTermine {
-		newTermin := TerminWithVoted{
+		newTermin := AdminTerminInfo{
 			Termin:     elem,
 			IsSelected: false,
 		}

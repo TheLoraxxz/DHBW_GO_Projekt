@@ -120,6 +120,8 @@ func TestCreatePerson(t *testing.T) {
 	//the data blocks should be the right and a new user should be added
 	assert.Equal(t, 1, len(allTermine.shared))
 	assert.Equal(t, 1, len(allTermine.shared[user+"|"+terminId].Persons))
+	assert.Equal(t, 1, len(allTermine.links))
+	//assert.Equal(t, allTermine.shared[user+"|"+terminId].Persons[user].Url,)
 
 }
 

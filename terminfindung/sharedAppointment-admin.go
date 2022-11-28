@@ -128,7 +128,7 @@ func CreatePerson(name *string, terminID *string, user *string) (urlToShow strin
 		return
 	}
 	termin.Persons[*name] = newUser
-	urlToShow = "terminID=" + url.QueryEscape(*terminID) + "&name=" + *name + "&user=" + *user + "&apiKey=" + url.QueryEscape(string(bytesHash))
+	urlToShow = "apiKey=" + url.QueryEscape(string(bytesHash))
 	allTermine.links[urlToShow] = *user + "|" + *terminID
 	return urlToShow, nil
 }

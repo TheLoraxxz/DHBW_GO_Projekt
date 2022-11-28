@@ -35,7 +35,7 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 	}
-	terminForHTML := terminShared.ChangeToCorrectHTML()
+	terminForHTML := terminShared.ConvertAdminToHTML()
 
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
@@ -165,6 +165,18 @@ func ShowAllLinksServeHttp(writer http.ResponseWriter, request *http.Request) {
 		log.Fatal("Coudnt export Parsefiles")
 	}
 	err = linkRoute.Execute(writer, forTemplate)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
+	}
+	return
+}
+
+func PublicSharedWebsite(writer http.ResponseWriter, request *http.Request) {
+	linkRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-public.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+	}
+	err = linkRoute.Execute(writer, nil)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}
