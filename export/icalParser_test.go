@@ -9,8 +9,8 @@ import (
 
 func TestParser(t *testing.T) {
 	var kTest []ds.Termin
-	ds.CreateNewTermin("testu", "test", ds.YEARLY, time.Date(2022, 11, 22, 15, 2, 5, 0, time.UTC), time.Date(2022, 11, 22, 15, 2, 5, 0, time.UTC), "mik")
-	k := ds.CreateNewTermin("testa", "test", ds.YEARLY, time.Date(2022, 11, 22, 14, 2, 5, 0, time.UTC), time.Date(2022, 11, 22, 15, 2, 5, 0, time.UTC), "mik")
+	ds.CreateNewTermin("testu", "test", ds.YEARLY, time.Date(2022, 11, 22, 15, 2, 5, 0, time.UTC), time.Date(2022, 11, 22, 15, 2, 5, 0, time.UTC), false, "mik")
+	k := ds.CreateNewTermin("testa", "test", ds.YEARLY, time.Date(2022, 11, 22, 14, 2, 5, 0, time.UTC), time.Date(2022, 11, 22, 15, 2, 5, 0, time.UTC), false, "mik")
 
 	kTest = ds.GetTermine("mik")
 

@@ -1,6 +1,5 @@
 package dateisystem
 
-//ToDo Funktion Dateiname durch ID ersetzen
 //Mat-Nr. 8689159
 import (
 	"encoding/json"
@@ -13,7 +12,7 @@ import (
 )
 
 // NewTerminObj erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
-func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time) Termin {
+func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time, shared bool) Termin {
 
 	t := Termin{
 		Title:       title,
@@ -21,6 +20,7 @@ func NewTerminObj(title string, description string, rep Repeat, date time.Time, 
 		Recurring:   rep,
 		Date:        date,
 		EndDate:     endDate,
+		Shared:      shared,
 		ID:          createID(date, endDate)}
 
 	return t
@@ -42,8 +42,8 @@ func StoreTerminObj(termin Termin, username string) {
 }
 
 // CreateNewTermin erzeugt einen persistenten Termin
-func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, username string) Termin {
-	t := NewTerminObj(title, description, rep, date, endDate)
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, shared bool, username string) Termin {
+	t := NewTerminObj(title, description, rep, date, endDate, shared)
 	StoreTerminObj(t, username)
 	return t
 }
@@ -158,27 +158,20 @@ func createID(dat time.Time, endDat time.Time) string {
 
 	id := dat.String() + endDat.String() + u
 
-	bytes, err := bcrypt.GenerateFromPassword([]byte(id), 14)
+	bytes, _ := bcrypt.GenerateFromPassword([]byte(id), 14)
 	id = string(bytes)
-
-	f, err := os.OpenFile("id.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-
-		}
-	}(f)
 
 	id = strings.Replace(id, "/", "E", 99)
 	id = strings.Replace(id, ".", "D", 99)
 
-	if _, err = f.WriteString(id + "\n"); err != nil {
-		panic(err)
-	}
-
 	return id
+}
+
+func FindInCacheByID(kalender []Termin, id string) Termin {
+	for i := 0; i < len(kalender); i++ {
+		if kalender[i].ID == id {
+			return kalender[i]
+		}
+	}
+	return Termin{}
 }
