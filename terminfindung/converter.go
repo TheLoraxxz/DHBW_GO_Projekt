@@ -77,6 +77,7 @@ func (t TerminFindung) ConvertAdminToHTML() (rightHTML AdminHTML) {
 	return
 }
 
+// ConvertUserSiteToRightHTML --> used for converting user site to html object without weird objects in between
 func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *string) (newHTMLObj UserHTML) {
 	if len(*user) == 0 {
 		return
@@ -104,4 +105,9 @@ func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *str
 		newHTMLObj.ToVotes[vote] = voted
 	}
 	return
+}
+
+// SaveSharedTermineToDisk --> saving it to the disk
+func SaveSharedTermineToDisk() {
+
 }
