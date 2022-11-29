@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	//TODO implement me
-	panic("implement me")
-}
 func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "POST" {
 		err := request.ParseForm()
@@ -239,6 +235,10 @@ func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 	if er != nil {
 		log.Fatalln(er)
 	}
+}
+func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
