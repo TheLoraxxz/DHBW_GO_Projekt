@@ -175,9 +175,42 @@ func TestSelectDate_RightInput(t *testing.T) {
 	err = SelectDate(&propDate, &terminId, &user)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, propDate, allTermine.shared[user+"|"+terminId].FinalTermin.ID)
+	//terminArray := dateisystem.GetTermine(user)
+	//assert.Equal(t, 1, len(terminArray))
 	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 }
 
-func TestSelectDate_WrongIDPropDate(t *testing.T) {
+// TestGetTerminFromShared_right
+// should return object of terminfindung and it should have the right
+// inputs
+func TestGetTerminFromShared_right(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		user, "test2")
+	//create shared appointment
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	terminFind, err := GetTerminFromShared(&user, &terminId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "test2", terminFind.Info.ID)
+	assert.Equal(t, "test", terminFind.User)
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 
+}
+
+// TestGetTerminFromShared_emptyObject
+// tests if the object is empty it still return an error
+// used for deletion
+func TestGetTerminFromShared_emptyObject(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	user := "test"
+	terminId := "testTermin"
+	allTermine.shared[user+"|"+terminId] = TerminFindung{}
+	termin, err := GetTerminFromShared(&user, &terminId)
+	assert.NotEqual(t, nil, err)
+	assert.Equal(t, "can't find SharedTermin", err.Error())
+	assert.Empty(t, termin)
 }
