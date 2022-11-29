@@ -2,6 +2,10 @@ package terminfindung
 
 import (
 	"DHBW_GO_Projekt/dateisystem"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -108,8 +112,19 @@ func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *str
 }
 
 // SaveSharedTermineToDisk --> saving it to the disk
-func SaveSharedTermineToDisk() {
+func SaveSharedTermineToDisk(basepath *string) error {
 	allTermine.mutex.RLock()
 	defer allTermine.mutex.RUnlock()
+	// set to ../data/shared-termin/shared-termin-data.json
+	pathAbs := filepath.Join(*basepath, "data", "shared-termin", "shared-termin-data.json")
+	file, err := json.MarshalIndent(pathAbs, "", " ")
+	if err != nil {
+		return fmt.Errorf("Coudn't Convert to JSON data - Error: %w", err)
+	}
+	err = os.WriteFile("shared-user.json", file, 0644)
+	if err != nil {
+		return fmt.Errorf("Coudn't write JSON to path - Error: %w", err)
+	}
+	return nil
 
 }
