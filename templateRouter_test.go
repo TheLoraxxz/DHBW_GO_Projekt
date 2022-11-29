@@ -167,7 +167,7 @@ func TestCreatUserHandler_ServeHTTP_CorrectPost(t *testing.T) {
 	CreatUserHandler{}.ServeHTTP(rec, req)
 	//it should be redirect to user website
 	url, _ := rec.Result().Location()
-	assert.Equal(t, "/user", url.Path)
+	assert.Equal(t, "", url.Path)
 	assert.Equal(t, http.StatusContinue, rec.Code)
 	//the user should exist and the authentication should return true
 	user = "user"

@@ -27,7 +27,14 @@ func main() {
 	basepath, err := os.Getwd()
 	// load user data from plate and if not create a new user
 	err = authentifizierung.LoadUserData(adminUserName, adminPassword, &basepath)
+	if err != nil {
+		fmt.Println(err)
+		log.Fatal("Coudn't load users")
+	}
 	err = terminfindung.LoadDataToSharedTermin(&basepath)
+	if err != nil {
+		fmt.Println(err)
+	}
 	//set a timer to write all users to plate every minute
 	timerSaveData := time.NewTimer(1 * time.Minute * 15)
 	go func() {
@@ -43,10 +50,7 @@ func main() {
 			fmt.Println(saveSharedErr)
 		}
 	}()
-	if err != nil {
-		fmt.Println(err)
-		log.Fatal("Coudn't load users")
-	}
+
 	// setup server
 	Server = http.Server{
 		Addr: ":" + *port,
