@@ -20,7 +20,30 @@ Diese werden auch in den Tests von TableView und ListView genutzt.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
 //Slice, der mit Testterminen gefüllt wird, damit dies für mehrere Tests nur einmal durchgeführt werden muss
-var testTermine []ds.Termin
+var testTermine30 []ds.Termin
+
+// create30TestTermins
+// Rückgabewert: Slice mit 30 testterminen
+// Funktionen wird benötigt um ein Slice mit Test-Terminen zu Begin des Testvorgangs zu erstellen.
+// Dieses wird für mehrere Tests benötigt in: list_view_test & in view_manager_test
+func create30TestTermins() []ds.Termin {
+	testTerminStarts := time.Now()
+	testTerminEnds := time.Now().AddDate(1, 0, 0)
+
+	//Slice mit Testterminen erstellen
+	testTermine30 := make([]ds.Termin, 0, 30)
+	// 5 testTermine30 erstellen
+	testTermin1 := ds.NewTerminObj("testTermin1", "test", ds.MONTHLY, testTerminStarts, testTerminEnds, false)
+	testTermin2 := ds.NewTerminObj("testTermin2", "test", ds.YEARLY, testTerminStarts, testTerminEnds, false)
+	testTermin3 := ds.NewTerminObj("testTermin3", "test", ds.WEEKLY, testTerminStarts, testTerminEnds, false)
+
+	for i := 0; i < 10; i++ {
+		testTermine30 = append(testTermine30, testTermin1)
+		testTermine30 = append(testTermine30, testTermin2)
+		testTermine30 = append(testTermine30, testTermin3)
+	}
+	return testTermine30
+}
 
 // generateRandomDate
 // generiert ein komplett zufälliges Datum (bis zum Jahr 3000)
@@ -199,6 +222,24 @@ func testCreateTerminLogicCheck(t *testing.T) {
 	//Löschen der erstellten Testdaten
 	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
+
+func testGetTerminInfos(t *testing.T) {
+	//Erstelle einen wöchentlichen Termin zum Testen
+	vm := createTestTermin(ds.WEEKLY)
+	termin := vm.TerminCache[0]
+
+	//Erstellen der Request-Werte
+	data := url.Values{}
+	data.Add("ID", termin.ID)
+
+	//Erstellen der Request
+	r, _ := http.NewRequest("POST", "/editor", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	assert.Equal(t, termin, vm.GetTerminInfos(r), "Die Termine sollten identisch sein.")
+}
+
 func testEditTerminDelete(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
@@ -439,9 +480,14 @@ func testLvJumpPageForward(t *testing.T) {
 	vm.LvJumpPageForward()
 	assert.Equal(t, 1, vm.Lv.CurrentPage, "Die Seite sollte 1 sein, da es nur einen Eintrag gibt.")
 
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
 	//dem Cache mehrere Termine hinzufügen
-	for i := 0; i < len(testTermine); i++ {
-		vm.TerminCache = ds.AddToCache(testTermine[i], vm.TerminCache)
+	for i := 0; i < len(testTermine30); i++ {
+		vm.TerminCache = ds.AddToCache(testTermine30[i], vm.TerminCache)
 	}
 
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
@@ -459,9 +505,15 @@ func testLvJumpPageBack(t *testing.T) {
 	vm.Lv.JumpPageForward()
 	assert.Equal(t, 1, vm.Lv.CurrentPage, "Die Seite sollte 1 sein, da die Seitennummer nicht kleiner als 1 sein kann..")
 
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
+
 	//dem Cache mehrere Termine hinzufügen
-	for i := 0; i < len(testTermine); i++ {
-		vm.TerminCache = ds.AddToCache(testTermine[i], vm.TerminCache)
+	for i := 0; i < len(testTermine30); i++ {
+		vm.TerminCache = ds.AddToCache(testTermine30[i], vm.TerminCache)
 	}
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
 
@@ -482,12 +534,13 @@ Aufrufen aller Tests
 
 func TestViewManager(t *testing.T) {
 	//slice mit Testterminen erstellen, benötigt viel Zeit: daher ein globales Slice
-	testTermine = create30TestTermins()
+	testTermine30 = create30TestTermins()
 	//createWeeklyTestTermin()
 	//Tests zum Erstellens/Bearbeitens/Löschens eines Termins
 	t.Run("testRuns filterRepetition", testfilterRepetition)
 	t.Run("testRuns CreateTermin", testCreateTermin)
 	t.Run("testRuns CreateTerminLogicCheck", testCreateTerminLogicCheck)
+	t.Run("testRuns GetTerminInfos", testGetTerminInfos)
 	t.Run("testRuns EditTermin-Delete", testEditTerminDelete)
 	t.Run("testRuns EditTermin-Edit", testEditTerminEdit)
 

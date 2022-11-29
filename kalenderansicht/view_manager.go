@@ -64,19 +64,6 @@ func filterRepetition(repStr string) ds.Repeat {
 	return rep
 }
 
-// GetTerminInfos
-// Parameter: Request mit Termininfos
-// Rückgabewert: Termin, aus dem Cahce mit entsprechender ID
-// Die Funktion wird genutzt, um den Termin zu erhalten, der bearbeitet/gelöscht werden soll
-func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
-
-	//Filtern der Termin-Id und des zu bearbeitenden Termins aus dem Cache
-	id := r.FormValue("ID")
-	termin := ds.FindInCacheByID(vm.TerminCache, id)
-
-	return termin
-}
-
 // CreateTermin
 // Parameter: eine Post-Request mit Informationen über einen Termin und den Usernamen des Nutzers, der diesen anlegen möchte
 // CreateTermin ruft die Funktion zum Erstellen des Termins auf
@@ -106,6 +93,19 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+}
+
+// GetTerminInfos
+// Parameter: Request mit Termininfos
+// Rückgabewert: Termin, aus dem Cahce mit entsprechender ID
+// Die Funktion wird genutzt, um den Termin zu erhalten, der bearbeitet/gelöscht werden soll
+func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
+
+	//Filtern der Termin-Id und des zu bearbeitenden Termins aus dem Cache
+	id := r.FormValue("ID")
+	termin := ds.FindInCacheByID(vm.TerminCache, id)
+
+	return termin
 }
 
 // EditTermin

@@ -10,35 +10,6 @@ import (
 
 /*
 **************************************************************************************************************
-Funktionen, die für Tests  benötigt werden
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
-
-// create30TestTermins
-// Rückgabewert: Slice mit 30 testterminen
-// Funktionen wird benötigt um ein Slice mit Test-Terminen zu Begin des Testvorgangs zu erstellen.
-// Dieses wird für mehrere Tests benötigt
-func create30TestTermins() []ds.Termin {
-	testTerminStarts := time.Now()
-	testTerminEnds := time.Now().AddDate(1, 0, 0)
-
-	//Slice mit Testterminen erstellen
-	testTermine := make([]ds.Termin, 0, 30)
-	// 5 testTermine erstellen
-	testTermin1 := ds.NewTerminObj("testTermin1", "test", ds.MONTHLY, testTerminStarts, testTerminEnds, false)
-	testTermin2 := ds.NewTerminObj("testTermin2", "test", ds.YEARLY, testTerminStarts, testTerminEnds, false)
-	testTermin3 := ds.NewTerminObj("testTermin3", "test", ds.WEEKLY, testTerminStarts, testTerminEnds, false)
-
-	for i := 0; i < 10; i++ {
-		testTermine = append(testTermine, testTermin1)
-		testTermine = append(testTermine, testTermin2)
-		testTermine = append(testTermine, testTermin3)
-	}
-	return testTermine
-}
-
-/*
-**************************************************************************************************************
 Tests für Custom-Settings innerhalb der Webseite
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
@@ -86,8 +57,14 @@ func testJumpPageBackFirstPage(t *testing.T) {
 }
 func testJumPageFor(t *testing.T) {
 
-	//Liste erstellen, angezeigte Seite ist 1
-	lv := InitListView(testTermine)
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
+
+	//Listen-Ansicht erstellen, angezeigte Seite ist 1
+	lv := InitListView(testTermine30)
 
 	//5 Einträge pro Tag -> das heißt es muss 6 Seiten geben
 	lv.SelectEntriesPerPage(5)
@@ -119,8 +96,15 @@ func testJumPageFor(t *testing.T) {
 	}
 }
 func testJumpPageBack(t *testing.T) {
-	//Liste erstellen
-	lv := InitListView(testTermine)
+
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
+
+	//Listen-Ansicht erstellen
+	lv := InitListView(testTermine30)
 
 	//5 Einträge pro Tag -> das heißt es muss 6 Seiten geben
 	lv.SelectEntriesPerPage(5)
@@ -157,13 +141,20 @@ func testJumpPageBack(t *testing.T) {
 // testGetEntriesCorrectNumber
 // hier wird getestet, ob die Anzahl der Einträge mit der eingestellten überein stimmt
 func testGetEntriesCorrectNumber(t *testing.T) {
-	//Liste erstellen
+	//Listen-Ansicht erstellen
 	lv := new(ListView)
 	//Hier wird das Startdatum gesetzt, abhängig vom heutigen Datum -> Testausführung unabhängig vom eig. Datum
 	lv.SelectedDate = createSpecificDate(time.Now().Year()-1, time.Now().Day(), time.Now().Month())
 	lv.EntriesPerPage = 5
 	lv.CurrentPage = 1
-	lv.CreateTerminListEntries(testTermine)
+
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
+
+	lv.CreateTerminListEntries(testTermine30)
 
 	assert.Equal(t, 30, len(lv.EntriesSinceSelDate), "Es sollten 30 Termine in dem Slice sein")
 
@@ -187,16 +178,23 @@ func testGetEntriesCorrectNumber(t *testing.T) {
 // hier wird getestet, ob die Einträge stimmen, wenn die nächste Seite aufgerufen wird
 func testGetEntriesCorrectEntries(t *testing.T) {
 
-	//Liste erstellen
+	//Listen-Ansicht erstellen
 	lv := new(ListView)
 	//Hier wird das Startdatum gesetzt, abhängig vom heutigen Datum -> Testausführung unabhängig vom eig. Datum
 	lv.SelectedDate = createSpecificDate(time.Now().Year()-1, time.Now().Day(), time.Now().Month())
 	lv.EntriesPerPage = 5
 	lv.CurrentPage = 1
-	lv.CreateTerminListEntries(testTermine)
+
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
+
+	lv.CreateTerminListEntries(testTermine30)
 
 	//Termine filtern
-	filteredSlice := lv.FilterCalendarEntries(testTermine)
+	filteredSlice := lv.FilterCalendarEntries(testTermine30)
 	assert.Equal(t, 30, len(filteredSlice), "Es sollten 30 Termine in dem Slice sein")
 
 	//5 Einträge pro Tag, Test mit Seite vor und zurück springen
@@ -404,7 +402,7 @@ Führe alle Tests aus
 */
 func TestListView(t *testing.T) {
 	//slice mit Testterminen erstellen, benötigt viel Zeit: daher ein globales Slice
-	testTermine = create30TestTermins()
+	testTermine30 = create30TestTermins()
 
 	//Tests für Custom-Settings innerhalb der Webseite
 	t.Run("testRuns SelectDate", testSelectDate)
