@@ -12,7 +12,7 @@ const (
 	dateLayout = "20060102T150405"
 )
 
-func ParsToIcal(k []dateisystem.Termin, username string) {
+func ParsToIcal(k []dateisystem.Termin, username string) string {
 	checkForDirectory()
 	file := "export/" + username + ".ics"
 	fileForMac := "export/" + username + ".ical"
@@ -48,6 +48,8 @@ func ParsToIcal(k []dateisystem.Termin, username string) {
 
 	writeI(file, p)
 	writeI(fileForMac, p)
+
+	return fileForMac
 }
 
 func checkForDirectory() {

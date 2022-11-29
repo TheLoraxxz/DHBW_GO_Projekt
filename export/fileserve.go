@@ -7,6 +7,7 @@ log.Fatalln(http.ListenAndServe(":8080", nil))
 */
 
 import (
+	"DHBW_GO_Projekt/authentifizierung"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,7 +18,14 @@ import (
 
 // Handler ToDo relativePfade + Parametrisierung vom Handler
 func Handler(w http.ResponseWriter, r *http.Request) { //für Download nötiger Handle
-	err := serveFile(w, r, "C:\\Users\\chris\\Documents\\GitHub\\DHBW_GO_Projekt\\export\\export\\mik.ics")
+
+	cookie, err := r.Cookie("Download-Kalender")
+	if err != nil {
+		return
+	}
+	_, user := authentifizierung.CheckCookie(&cookie.Value)
+
+	err = serveFile(w, r, "C:\\Users\\chris\\Documents\\GitHub\\DHBW_GO_Projekt\\export\\export\\"+"mik"+".ical")
 	if err != nil {
 		return
 	}
