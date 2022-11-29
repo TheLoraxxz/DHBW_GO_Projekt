@@ -165,6 +165,7 @@ func SelectDate(idPropDate *string, terminID *string, user *string) (err error) 
 			votedFor++
 		}
 	}
+	termin.FinalTermin.Title = termin.Info.Title
 	//change description to the number who voted --> directly voted
 	termin.FinalTermin.Description = termin.FinalTermin.Description + "| Dafür gestimmt: " +
 		strconv.Itoa(votedFor) + " / Dagegen oder enthalten: " + strconv.Itoa(len(termin.Persons)-votedFor)
