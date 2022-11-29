@@ -202,9 +202,19 @@ func SelectDate(idPropDate *string, terminID *string, user *string) (err error) 
 	return nil
 }
 
-func DeleteSharedTermin(terminID *string, user *string) {
+func DeleteSharedTermin(terminID *string, user *string) (err error) {
+	if len(*terminID) == 0 || len(*user) == 0 {
+		return errors.New("terminid and user needs to be set")
+	}
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()
 	// shared Termine being saved back
+	userAppID := *user + "|" + *terminID
+	// checks that it finds it and the obj is not empty
+	if _, ok := allTermine.shared[userAppID]; !ok || len(allTermine.shared[userAppID].User) == 0 {
+		err = errors.New("can't find SharedTermin")
+		return
+	}
 	allTermine.shared[*user+"|"+*terminID] = TerminFindung{}
+	return nil
 }
