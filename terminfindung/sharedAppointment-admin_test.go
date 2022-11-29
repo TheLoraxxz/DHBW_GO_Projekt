@@ -2,7 +2,6 @@ package terminfindung
 
 import (
 	"DHBW_GO_Projekt/dateisystem"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -26,9 +25,9 @@ func TestCreateSharedTermin_RightInput(t *testing.T) {
 
 	//check that it creates automaticaally the first appointment
 	uuid := user + "|" + terminId
-	fmt.Println(allTermine.shared[uuid])
 	assert.Equal(t, 1, len(allTermine.shared[uuid].VorschlagTermine))
 	assert.Equal(t, nil, err)
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 
 }
 func TestCreateSharedTerminWrongInput(t *testing.T) {
@@ -53,6 +52,8 @@ func TestCreateSharedTerminWrongInput(t *testing.T) {
 	assert.Equal(t, 0, len(allTermine.shared))
 	assert.Equal(t, "", terminId)
 	assert.NotEqual(t, nil, err)
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
+
 }
 
 func TestCreateNewProposedDateRight_SameDate(t *testing.T) {
@@ -81,6 +82,8 @@ func TestCreateNewProposedDateRight_SameDate(t *testing.T) {
 	assert.Empty(t, proposedTermin[1].Title)
 	assert.Empty(t, proposedTermin[1].Description)
 	assert.NotEmpty(t, proposedTermin[1].ID)
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
+
 }
 
 func TestCreateNewProposedDate_StartDateAfterEnddate(t *testing.T) {
@@ -101,6 +104,7 @@ func TestCreateNewProposedDate_StartDateAfterEnddate(t *testing.T) {
 	assert.NotEqual(t, nil, err)
 	userTerminId := user + "|" + terminId
 	assert.Equal(t, 1, len(allTermine.shared[userTerminId].VorschlagTermine))
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 
 }
 
@@ -121,7 +125,7 @@ func TestCreatePerson(t *testing.T) {
 	assert.Equal(t, 1, len(allTermine.shared))
 	assert.Equal(t, 1, len(allTermine.shared[user+"|"+terminId].Persons))
 	assert.Equal(t, 1, len(allTermine.links))
-	//assert.Equal(t, allTermine.shared[user+"|"+terminId].Persons[user].Url,)
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 
 }
 
@@ -140,6 +144,7 @@ func TestGetAllLinks(t *testing.T) {
 	users, err := GetAllLinks(&user, &terminId)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(users))
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 
 }
 
@@ -168,6 +173,7 @@ func TestSelectDate_RightInput(t *testing.T) {
 	err = SelectDate(&propDate, &terminId, &user)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, propDate, allTermine.shared[user+"|"+terminId].FinalTermin.ID)
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 }
 
 func TestSelectDate_WrongIDPropDate(t *testing.T) {

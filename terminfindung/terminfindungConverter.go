@@ -113,18 +113,51 @@ func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *str
 
 // SaveSharedTermineToDisk --> saving it to the disk
 func SaveSharedTermineToDisk(basepath *string) error {
-	allTermine.mutex.RLock()
-	defer allTermine.mutex.RUnlock()
+	allTermine.mutex.Lock()
+	defer allTermine.mutex.Unlock()
 	// set to ../data/shared-termin/shared-termin-data.json
-	pathAbs := filepath.Join(*basepath, "data", "shared-termin", "shared-termin-data.json")
-	file, err := json.MarshalIndent(pathAbs, "", " ")
+	file, err := json.MarshalIndent(allTermine.shared, "", " ")
 	if err != nil {
-		return fmt.Errorf("Coudn't Convert to JSON data - Error: %w", err)
+		return fmt.Errorf("coudn't Convert to JSON data - Error: %w", err)
 	}
-	err = os.WriteFile("shared-user.json", file, 0644)
+	pathAbs := filepath.Join(*basepath, "data", "shared-termin", "shared-termin-data.json")
+	err = os.WriteFile(pathAbs, file, 0644)
 	if err != nil {
 		return fmt.Errorf("Coudn't write JSON to path - Error: %w", err)
 	}
+
+	// save links in seperate JSON File
+	file, err = json.MarshalIndent(allTermine.links, "", " ")
+	if err != nil {
+		return fmt.Errorf("coudn't Convert links to JSON: %w", err)
+	}
+	pathAbs = filepath.Join(*basepath, "data", "shared-termin", "links.json")
+	err = os.WriteFile(pathAbs, file, 0644)
+	if err != nil {
+		return fmt.Errorf("coudn't write to file links to JSON: %w", err)
+	}
 	return nil
 
+}
+
+func LoadDataToSharedTermin(pathBase *string) (err error) {
+	allTermine.mutex.Lock()
+	defer allTermine.mutex.Unlock()
+	allTermine.shared = map[string]TerminFindung{}
+	allTermine.links = map[string]string{}
+	pathShared := filepath.Join(*pathBase, "data", "shared-termin", "shared-termin-data.json")
+	pathLinks := filepath.Join(*pathBase, "data", "shared-termin", "links.json")
+	fileShared, err := os.ReadFile(pathShared)
+	fileLinks, err := os.ReadFile(pathLinks)
+	if err != nil {
+		return fmt.Errorf("coudn't read files %w", err)
+	}
+	err = json.Unmarshal(fileShared, &allTermine.shared)
+	err = json.Unmarshal(fileLinks, &allTermine.links)
+	if err != nil {
+		allTermine.shared = map[string]TerminFindung{}
+		allTermine.links = map[string]string{}
+		return fmt.Errorf("Coudn't Convert Jsons %w", err)
+	}
+	return nil
 }

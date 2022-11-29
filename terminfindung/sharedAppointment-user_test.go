@@ -47,4 +47,6 @@ func TestGetTerminViaApiKey_RightInput(t *testing.T) {
 	termine, _ := GetTerminFromShared(&user, &terminId)
 	assert.Equal(t, user, userFinal)
 	assert.Equal(t, termine.Info.ID, terminFinal.Info.ID)
+	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
+
 }

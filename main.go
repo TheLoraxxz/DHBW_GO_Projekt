@@ -2,6 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	"DHBW_GO_Projekt/terminfindung"
 	"flag"
 	"fmt"
 	"log"
@@ -26,14 +27,20 @@ func main() {
 	basepath, err := os.Getwd()
 	// load user data from plate and if not create a new user
 	err = authentifizierung.LoadUserData(adminUserName, adminPassword, &basepath)
+	err = terminfindung.LoadDataToSharedTermin(&basepath)
 	//set a timer to write all users to plate every minute
-	timerSaveData := time.NewTimer(1 * time.Minute)
+	timerSaveData := time.NewTimer(1 * time.Minute * 15)
 	go func() {
 		// timer waits until one minute is over and then saves the new data
 		<-timerSaveData.C
-		errOnSave := authentifizierung.SaveUserData(&basepath)
-		if errOnSave != nil {
-			fmt.Println(errOnSave)
+		saveAuthErr := authentifizierung.SaveUserData(&basepath)
+		if saveAuthErr != nil {
+			fmt.Println(saveAuthErr)
+		}
+		// save every 30 minutes the whole shared termine
+		saveSharedErr := terminfindung.SaveSharedTermineToDisk(&basepath)
+		if saveSharedErr != nil {
+			fmt.Println(saveSharedErr)
 		}
 	}()
 	if err != nil {

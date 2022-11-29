@@ -23,10 +23,13 @@ func VoteForDay(terminID *string, userAdmin *string, name *string, votedDay *str
 }
 
 func GetTerminViaApiKey(apikey *string) (termin TerminFindung, user string, err error) {
+
 	if len(*apikey) == 0 {
 		err = errors.New("API Key is not defined")
 		return
 	}
+	allTermine.mutex.RLock()
+	defer allTermine.mutex.RUnlock()
 	if val, ok := allTermine.links[*apikey]; ok {
 		termin = allTermine.shared[val]
 		for key, pers := range termin.Persons {
