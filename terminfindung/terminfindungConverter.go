@@ -109,5 +109,7 @@ func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *str
 
 // SaveSharedTermineToDisk --> saving it to the disk
 func SaveSharedTermineToDisk() {
+	allTermine.mutex.RLock()
+	defer allTermine.mutex.RUnlock()
 
 }
