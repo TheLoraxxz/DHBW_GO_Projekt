@@ -1,6 +1,7 @@
 package dateisystem
 
 //Mat-Nr. 8689159
+//ToDo shared bool ergänzen
 import (
 	"time"
 )
@@ -25,6 +26,7 @@ type Termin struct {
 	Recurring   Repeat    `json:"Recurring"`
 	Date        time.Time `json:"Date"`
 	EndDate     time.Time `json:"EndDate"`
+	Shared      bool      `json:"Shared"`
 	ID          string    `json:"ID"`
 }
 
@@ -50,4 +52,8 @@ func (Termin) SetEndeDate(t *Termin, newDate time.Time) {
 
 func (Termin) setID(t *Termin, id string) {
 	t.ID = id
+}
+
+func (Termin) SetShared(t *Termin, shared bool) {
+	t.Shared = shared
 }
