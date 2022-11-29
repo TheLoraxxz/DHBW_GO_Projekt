@@ -214,71 +214,37 @@
     // Parameter: 3 int Werte, Liste mit den Terminen eines bestimmten Tages
     // Es wird Tag, Monat und Jahr und die Termineinträge des Tages übergeben, von dem die Termine angezeigt werden sollen.
     // Die Funktion sorgt dafür, dass die Informationen im linken Teil des Bildschirms angezeigt werden.
-    // Die Informationen werden in einem Formular angezeigt.
+    // Unter den angezeigten Informationen jedes Eintrags wird ein Formular angezeigt, welches die Termin Id enthält.
     // Wenn auf bearbeiten gedrückt wird, wird eine get-Anfrage an den Server gestellt.
+    // Dieser bekommt so mitgeteilt, welcher Termin bearbeitet/gelöscht werden soll.
     function showTermin(day, month, year, dayentries) {
         let terminStr = "<h5> Deine Termine am: <br>" + day + " " + month + " " + year + "</h5>";
         for (let i = 0; i < dayentries.length; i++) {
-            let terminInfos = dayentries[i]
-            let startMonth = new Date(terminInfos.Date).getMonth() +1
-            let endMonth = new Date(terminInfos.EndDate).getMonth() +1
-            let startDate = new Date(terminInfos.Date).getFullYear() + "-" + startMonth + "-" +new Date(terminInfos.Date).getDate()
-            let endDate = new Date(terminInfos.EndDate).getFullYear() + "-" + endMonth + "-" +new Date(terminInfos.EndDate).getDate()
-            terminStr = terminStr +
-                "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">\n" +
-                "<div class=\"form-group row\"> " +
-                "  <label for=\"ID\"></label>\n" +
-                " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"\n" +
-                "                       value=\""+ terminInfos.ID+"\">"+
-                "<label for=\"title\"  class=\"col col-form-label\"><b>Titel:</b></label>\n" +
-                " <div class=\"col\">"+
-                " <input type=\"text\" class=\"form-control-plaintext\" name=\"title\" id=\"title\"\n" +
-                " value=\""+ terminInfos.Title +"\">\n" +
-                "</div>"+
-                "</div>"+
-                "<div class=\"form-group row\"> " +
-                " <label for=\"description\" class=\"col col-form-label\"><b>Beschreibung:</b></label>\n" +
-                " <div class=\"col\">"+
-                " <input type=\"text\" class=\"form-control-plaintext\" name=\"description\" id=\"description\"\n" +
-                " value=\""+ terminInfos.Description +"\">\n" +
-                "</div>"+
-                "</div>"+
-                "<div class=\"form-group row\"> " +
-                " <label for=\"rep\" class=\"col col-form-label\"><b>Wiederholung:</b></label>\n" +
-                " <div class=\"col\">"+
-                " <input type=\"text\" class=\"form-control-plaintext\" name=\"rep\" id=\"rep\"\n" +
-                " value=\""+ getRecurring(terminInfos.Recurring) +"\">\n" +
-                "</div>"+
-                "</div>"+
-                " <label for=\"date\"></label>\n" +
-                " <input type=\"hidden\" class=\"form-control-plaintext\" name=\"date\" id=\"date\"\n" +
-                " value=\""+ terminInfos.Date +"\">\n" +
-                " <label for=\"endDate\"></label>\n" +
-                " <input type=\"hidden\" class=\"form-control-plaintext\" name=\"endDate\" id=\"endDate\"\n" +
-                " value=\""+  terminInfos.EndDate  +"\">" +
-                "<div class=\"row\"> " +
-                " <div class=\"col\">"+
-                "<b>Start-Datum: </b>"+
-                "</div>"+
-                " <div class=\"col\">"+
-                startDate +
-                "</div>"+
-                "</div>"+
-                "<div class=\"row\"> " +
-                " <div class=\"col\">"+
-                "<b>End-Datum: </b>"+
-                "</div>"+
-                " <div class=\"col\">"+
-                endDate +
-                "</div>"+
-                "</div>"+
-                "<div class=\"text-center\">"+
-                " <button type=\"submit\" class=\"btn float-end btn-outline-secondary\">Bearbeiten</button>\n" +
-                "<br>"+
-                "<hr>"+
-                "</div>"+
-                " </form>";
-
+            let entry = dayentries[i];
+            if (entry.Shared){
+                terminStr = terminStr +
+                    "<div class=\"text-warning border border-warning px-1 py-1 mx-1 my-1  \">" +
+                    "<b> Geteilter-Terminvorschlag </b>"+
+                    "<br>";
+            }
+            else{
+                terminStr = terminStr +
+                    "<div  class=\"text-dark border border-dark px-1 py-1 mx-1 my-1 \">"
+            }
+            terminStr = terminStr + "<b class=\"text-dark\">" + entry.Title.toString() + "</b>"
+            + "<ul  class=\"text-dark\">" +
+            "<li> <b>Beschreibung:</b> " + entry.Description + "</li>" +
+            "<li><b> Wiederholung: </b>" + getRecurring(entry.Recurring) + "</li>" +
+            "<li> <b>Starttermin: </b>" + entry.Date + "</li>" +
+            "<li> <b>Endtermin: </b>" + entry.EndDate + "</li>" +
+            "</ul>" +
+            "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">" +
+            "  <label for=\"ID\"></label>\n" +
+            " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"\n" +
+            "                       value=\"" + entry.ID + "\">" +
+            " <button type=\"submit\" class=\"btn float-end btn-outline-secondary\">Bearbeiten</button>" +
+            " </form>"+
+            "</div>";
         }
         document.getElementById("showTermins").innerHTML = terminStr;
     }

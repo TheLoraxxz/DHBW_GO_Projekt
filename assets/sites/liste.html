@@ -19,7 +19,13 @@
             </div>
         </form>
         {{range $dayEntry := .GetEntries}}
-        <div class="card text-dark bg-light mb-3">
+        <!---Überprüfen, ob es sich um Terminvorschlag handelt. Wenn ja: farblich markieren-->
+        {{if .Shared}}
+            <div class="card border-warning border-4 text-dark bg-light mb-3">
+            <h5 class="text-warning"> Geteilter-Terminvorschlag</h5>
+        {{else}}
+            <div class="card text-dark bg-light mb-3">
+        {{end}}
             <div class="card-body">
                 {{ $nextOccurrences := $.NextOccurrences $dayEntry }}
                 {{ $firstOccur := index $nextOccurrences 0}}
@@ -62,20 +68,10 @@
                         </li>
                     </ul>
                 </div>
-                <!---Formular zum Bearbeiten des Termins--->
+                <!---Formular zum Bearbeiten des Termins, übermittelt zu bearbeitende ID--->
                 <form action="/user/view/list/editor" method="GET" role="form">
                     <label for="ID"></label>
                     <input type="hidden" class="form-control" name="ID" id="ID" value="{{.ID}}">
-                    <label for="title"></label>
-                    <input type="hidden" class="form-control" name="title" id="title" value="{{.Title}}">
-                    <label for="description"></label>
-                    <input type="hidden" class="form-control" name="description" id="description" value="{{.Description}}">
-                    <label for="rep"></label>
-                    <input type="hidden" class="form-control" name="rep" id="rep" value="{{.Recurring}}">
-                    <label for="date"></label>
-                    <input type="hidden" class="form-control" name="date" id="date" value="{{.Date}}">
-                    <label for="endDate"></label>
-                    <input type="hidden" class="form-control" name="endDate" id="endDate" value="{{.EndDate}}">
                     <button type="submit" class="btn btn-link">Bearbeiten</button>
                 </form>
             </div>

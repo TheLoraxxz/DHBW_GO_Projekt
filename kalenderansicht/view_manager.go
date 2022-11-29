@@ -3,7 +3,6 @@ package kalenderansicht
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -67,32 +66,15 @@ func filterRepetition(repStr string) ds.Repeat {
 
 // GetTerminInfos
 // Parameter: Request mit Termininfos
-// Rückgabewert: Termin, erstellt aus den Infos.
+// Rückgabewert: Termin, aus dem Cahce mit entsprechender ID
 // Die Funktion wird genutzt, um den Termin zu erhalten, der bearbeitet/gelöscht werden soll
 func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
 
-	//Filtern der Termin-Infos
+	//Filtern der Termin-Id und des zu bearbeitenden Termins aus dem Cache
 	id := r.FormValue("ID")
-	title := r.FormValue("title")
-	description := r.FormValue("description")
-	repStr := r.FormValue("rep")
+	termin := ds.FindInCacheByID(vm.TerminCache, id)
 
-	//Filter das Wiederholungsintervall aus der Antwort
-	rep := filterRepetition(repStr)
-
-	dateTestStart := r.FormValue("date")
-	dateTestEnd := r.FormValue("date")
-	print(dateTestStart, dateTestEnd)
-	//Daten in das richtige Format überführen mithilfe eines Layouts
-	layout := "2006-01-02T00:00:00Z"
-	if strings.Contains(r.FormValue("date"), "UTC") {
-		layout = "2006-01-02 00:00:00 +0000 UTC"
-	}
-
-	date, _ := time.Parse(layout, r.FormValue("date"))
-	endDate, _ := time.Parse(layout, r.FormValue("endDate"))
-
-	return ds.Termin{Title: title, Description: description, Recurring: rep, Date: date, EndDate: endDate, ID: id}
+	return termin
 }
 
 // CreateTermin

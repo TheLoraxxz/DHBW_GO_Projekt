@@ -209,16 +209,10 @@ func testEditTerminDelete(t *testing.T) {
 	//Erstellen der Termin-infos, die über die Request gesendet werden
 	data := url.Values{}
 
-	//Erstellen der Lösch-Request
+	//Erstellen der Lösch-Request, Wert 2 entspricht einer Lösch-Anfrage
 	data = url.Values{}
 	data.Add("ID", termin.ID)
-	data.Add("oldTitle", "Test Termin")
-	data.Add("editing", "Löschen: Termin")
-	data.Add("title", "Test Termin")
-	data.Add("description", "Spaßiger Termin")
-	data.Add("repeat", "4") //Der Wert 1 entspricht der Wiederholung "niemals"
-	data.Add("date", "2022-11-11")
-	data.Add("endDate", "2030-11-11")
+	data.Add("editing", "2")
 
 	//Erstellen der Request
 	r, _ := http.NewRequest("POST", "../editor", strings.NewReader(data.Encode()))
