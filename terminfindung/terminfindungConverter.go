@@ -140,11 +140,15 @@ func SaveSharedTermineToDisk(basepath *string) error {
 
 }
 
+// LoadDataToSharedTermin
+// loads the data from ../data/shared-termin/ and puts it into the shared muted
 func LoadDataToSharedTermin(pathBase *string) (err error) {
+	//lock file directly to reset the mutex
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()
 	allTermine.shared = map[string]TerminFindung{}
 	allTermine.links = map[string]string{}
+	// read paths and read it
 	pathShared := filepath.Join(*pathBase, "data", "shared-termin", "shared-termin-data.json")
 	pathLinks := filepath.Join(*pathBase, "data", "shared-termin", "links.json")
 	fileShared, err := os.ReadFile(pathShared)

@@ -48,7 +48,7 @@ func GetTerminFromShared(user *string, terminID *string) (termin TerminFindung, 
 		return
 	}
 	userAppID := *user + "|" + *terminID
-	if _, ok := allTermine.shared[userAppID]; !ok {
+	if _, ok := allTermine.shared[userAppID]; !ok || len(allTermine.shared[userAppID].User) == 0 {
 		err = errors.New("can't find SharedTermin")
 		return
 	}
@@ -166,6 +166,7 @@ func SelectDate(idPropDate *string, terminID *string, user *string) (err error) 
 		}
 	}
 	termin.FinalTermin.Title = termin.Info.Title
+	termin.FinalTermin.Recurring = termin.Info.Recurring
 	//change description to the number who voted --> directly voted
 	termin.FinalTermin.Description = termin.FinalTermin.Description + "| Dafür gestimmt: " +
 		strconv.Itoa(votedFor) + " / Dagegen oder enthalten: " + strconv.Itoa(len(termin.Persons)-votedFor)

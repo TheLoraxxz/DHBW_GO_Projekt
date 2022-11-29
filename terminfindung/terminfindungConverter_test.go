@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -14,6 +15,7 @@ import (
 // tests that if it saves it saves to the right versio
 func TestSaveSharedTermineToDisk_RightFunction(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
+	allTermine.links = make(map[string]string)
 	user := "test"
 	//create termin
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
@@ -64,6 +66,9 @@ func TestSaveSharedTermineToDisk_RightFunction(t *testing.T) {
 	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 }
 
+// TestLoadDataToSharedTermin_RightShared
+// This functions checks that if everything is created it should
+// save in the right amount
 func TestLoadDataToSharedTermin_RightShared(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
 	allTermine.links = make(map[string]string)
@@ -93,4 +98,35 @@ func TestLoadDataToSharedTermin_RightShared(t *testing.T) {
 	err = os.Remove(path)
 	assert.Equal(t, nil, err)
 	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
+}
+
+// TestSaveSharedTermineToDisk_EmptyShared
+// checks that on saving an empty shared and links both files are empty
+func TestSaveSharedTermineToDisk_EmptyShared(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	allTermine.links = make(map[string]string)
+	path, _ := filepath.Abs("../")
+	err := SaveSharedTermineToDisk(&path)
+	assert.Equal(t, nil, err)
+	err = LoadDataToSharedTermin(&path)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 0, len(allTermine.shared))
+	assert.Equal(t, 0, len(allTermine.links))
+	path2, err := filepath.Abs("../data/shared-termin/links.json")
+	path, err = filepath.Abs("../data/shared-termin/shared-termin-data.json")
+	err = os.Remove(path2)
+	assert.Equal(t, nil, err)
+	err = os.Remove(path)
+	assert.Equal(t, nil, err)
+
+}
+
+// TestLoadDataToSharedTermin_FileNotExisting
+// tests that if it is not existing it hsould be automatically not existing
+func TestLoadDataToSharedTermin_FileNotExisting(t *testing.T) {
+	path, _ := filepath.Abs("../")
+	err := LoadDataToSharedTermin(&path)
+	assert.NotEqual(t, nil, err)
+	assert.Equal(t, true, strings.Contains(err.Error(), "coudn't read files"))
+	assert.Equal(t, 0, len(allTermine.shared))
 }

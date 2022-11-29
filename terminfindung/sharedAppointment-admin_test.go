@@ -110,6 +110,7 @@ func TestCreateNewProposedDate_StartDateAfterEnddate(t *testing.T) {
 
 func TestCreatePerson(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
+	allTermine.links = make(map[string]string)
 	assert.Equal(t, 0, len(allTermine.shared))
 	user := "test"
 	//create termin
@@ -131,6 +132,7 @@ func TestCreatePerson(t *testing.T) {
 
 func TestGetAllLinks(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
+	allTermine.links = make(map[string]string)
 	assert.Equal(t, 0, len(allTermine.shared))
 	user := "test"
 	//create termin
