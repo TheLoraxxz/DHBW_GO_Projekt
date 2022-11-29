@@ -129,6 +129,8 @@ func TestCreatePerson(t *testing.T) {
 
 }
 
+// TestGetAllLinks
+// tests if all links are set it returns the right amount of users
 func TestGetAllLinks(t *testing.T) {
 	allTermine.shared = make(map[string]TerminFindung)
 	allTermine.links = make(map[string]string)
@@ -142,6 +144,7 @@ func TestGetAllLinks(t *testing.T) {
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	_, err := CreatePerson(&user, &terminId, &user)
 	assert.Equal(t, nil, err)
+	// all links hsould return 1 user and should work without a problem
 	users, err := GetAllLinks(&user, &terminId)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 1, len(users))

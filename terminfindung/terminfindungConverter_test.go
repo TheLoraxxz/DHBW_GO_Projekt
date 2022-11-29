@@ -130,3 +130,82 @@ func TestLoadDataToSharedTermin_FileNotExisting(t *testing.T) {
 	assert.Equal(t, true, strings.Contains(err.Error(), "coudn't read files"))
 	assert.Equal(t, 0, len(allTermine.shared))
 }
+
+func TestTerminFindung_ConvertAdminToHTML_right(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	allTermine.links = make(map[string]string)
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		true, "test")
+	//should return error if user is empty
+	//create an appointment and a new proposed Date
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	startDate := time.Date(2022, 12, 10, 12, 0, 0, 1, time.UTC)
+	endDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
+	CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
+	CreatePerson(&user, &terminId, &user)
+	name := "abcd"
+	CreatePerson(&name, &terminId, &user)
+	terminFind, _ := GetTerminFromShared(&user, &terminId)
+	rightHtml := terminFind.ConvertAdminToHTML()
+	assert.Equal(t, 2, len(rightHtml.Persons))
+	assert.Equal(t, 1, len(rightHtml.VorschlagTermine))
+	assert.Equal(t, false, rightHtml.IsLocked)
+}
+
+func TestTerminFindung_ConvertUserSiteToRightHTML(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	allTermine.links = make(map[string]string)
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		true, "test")
+	//should return error if user is empty
+	//create an appointment and a new proposed Date
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	startDate := time.Date(2022, 12, 10, 12, 0, 0, 1, time.UTC)
+	endDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
+	CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
+	CreatePerson(&user, &terminId, &user)
+	name := "abcd"
+	person, _ := CreatePerson(&name, &terminId, &user)
+	//get the apikey
+	apikey := person[7:]
+	terminFind, _ := GetTerminFromShared(&user, &terminId)
+	rightHtml := terminFind.ConvertUserSiteToRightHTML(&name, &apikey)
+	//should convert it correctly
+	assert.Equal(t, apikey, rightHtml.APIKey)
+	assert.Equal(t, name, rightHtml.User)
+	assert.Equal(t, 0, rightHtml.ToVotes[terminId].Votedfor)
+}
+
+func TestTerminFindung_ConvertAdminToHTML_DateSelected(t *testing.T) {
+	allTermine.shared = make(map[string]TerminFindung)
+	allTermine.links = make(map[string]string)
+	user := "test"
+	//create termin
+	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
+		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
+		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
+		true, "test")
+	//should return error if user is empty
+	//create an appointment and a new proposed Date
+	terminId, _ := CreateSharedTermin(&termin, &user)
+	startDate := time.Date(2022, 12, 10, 12, 0, 0, 1, time.UTC)
+	endDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
+	CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
+	CreatePerson(&user, &terminId, &user)
+	name := "abcd"
+	CreatePerson(&name, &terminId, &user)
+	VoteForDay(&terminId, &user, &name, &allTermine.shared[user+"|"+terminId].VorschlagTermine[0].ID, true)
+	err := SelectDate(&allTermine.shared[user+"|"+terminId].VorschlagTermine[0].ID, &terminId, &user)
+	assert.Equal(t, nil, err)
+	terminFind, _ := GetTerminFromShared(&user, &terminId)
+	rightHtml := terminFind.ConvertAdminToHTML()
+	assert.Equal(t, true, rightHtml.IsLocked)
+}

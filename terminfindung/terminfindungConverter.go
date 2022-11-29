@@ -82,6 +82,7 @@ func (t TerminFindung) ConvertAdminToHTML() (rightHTML AdminHTML) {
 }
 
 // ConvertUserSiteToRightHTML --> used for converting user site to html object without weird objects in between
+// user --> the name of the user (not admin-user)
 func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *string) (newHTMLObj UserHTML) {
 	if len(*user) == 0 {
 		return
