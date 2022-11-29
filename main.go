@@ -2,9 +2,11 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	ka "DHBW_GO_Projekt/kalenderansicht"
 	"DHBW_GO_Projekt/terminfindung"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +18,11 @@ type ChangeUserHandler struct{}
 type UserHandler struct{}
 type LogoutHandler struct{}
 type CreatUserHandler struct{}
+type ViewmanagerHandler struct {
+	vm             *ka.ViewManager
+	cookie         string
+	viewmanagerTpl *template.Template
+}
 
 var Server http.Server
 
@@ -63,10 +70,12 @@ func main() {
 	changeUser := ChangeUserHandler{}
 	user := UserHandler{}
 	logout := LogoutHandler{}
+	viewmanagerHandler := ViewmanagerHandler{}
 	http.Handle("/", &root)
 	http.Handle("/user/create", &createUser)
 	http.Handle("/user/change", &changeUser)
 	http.Handle("/user", &user)
+	http.Handle("/user/view", &viewmanagerHandler)
 	http.Handle("/logout", &logout)
 	http.HandleFunc("/shared", AdminSiteServeHTTP)
 	http.HandleFunc("/shared/create/link", CreateLinkServeHTTP)

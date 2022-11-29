@@ -5,9 +5,15 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
+func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//TODO implement me
+	panic("implement me")
+}
 func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "POST" {
 		err := request.ParseForm()
@@ -148,6 +154,90 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	err = mainRoute.Execute(writer, username)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
+	}
+}
+
+// handleTableView
+// Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
+func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		switch {
+		case r.RequestURI == "/user/view/table?suche=minusMonat":
+			v.vm.TvJumpMonthBack()
+		case r.RequestURI == "/user/view/table?suche=plusMonat":
+			v.vm.TvJumpMonthFor()
+		case strings.Contains(r.RequestURI, "/user/view/table?monat="):
+			monatStr := r.FormValue("monat")
+			monat, _ := strconv.Atoi(monatStr)
+			v.vm.TvSelectMonth(time.Month(monat))
+		case r.RequestURI == "/user/view/table?jahr=Zurueck":
+			v.vm.TvJumpYearForOrBack(-1)
+		case r.RequestURI == "/user/view/table?jahr=Vor":
+			v.vm.TvJumpYearForOrBack(1)
+		case r.RequestURI == "/user/view/table?datum=heute":
+			v.vm.TvJumpToToday()
+		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
+			terminToEdit := v.vm.GetTerminInfos(r)
+			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if er != nil {
+				log.Fatalln(er)
+			}
+			return
+		}
+	}
+
+	if r.Method == "POST" {
+		switch {
+		case r.RequestURI == "/user/view/table?terminErstellen":
+			v.vm.CreateTermin(r, v.vm.Username)
+		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
+			v.vm.EditTermin(r, v.vm.Username)
+		}
+	}
+
+	er := v.viewmanagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
+	if er != nil {
+		log.Fatalln(er)
+	}
+}
+
+// ListHandler
+// Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
+func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		switch {
+		case strings.Contains(r.RequestURI, "/user/view/list?selDate="):
+			dateStr := r.FormValue("selDate")
+			v.vm.LvSelectDate(dateStr)
+		case strings.Contains(r.RequestURI, "/user/view/list?Eintraege="):
+			amountStr := r.FormValue("Eintraege")
+			amount, _ := strconv.Atoi(amountStr)
+			v.vm.LvSelectEntriesPerPage(amount)
+		case r.RequestURI == "/user/view/list?Seite=Vor":
+			v.vm.LvJumpPageForward()
+		case r.RequestURI == "/user/view/list?Seite=Zurueck":
+			v.vm.LvJumpPageBack()
+		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+			terminToEdit := v.vm.GetTerminInfos(r)
+			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if er != nil {
+				log.Fatalln(er)
+			}
+			return
+		}
+	}
+
+	if r.Method == "POST" {
+		switch {
+		case r.RequestURI == "/user/view/list?terminErstellen":
+			v.vm.CreateTermin(r, v.vm.Username)
+		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+			v.vm.EditTermin(r, v.vm.Username)
+		}
+	}
+	er := v.viewmanagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
+	if er != nil {
+		log.Fatalln(er)
 	}
 }
 
