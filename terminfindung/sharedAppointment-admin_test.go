@@ -18,9 +18,8 @@ func TestCreateSharedTermin_RightInput(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test")
+		true, "test")
 	terminId, err := CreateSharedTermin(&termin, &user)
-	assert.Equal(t, "test", terminId)
 	assert.Equal(t, 1, len(allTermine.shared))
 
 	//check that it creates automaticaally the first appointment
@@ -38,7 +37,7 @@ func TestCreateSharedTerminWrongInput(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
-		user, "test")
+		true, "test")
 	user = ""
 	//should return error if user is empty
 	terminId, err := CreateSharedTermin(&termin, &user)
@@ -64,13 +63,13 @@ func TestCreateNewProposedDateRight_SameDate(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test")
+		true, "test")
 	//should return error if user is empty
 	//create an appointment and a new proposed Date
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	startDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
 	endDate := time.Date(2022, 12, 10, 12, 0, 0, 0, time.UTC)
-	err := CreateNewProposedDate(startDate, endDate, &terminId, &user, false)
+	err := CreateNewProposedDate(startDate, endDate, &user, &terminId, false)
 	//it should create it and the proposed date should be added
 	assert.Equal(t, nil, err)
 	userTerminId := user + "|" + terminId
@@ -94,7 +93,7 @@ func TestCreateNewProposedDate_StartDateAfterEnddate(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test")
+		true, "test")
 	//should return error if user is empty
 	//create an appointment and a new proposed Date
 	terminId, _ := CreateSharedTermin(&termin, &user)
@@ -117,7 +116,7 @@ func TestCreatePerson(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test2")
+		true, "test2")
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	_, err := CreatePerson(&user, &terminId, &user)
 	// CreatePerson should return the right values --> the url with all the things and no error
@@ -139,7 +138,7 @@ func TestGetAllLinks(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test2")
+		true, "test2")
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	_, err := CreatePerson(&user, &terminId, &user)
 	assert.Equal(t, nil, err)
@@ -158,7 +157,7 @@ func TestSelectDate_RightInput(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test2")
+		true, "test")
 	//create shared appointment
 	terminId, err := CreateSharedTermin(&termin, &user)
 	assert.Equal(t, nil, err)
@@ -190,12 +189,12 @@ func TestGetTerminFromShared_right(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test2")
+		true, "test")
 	//create shared appointment
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	terminFind, err := GetTerminFromShared(&user, &terminId)
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "test2", terminFind.Info.ID)
+	assert.Equal(t, terminId, terminFind.Info.ID)
 	assert.Equal(t, "test", terminFind.User)
 	dateisystem.DeleteAll(dateisystem.GetTermine(user), user)
 

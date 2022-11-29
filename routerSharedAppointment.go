@@ -231,7 +231,7 @@ func CreateTest(writer http.ResponseWriter, request *http.Request) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
-		user, "test")
+		true, "test")
 	terminID, err := terminfindung.CreateSharedTermin(&termin, &user)
 	if err != nil {
 		return

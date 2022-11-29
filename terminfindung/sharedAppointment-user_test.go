@@ -16,7 +16,7 @@ func TestVoteForDayRightInput(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test2")
+		true, user)
 	//create shared appointment
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	//create a person so it can be entered
@@ -37,7 +37,7 @@ func TestGetTerminViaApiKey_RightInput(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test2")
+		true, "test")
 	//create shared appointment
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	//create a person so it can be entered
@@ -84,7 +84,7 @@ func TestVoteForDay(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test2")
+		true, user)
 	//create shared appointment
 	terminId, _ := CreateSharedTermin(&termin, &user)
 	//create a person so it can be tested

@@ -178,6 +178,6 @@ func SelectDate(idPropDate *string, terminID *string, user *string) (err error) 
 	kalender := dateisystem.GetTermine(*user)
 	kalender = dateisystem.DeleteFromCache(kalender, termin.Info.ID, *user)
 	dateisystem.CreateNewTermin(termin.FinalTermin.Title, termin.FinalTermin.Description, dateisystem.Never,
-		termin.FinalTermin.Date, termin.FinalTermin.EndDate, termin.User, termin.FinalTermin.ID)
+		termin.FinalTermin.Date, termin.FinalTermin.EndDate, false, termin.User)
 	return nil
 }

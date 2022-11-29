@@ -21,7 +21,7 @@ func TestSaveSharedTermineToDisk_RightFunction(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test")
+		true, "test")
 	//should return error if user is empty
 	//create an appointment and a new proposed Date
 	terminId, _ := CreateSharedTermin(&termin, &user)
@@ -77,7 +77,7 @@ func TestLoadDataToSharedTermin_RightShared(t *testing.T) {
 	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
 		time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC),
 		time.Date(2022, 12, 13, 12, 12, 0, 0, time.UTC),
-		user, "test")
+		true, "test")
 	//should return error if user is empty
 	//create an appointment and a new proposed Date
 	terminId, _ := CreateSharedTermin(&termin, &user)
