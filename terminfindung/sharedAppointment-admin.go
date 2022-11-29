@@ -5,6 +5,7 @@ import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -148,7 +149,6 @@ func GetAllLinks(user *string, terminId *string) (users []UserTermin, err error)
 	return
 }
 
-// TODO: create a new temrin in the name of the user, delete the old one and change description
 func SelectDate(idPropDate *string, terminID *string, user *string) (err error) {
 	termin, err := GetTerminFromShared(user, terminID)
 	if err != nil {
@@ -159,8 +159,23 @@ func SelectDate(idPropDate *string, terminID *string, user *string) (err error) 
 			termin.FinalTermin = elem
 		}
 	}
+	votedFor := 0
+	for _, elem := range termin.Persons {
+		if val, ok := elem.Votes[*idPropDate]; ok && val {
+			votedFor++
+		}
+	}
+	//change description to the number who voted --> directly voted
+	termin.FinalTermin.Description = termin.FinalTermin.Description + "| Dafür gestimmt: " +
+		strconv.Itoa(votedFor) + " / Dagegen oder enthalten: " + strconv.Itoa(len(termin.Persons)-votedFor)
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()
+	// shared Termine being saved back
 	allTermine.shared[*user+"|"+*terminID] = termin
+	// manage dateisystem and change the termin
+	kalender := dateisystem.GetTermine(*user)
+	kalender = dateisystem.DeleteFromCache(kalender, termin.Info.ID, *user)
+	dateisystem.CreateNewTermin(termin.FinalTermin.Title, termin.FinalTermin.Description, dateisystem.Never,
+		termin.FinalTermin.Date, termin.FinalTermin.EndDate, termin.User, termin.FinalTermin.ID)
 	return nil
 }
