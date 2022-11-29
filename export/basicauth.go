@@ -17,7 +17,7 @@ func (af AuthenticatorFunc) Authenticate(user, password string) (bool, string) {
 func WrapperAuth(authenticator Authenticator, handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, pswd, ok := r.BasicAuth()
-		isUser, cookieText := authentifizierung.AuthenticateUser(&user, &pswd)
+		isUser, cookieText := authenticator.Authenticate(user, pswd)
 		if isUser == true {
 			// wenn user authentifiziert ist dann wird cookie erstellt und
 			cookie := &http.Cookie{

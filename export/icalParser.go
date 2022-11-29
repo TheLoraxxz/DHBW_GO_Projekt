@@ -14,7 +14,6 @@ const (
 
 func ParsToIcal(k []dateisystem.Termin, username string) string {
 	checkForDirectory()
-	file := "export/" + username + ".ics"
 	fileForMac := "export/" + username + ".ical"
 
 	p :=
@@ -46,7 +45,6 @@ func ParsToIcal(k []dateisystem.Termin, username string) string {
 
 	p = p + "END:VEVENT\nEND:VCALENDAR"
 
-	writeI(file, p)
 	writeI(fileForMac, p)
 
 	return fileForMac

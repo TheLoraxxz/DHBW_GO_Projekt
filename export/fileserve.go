@@ -8,6 +8,7 @@ log.Fatalln(http.ListenAndServe(":8080", nil))
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	"DHBW_GO_Projekt/dateisystem"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,7 +26,13 @@ func Handler(w http.ResponseWriter, r *http.Request) { //für Download nötiger 
 	}
 	_, user := authentifizierung.CheckCookie(&cookie.Value)
 
-	err = serveFile(w, r, "C:\\Users\\chris\\Documents\\GitHub\\DHBW_GO_Projekt\\export\\export\\"+"mik"+".ical")
+	file := ParsToIcal(dateisystem.GetTermine(user), user)
+	err = serveFile(w, r, file)
+	if err != nil {
+		return
+	}
+
+	err = os.Remove(file)
 	if err != nil {
 		return
 	}
