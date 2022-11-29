@@ -201,3 +201,10 @@ func SelectDate(idPropDate *string, terminID *string, user *string) (err error) 
 		termin.FinalTermin.Date, termin.FinalTermin.EndDate, false, termin.User)
 	return nil
 }
+
+func DeleteSharedTermin(terminID *string, user *string) {
+	allTermine.mutex.Lock()
+	defer allTermine.mutex.Unlock()
+	// shared Termine being saved back
+	allTermine.shared[*user+"|"+*terminID] = TerminFindung{}
+}
