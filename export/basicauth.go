@@ -1,6 +1,7 @@
 package export
 
 import (
+	"DHBW_GO_Projekt/authentifizierung"
 	"net/http"
 )
 
@@ -30,5 +31,6 @@ func WrapperAuth(authenticator Authenticator, handler http.HandlerFunc) http.Han
 
 // CheckUserValid ToDo User Prüfung umsetzen
 func CheckUserValid(user, pswd string) bool { //prüft, ob zugriff Valide
-	return true
+	check, _ := authentifizierung.AuthenticateUser(&user, &pswd)
+	return check
 }

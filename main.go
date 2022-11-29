@@ -2,6 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	"DHBW_GO_Projekt/export"
 	"flag"
 	"fmt"
 	"log"
@@ -57,6 +58,7 @@ func main() {
 	http.Handle("/user/change", &changeUser)
 	http.Handle("/user", &user)
 	http.Handle("/logout", &logout)
+	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.Handler))
 	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
