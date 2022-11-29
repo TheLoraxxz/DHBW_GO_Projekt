@@ -22,7 +22,8 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	selectedDay := request.URL.Query().Get("selected")
 	terminShared, err := terminfindung.GetTerminFromShared(&user, &termin)
 	if err != nil {
-		log.Fatal("Coudnt find Termin")
+		fmt.Println("Coudnt find Termin")
+		return
 
 	}
 	if len(selectedDay) != 0 {
