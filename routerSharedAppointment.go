@@ -2,7 +2,6 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
-	"DHBW_GO_Projekt/dateisystem"
 	"DHBW_GO_Projekt/terminfindung"
 	"fmt"
 	"html/template"
@@ -224,22 +223,4 @@ func checkIfIsAllowed(request *http.Request) (isAllowed bool, username string) {
 	}
 	isAllowed, username = authentifizierung.CheckCookie(&cookie.Value)
 	return
-}
-
-func CreateTest(writer http.ResponseWriter, request *http.Request) {
-	user := "admin"
-	termin := dateisystem.CreateNewTermin("Test", "Test Description", dateisystem.Never,
-		time.Date(2022, 12, 12, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
-		time.Date(2022, 12, 13, 12, 12, 0, 0, time.FixedZone("Berlin", 1)),
-		true, "test")
-	terminID, err := terminfindung.CreateSharedTermin(&termin, &user)
-	if err != nil {
-		return
-	}
-	fmt.Printf(terminID)
-	_, err = fmt.Fprintf(writer, "Test finished")
-	if err != nil {
-		return
-	}
-
 }

@@ -69,8 +69,6 @@ func main() {
 	http.HandleFunc("/shared/create/app", ServeHTTPSharedAppCreateDate)
 	http.HandleFunc("/shared/showAllLink", ShowAllLinksServeHttp)
 	http.HandleFunc("/shared/public", PublicSharedWebsite)
-
-	http.HandleFunc("/test", CreateTest)
 	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
