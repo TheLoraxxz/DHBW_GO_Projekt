@@ -4,18 +4,8 @@
     <div class="row justify-content-center align-items-center">
 
         <div class="col ">
+            <!--------------------Termin ersteller wird eingebunden in die Seite--------------------------->
             {{ template "creator" . }}
-            <!--------------Link Termin zu erstellen----------->
-            <div class="offcanvas offcanvas-top" tabindex="-1" id="offcanvasTop" aria-labelledby="offcanvasTopLabel">
-                <div class="offcanvas-header">
-                    <h5 id="offcanvasTopLabel">Offcanvas top</h5>
-                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                            aria-label="Close"></button>
-                </div>
-                <div class="offcanvas-body">
-
-                </div>
-            </div>
         </div>
         <div class="col text-light">
             <div class="card text-center border-0">
@@ -237,26 +227,37 @@
             "<li><b> Wiederholung: </b>" + getRecurring(entry.Recurring) + "</li>" +
             "<li> <b>Starttermin: </b>" + entry.Date + "</li>" +
             "<li> <b>Endtermin: </b>" + entry.EndDate + "</li>" +
-            "</ul>" +
-            "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">" +
-            "  <label for=\"ID\"></label>" +
-            " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"" +
-            "                       value=\"" + entry.ID + "\">" +
-                "  <label for=\"shared\"></label>" +
-                " <input type=\"hidden\" class=\"form-control\" name=\"shared\" id=\"shared\"" +
-                "                       value=\"" + entry.Shared + "\">" +
-            " <button type=\"submit\" class=\"btn float-end btn-outline-secondary\">Bearbeiten</button>" +
-            " </form>";
+            "</ul>";
             if (entry.Shared) {
+                //Details anzeigen button
                 terminStr = terminStr +
                     "<form action=\"/shared\" method=\"GET\" role=\"form\">" +
                     "<label for=\"ID_shared\"></label>" +
-                    " <input type=\"hidden\" class=\"form-control\" name=\"terminID\" id=\"ID_shared\" value=\""+ entry.ID +"\">" +
+                    " <input type=\"hidden\" class=\"form-control\" name=\"terminID\" id=\"ID_shared\" value=\"" + entry.ID + "\">" +
                     " <button type=\"submit\" class=\"btn btn-link btn-start\">Details anzeigen</button>" +
                     "</form>";
+                //Terminvorschlag löschen button
+                terminStr = terminStr +
+                    "  <form action=\"/user/view/table\" method=\"GET\" role=\"form\">" +
+                    "  <label for=\"deleteSharedTermin\"></label>" +
+                    " <input type=\"hidden\" class=\"form-control\" name=\"deleteSharedTermin\" id=\"deleteSharedTermin\"" +
+                    "                       value=\"" + entry.ID + "\">" +
+                    " <button type=\"submit\" class=\"btn float-end btn-outline-secondary\">Vorschlag Löschen</button>" +
+                    " </form>"+
+                    "</div>";
+            }else {
+                //Termin bearbeiten button
+                terminStr = terminStr +
+                    "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">" +
+                    "  <label for=\"ID\"></label>" +
+                    " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"" +
+                    "                       value=\"" + entry.ID + "\">" +
+                    "  <label for=\"shared\"></label>" +
+                    " <button type=\"submit\" class=\"btn float-end btn-outline-secondary\">Bearbeiten</button>" +
+                    " </form>"
+                    + "</div>";
             }
-            terminStr = terminStr + "</div>";
-        }
+            }
         document.getElementById("showTermins").innerHTML = terminStr;
     }
 

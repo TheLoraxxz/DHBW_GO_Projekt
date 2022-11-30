@@ -2,10 +2,25 @@
 <div id="terminCreation">
 <form action="?terminErstellen" method="POST" id="terminCreater" role="form" class="row mb-3 p-3  needs-validation" novalidate>
   <h3>Neuen Termin erstellen</h3>
+  <!----------Radio für Wahl ob normaler Termin oder Terminvorschlag, normaler Termin als default-->
+  <div class="form-check">
+    <input class="form-check-input" type="radio" name="shared" id="sharedFalse" value="false" checked>
+    <label class="form-check-label" for="sharedFalse">
+      Termin erstellen
+    </label>
+  </div>
+  <div class="form-check">
+    <input class="form-check-input" type="radio" name="shared" id="sharedTrue" value="true">
+    <label class="form-check-label" for="sharedTrue">
+      Terminvorschlag erstellen
+    </label>
+  </div>
+  <!----------Textfeld für Titel--------------->
   <div>
     <label for="title" class="col-sm-2 col-form-label ">Titel</label>
     <input type="text" class="form-control" id="title" name="title" placeholder="Termin-Titel" required>
   </div>
+  <!----------Textfeld für Terminbeschreibung--------------->
   <div>
     <label for="description" class="col-sm-2 col-form-label">Beschreibung</label>
     <input type="text" class="form-control" id="description" name="description" placeholder="Hier eine Termin Beschreibung eingeben." required>
@@ -20,14 +35,18 @@
       <option value="jährlich">jährlich</option>
     </select>
   </div>
+
+  <!---------- Eingabefeld für Startdatum --------------->
   <div class="col-md-6 col-form-label">
     <label for="date" class="col-sm-2 ">Datum</label>
     <input type="date" class="form-control" name="date" id="date" required>
   </div>
+  <!---------- Eingabefeld für Enddatum --------------->
   <div class="col-md-6 col-form-label">
     <label for="endDate" class="col-sm-2 ">Enddatum</label>
     <input type="date" class="form-control" name="endDate" id="endDate" required>
   </div>
+  <!---------- Submit-Button --------------->
   <div class="col-12  p-3">
     <button type="submit" class="btn btn-secondary" onclick="validateForm('terminCreater')">Termin erstellen</button>
   </div>

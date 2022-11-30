@@ -5,7 +5,9 @@
         {{ template "creator" . }}
     </div>
     <div class="col-6 text-light bg-secondary">
+        <!---Zeigt Datum an, ab welchem die Termine angezeigt werden-->
         <h3 class="sticky-sm-top">Deine Termine ab dem {{.SelectedDate.Format "2006-01-02"}}</h3>
+        <!---Formular um Datum zu wählen, ab welchem die Termine angezeigt werden-->
         <form action="/user/view/list?selDatum" method="GET" id="dateSelector" role="form"
               class="row mb-3 p-3  needs-validation" novalidate>
             <div>
@@ -18,6 +20,7 @@
                 </div>
             </div>
         </form>
+        <!---Alle Termine im Slice durchgehen und eine Card für jeden mit den Termininfos erstellen-->
         {{range $dayEntry := .GetEntries}}
         <!---Überprüfen, ob es sich um Terminvorschlag handelt. Wenn ja: farblich markieren-->
         {{if .Shared}}
@@ -68,23 +71,35 @@
                         </li>
                     </ul>
                 </div>
-                <!---Formular um bei Shared Terminen, die Information dazu einzusehen--->
+                <!---Überprüfung: Ist termin ein Terminvorschlag?
+                        ja: button für Details anzeigen + button für Terminvorschlag löschen
+                        nein: Button zum Bearbeiten des festen Termins
+                --->
                 {{if .Shared}}
+                <!---Button um Details des terminvorschlags anzuzeigen--->
                     <form action="/shared" method="GET" role="form">
                         <label for="ID_shared"></label>
                         <input type="hidden" class="form-control" name="terminID" id="ID_shared" value="{{.ID}}">
                         <button type="submit" class="btn btn-link">Details anzeigen</button>
                     </form>
-                {{end}}
+                <!---Button um Terminvorschlag zu löschen --->
+                <form action="/user/view/list" method="GET" role="form">
+                    <label for="deleteSharedTermin"></label>
+                    <input type="hidden" class="form-control" name="deleteSharedTermin" id="deleteSharedTermin" value="{{.ID}}">
+                    <button type="submit" class="btn btn-link">Vorschlag Löschen</button>
+                </form>
+                {{else}}
                 <!---Formular zum Bearbeiten des Termins, übermittelt zu bearbeitende ID--->
                 <form action="/user/view/list/editor" method="GET" role="form">
                     <label for="ID"></label>
                     <input type="hidden" class="form-control" name="ID" id="ID" value="{{.ID}}">
                     <button type="submit" class="btn btn-link">Bearbeiten</button>
                 </form>
+                {{end}}
             </div>
         </div>
         {{end}}
+                <!---Button um Seite zurück zu springen-->
         <div class="row justify-content-md-center">
             <div class="col col-lg-2">
                 <form action="/user/view/list?Seite" method="GET" role="form" class="row mb-3 p-3 ">
@@ -96,6 +111,7 @@
             <div class="col-md-auto">
                 <h4> {{.CurrentPage}} von {{.RequiredPages}}</h4>
             </div>
+            <!---Button um Seite vor zu springen-->
             <div class="col col-lg-2">
                 <form action="/user/view/list?Seite" method="GET" role="form" class="row mb-3 p-3 ">
                     <label for="PageFor" class="col-sm-2 "></label>

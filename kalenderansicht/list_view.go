@@ -12,13 +12,24 @@ type ListView struct {
 	CurrentPage         int
 }
 
-// InitListView initTableView
+// InitListView
 // Rückgabewert: Pointer auf ein Objekt ListView
 // Dient zur Initialisierung der ListView zum Start des Programms.
 // Zu Begin wird diese auf das aktuelle Datum gesetzt, die Seitenanzahl Terminen wird die Seite mehrseitig.
 func InitListView(terminCache []ds.Termin) *ListView {
 	var lv = new(ListView)
-	lv.SelectedDate = time.Now()
+	today := time.Now()
+	//Uhrzeit des angezeigten Datums wird auf 0:00:00
+	lv.SelectedDate = time.Date(
+		today.Year(),
+		today.Month(),
+		today.Day(),
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
 	lv.EntriesPerPage = 5
 	lv.CurrentPage = 1
 	lv.CreateTerminListEntries(terminCache)

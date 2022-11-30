@@ -20,8 +20,7 @@ type LogoutHandler struct{}
 type CreatUserHandler struct{}
 type ViewManagerHandler struct {
 	vm             *ka.ViewManager
-	viewmanagerTpl *template.Template
-	user           string
+	viewManagerTpl *template.Template
 }
 
 var Server http.Server
@@ -77,9 +76,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Couldn't get rooted path name corresponding to the current directory")
 	}
-	viewManagerHdl.viewmanagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
-	template.Must(viewManagerHdl.viewmanagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
-	template.Must(viewManagerHdl.viewmanagerTpl.New("editor.html").ParseFiles(path + "/assets/sites/editor.html"))
+	viewManagerHdl.viewManagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+	template.Must(viewManagerHdl.viewManagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+	template.Must(viewManagerHdl.viewManagerTpl.New("editor.html").ParseFiles(path + "/assets/sites/editor.html"))
 
 	http.Handle("/", &root)
 	http.Handle("/user/create", &createUser)

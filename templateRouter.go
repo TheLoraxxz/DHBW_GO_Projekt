@@ -162,17 +162,16 @@ func (v *ViewManagerHandler) ServeHTTP(writer http.ResponseWriter, request *http
 	//cookie-Check
 	isAllowed, username := checkIfIsAllowed(request)
 
-	//Fals kein Berechtigter-User: Weiterleiten-Host-Seite
+	//Falls kein Berechtigter-User: Weiterleiten-Host-Seite
 	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
 
 	//Falls anderer User als zuvor
-	if username != v.user {
+	if v.vm == nil {
 		v.vm = ka.InitViewManager(username)
-		v.user = username
-
+		v.vm.Username = username
 	}
 
 	// Anfrage entsprechend weiterleiten (Listen- oder Tabellenansicht)
@@ -187,7 +186,7 @@ func (v *ViewManagerHandler) ServeHTTP(writer http.ResponseWriter, request *http
 
 // handleTableView
 // Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
-func (v *ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
+func (v ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		switch {
 		case r.URL.String() == "/user/view/table?suche=minusMonat":
@@ -204,9 +203,12 @@ func (v *ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 			v.vm.TvJumpYearForOrBack(1)
 		case r.URL.String() == "/user/view/table?datum=heute":
 			v.vm.TvJumpToToday()
+		case strings.Contains(r.URL.String(), "/user/view/table?deleteSharedTermin"):
+			terminToDeleteID := r.FormValue("deleteSharedTermin")
+			v.vm.DeleteSharedTermin(terminToDeleteID, v.vm.Username)
 		case strings.Contains(r.URL.String(), "/user/view/table/editor"):
 			terminToEdit := v.vm.GetTerminInfos(r)
-			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			er := v.viewManagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
 			if er != nil {
 				log.Fatalln(er)
 			}
@@ -223,7 +225,7 @@ func (v *ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	er := v.viewmanagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
+	er := v.viewManagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
 	if er != nil {
 		log.Fatalln(er)
 	}
@@ -237,7 +239,7 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 		case strings.Contains(r.URL.String(), "/user/view/list?selDate="):
 			dateStr := r.FormValue("selDate")
 			v.vm.LvSelectDate(dateStr)
-		case strings.Contains(r.URL.String(), "/user/view/list?Eintraege="):
+		case strings.Contains(r.URL.String(), "/user/view/list?Eintraege"):
 			amountStr := r.FormValue("Eintraege")
 			amount, _ := strconv.Atoi(amountStr)
 			v.vm.LvSelectEntriesPerPage(amount)
@@ -245,9 +247,12 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 			v.vm.LvJumpPageForward()
 		case r.URL.String() == "/user/view/list?Seite=Zurueck":
 			v.vm.LvJumpPageBack()
+		case strings.Contains(r.URL.String(), "/user/view/list?deleteSharedTermin"):
+			terminToDeleteID := r.FormValue("deleteSharedTermin")
+			v.vm.DeleteSharedTermin(terminToDeleteID, v.vm.Username)
 		case strings.Contains(r.URL.String(), "/user/view/list/editor"):
 			terminToEdit := v.vm.GetTerminInfos(r)
-			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			er := v.viewManagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
 			if er != nil {
 				log.Fatalln(er)
 			}
@@ -263,7 +268,7 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 			v.vm.EditTermin(r, v.vm.Username)
 		}
 	}
-	er := v.viewmanagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
+	er := v.viewManagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
 	if er != nil {
 		log.Fatalln(er)
 	}

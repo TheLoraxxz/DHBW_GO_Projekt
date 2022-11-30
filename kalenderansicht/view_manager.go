@@ -2,6 +2,8 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
+	"DHBW_GO_Projekt/terminfindung"
+	"log"
 	"net/http"
 	"time"
 )
@@ -70,6 +72,13 @@ func filterRepetition(repStr string) ds.Repeat {
 func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 
 	//Filtern der Termininfos
+	sharedStr := r.FormValue("shared")
+	var shared bool
+	if sharedStr == "true" {
+		shared = true
+	} else {
+		shared = false
+	}
 	title := r.FormValue("title")
 	description := r.FormValue("description")
 	repStr := r.FormValue("rep")
@@ -86,9 +95,13 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
 	if repStr == "niemals" || endDate.Before(date) {
 		endDate = date
 	}
+
 	//Erstelle neuen Termin und füge diesen dem Cache hinzu
-	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, false, username)
+	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, shared, username)
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
+
+	//Falls es sich um einen Terminvorschlag handelt, muss dieser noch den Terminvorschlägen hinzugefügt werden
+	terminfindung.CreateSharedTermin(&newTermin, &username)
 
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
@@ -135,6 +148,22 @@ func (vm *ViewManager) EditTermin(r *http.Request, username string) {
 		vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 		vm.Lv.CreateTerminListEntries(vm.TerminCache)
 	}
+}
+
+// DeleteSharedTermin
+// Parameter: id des terminvorschlags, der gelöscht werden soll; username
+// Die Funktion löscht den Termin aus den Teminvorschlägen und aus dem Cache
+func (vm *ViewManager) DeleteSharedTermin(id, username string) {
+	//Termin vom Cache löschen
+	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, id, username)
+	//Termin aus den Vorschlägen entfernen
+	err := terminfindung.DeleteSharedTermin(&id, &username)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	//Anzuzeigende Einträge in den Ansichten aktualisieren
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+	vm.Lv.CreateTerminListEntries(vm.TerminCache)
 }
 
 /**********************************************************************************************************************
