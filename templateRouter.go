@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -159,7 +158,7 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 // Hier werden all http-Request anfragen geregelt, die im Kontext der Terminansichten anfallen.
 // Zunächst wird der Cookie geprüft und ggf. die Termine/Infos des Users geladen.
 // Nach erfolgreicher Prüfung, wird die Anfrage an entweder den ListViewHandler oder den TableViewHandler weitergeleitet.
-func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (v *ViewManagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	//cookie-Check
 	isAllowed, username := checkIfIsAllowed(request)
 
@@ -174,14 +173,6 @@ func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http
 		v.vm = ka.InitViewManager(username)
 		v.user = username
 
-		// Templates für die Tabellenansicht sowie die Listenansicht erstellen
-		path, err := os.Getwd()
-		if err != nil {
-			log.Fatal("Couldn't get rooted path name corresponding to the current directory")
-		}
-		v.viewmanagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
-		template.Must(v.viewmanagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
-		template.Must(v.viewmanagerTpl.New("editor.html").ParseFiles(path + "/assets/sites/editor.html"))
 	}
 
 	// Anfrage entsprechend weiterleiten (Listen- oder Tabellenansicht)
@@ -196,7 +187,7 @@ func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http
 
 // handleTableView
 // Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
-func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
+func (v *ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		switch {
 		case r.URL.String() == "/user/view/table?suche=minusMonat":
@@ -240,7 +231,7 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 
 // ListHandler
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
-func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
+func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		switch {
 		case strings.Contains(r.URL.String(), "/user/view/list?selDate="):
