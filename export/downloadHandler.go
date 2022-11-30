@@ -35,7 +35,6 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	http.Redirect(w, r, "https:// "+r.Host+"/", 100)
 }
 
