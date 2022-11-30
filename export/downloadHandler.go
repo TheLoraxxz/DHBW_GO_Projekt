@@ -23,19 +23,20 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	_, username := authentifizierung.CheckCookie(&cookie.Value)
+	check, username := authentifizierung.CheckCookie(&cookie.Value)
 
-	file := ParsToIcal(dateisystem.GetTermine(username), username)
-	err = serveFile(w, r, file)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	if check {
+		file := ParsToIcal(dateisystem.GetTermine(username), username)
+		err = serveFile(w, r, file)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
-	err = os.Remove(file)
-	if err != nil {
-		log.Fatalln(err)
+		err = os.Remove(file)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
-	http.Redirect(w, r, "https:// "+r.Host+"/", 100)
 }
 
 func serveFile(writer http.ResponseWriter, request *http.Request, filePath string) (err error) {
