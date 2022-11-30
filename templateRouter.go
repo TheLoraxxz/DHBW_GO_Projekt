@@ -180,6 +180,8 @@ func (v *ViewManagerHandler) ServeHTTP(writer http.ResponseWriter, request *http
 		v.handleTableView(writer, request)
 	case strings.Contains(request.URL.String(), "/user/view/list"):
 		v.handleListView(writer, request)
+	case strings.Contains(request.URL.String(), "/user/view/filterTermins"):
+		v.handleFilterView(writer, request)
 	}
 
 }
@@ -274,6 +276,20 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// filterTerminsHandler
+// Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
+func (v *ViewManagerHandler) handleFilterView(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		switch {
+		}
+
+	}
+
+	er := v.viewManagerTpl.ExecuteTemplate(w, "filterTermins.html", v.vm.Fv)
+	if er != nil {
+		log.Fatalln(er)
+	}
+}
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	cookie, err := request.Cookie("SessionID-Kalender")
 	if err != nil {

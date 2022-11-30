@@ -1,0 +1,122 @@
+{{ define "listing" }}
+    <!---Alle Termine im Slice durchgehen und eine Card für jeden mit den Termininfos erstellen-->
+    {{range $dayEntry := .GetEntries}}
+    <!---Überprüfen, ob es sich um Terminvorschlag handelt. Wenn ja: farblich markieren-->
+    {{if .Shared}}
+    <div class="card border-warning border-4 text-dark bg-light mb-3">
+        <h5 class="text-warning"> Geteilter-Terminvorschlag</h5>
+        {{else}}
+        <div class="card text-dark bg-light mb-3">
+            {{end}}
+            <div class="card-body">
+                {{ $nextOccurrences := $.NextOccurrences $dayEntry }}
+                {{ $firstOccur := index $nextOccurrences 0}}
+                <h4 class="card-title">{{ $firstOccur.Format "2006-01-02" }}</h4>
+                <h5>{{.Title}}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{.Description}}</h6>
+                <!-------Filter Reccuring String-Repräsentation----->
+                {{$rep := ""}}
+                {{if eq .Recurring 0}}
+                {{$rep = "täglich"}}
+                {{else}}
+                {{if eq .Recurring 1}}
+                {{$rep = "wöchentlich"}}
+                {{else}}
+                {{if eq .Recurring 2}}
+                {{$rep = "monatlich"}}
+                {{else}}
+                {{if eq .Recurring 3}}
+                {{$rep = "jährlich"}}
+                {{else}}
+                {{$rep = "niemals"}}
+                {{end}}
+                {{end}}
+                {{end}}
+                {{end}}
+                <div class="card-text">
+                    <ul>
+                        <li>
+                            <b>Wiederholung: </b>{{$rep}}
+                        </li>
+                        <li>
+                            <b>Nächsten Vorkommen: </b> {{range $occur := $.NextOccurrences $dayEntry}} {{ $occur.Format
+                            "2006-01-02"}}, {{end}}
+                        </li>
+                        <li>
+                            <b>Startdatum: </b>{{.Date.Format "2006-01-02"}}
+                        </li>
+                        <li>
+                            <b>Enddatum: </b>{{.EndDate.Format "2006-01-02"}}
+                        </li>
+                    </ul>
+                </div>
+                <!---Überprüfung: Ist termin ein Terminvorschlag?
+                        ja: button für Details anzeigen + button für Terminvorschlag löschen
+                        nein: Button zum Bearbeiten des festen Termins
+                --->
+                {{if .Shared}}
+                <!---Button um Details des terminvorschlags anzuzeigen--->
+                <form action="/shared" method="GET" role="form">
+                    <label for="ID_shared"></label>
+                    <input type="hidden" class="form-control" name="terminID" id="ID_shared" value="{{.ID}}">
+                    <button type="submit" class="btn btn-link">Details anzeigen</button>
+                </form>
+                <!---Button um Terminvorschlag zu löschen --->
+                <form action="/user/view/list" method="GET" role="form">
+                    <label for="deleteSharedTermin"></label>
+                    <input type="hidden" class="form-control" name="deleteSharedTermin" id="deleteSharedTermin" value="{{.ID}}">
+                    <button type="submit" class="btn btn-link">Vorschlag Löschen</button>
+                </form>
+                {{else}}
+                <!---Formular zum Bearbeiten des Termins, übermittelt zu bearbeitende ID--->
+                <form action="/user/view/list/editor" method="GET" role="form">
+                    <label for="ID"></label>
+                    <input type="hidden" class="form-control" name="ID" id="ID" value="{{.ID}}">
+                    <button type="submit" class="btn btn-link">Bearbeiten</button>
+                </form>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+        <!---Button um Seite zurück zu springen-->
+        <div class="row justify-content-md-center">
+            <div class="col col-lg-2">
+                <form action="/user/view/list?Seite" method="GET" role="form" class="row mb-3 p-3 ">
+                    <label for="PageBack" class="col-sm-2 " hidden></label>
+                    <input type="hidden" class="form-control" name="Seite" id="PageBack" value="Zurueck">
+                    <button type="submit" class="btn btn-light">Zurück</button>
+                </form>
+            </div>
+            <div class="col-md-auto">
+                <h4> {{.CurrentPage}} von {{.RequiredPages}}</h4>
+            </div>
+            <!---Button um Seite vor zu springen-->
+            <div class="col col-lg-2">
+                <form action="/user/view/list?Seite" method="GET" role="form" class="row mb-3 p-3 ">
+                    <label for="PageFor" class="col-sm-2 " hidden></label>
+                    <input type="hidden" class="form-control" name="Seite" id="PageFor" value="Vor">
+                    <button type="submit" class="btn btn-light">Vor</button>
+                </form>
+            </div>
+        </div>
+    </div>
+<!----------Rechte Spalte: wählen der Einträge pro Seite------------>
+<div class="col">
+    <div class="row justify-content-md-center">
+        <form class="row g-3" action="/user/view/list?Eintraege" method="GET" role="form">
+            <h4>Wähle Einträge pro Seite:</h4>
+            <div class="col">
+                <label for="pageEntriesNr" hidden></label>
+                <select name="Eintraege" id="pageEntriesNr" class="form-select">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                </select>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-secondary">Bestätigen</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{ end }}

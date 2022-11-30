@@ -76,10 +76,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Couldn't get rooted path name corresponding to the current directory")
 	}
-	viewManagerHdl.viewManagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+	viewManagerHdl.viewManagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html", path+"/assets/templates/listing.html"))
 	template.Must(viewManagerHdl.viewManagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
-	template.Must(viewManagerHdl.viewManagerTpl.New("editor.html").ParseFiles(path + "/assets/sites/editor.html"))
-
+	template.Must(viewManagerHdl.viewManagerTpl.New("editor.html").ParseFiles(path+"/assets/sites/editor.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/listing.html"))
+	template.Must(viewManagerHdl.viewManagerTpl.New("filterTermins.html").ParseFiles(path + "/assets/sites/filterTermins.html"))
 	http.Handle("/", &root)
 	http.Handle("/user/create", &createUser)
 	http.Handle("/user/change", &changeUser)

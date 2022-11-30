@@ -11,6 +11,7 @@ import (
 type ViewManager struct {
 	Tv          TableView
 	Lv          ListView
+	Fv          FilterView
 	Username    string
 	TerminCache []ds.Termin
 }
@@ -21,6 +22,7 @@ func InitViewManager(username string) *ViewManager {
 	vm.TerminCache = ds.GetTermine(vm.Username)
 	vm.Tv = *InitTableView(vm.TerminCache)
 	vm.Lv = *InitListView(vm.TerminCache)
+	vm.Fv = *InitFilterView(vm.TerminCache)
 	return vm
 }
 

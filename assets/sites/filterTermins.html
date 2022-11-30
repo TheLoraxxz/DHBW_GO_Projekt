@@ -1,0 +1,31 @@
+{{ template "header" .}}
+<hr>
+<div class="row ">
+    <div class="col">
+    </div>
+    <div class="col-6 text-light bg-secondary">
+    <div class="col-6 text-light bg-secondary">
+        <form action="?termineFiltern" method="GET" id="terminFilter" role="form" class="row mb-3 p-3">
+            <h3>Termine Filtern</h3>
+            <!----------Textfeld für Titel-Filter--------------->
+            <div>
+                <label for="title" class="col-form-label ">Nach Titel filtern:</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Gebe hier einen Termin-Titel ein" >
+            </div>
+            <!----------Textfeld für Terminbeschreibung-Filter--------------->
+            <div>
+                <label for="description" class="col-form-label">Nach Beschreibung filtern:</label>
+                <input type="text" class="form-control" id="description" name="description" placeholder="Gebe hier eine Termin-Beschreibung ein">
+            </div>
+
+            <!---------- Submit-Button --------------->
+            <div class="col-12  p-3">
+                <button type="submit" class="btn btn-light">Termine filtern</button>
+            </div>
+        </form>
+    </div>
+        <!----------Template, um Ergebnisse in einer Liste anzuzeigen------------>
+        {{ template "listing" .}}
+    </div>
+</div>
+{{ template "footer" . }}
