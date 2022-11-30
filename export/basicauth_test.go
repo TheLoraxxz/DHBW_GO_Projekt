@@ -1,5 +1,6 @@
 package export
 
+//Mat-Nr. 8689159
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -18,8 +19,8 @@ func createServer(auth AuthenticatorFunc) *httptest.Server {
 }
 
 func TestWithoutPW(t *testing.T) {
-	ts := createServer(func(name, pwd string) bool {
-		return true
+	ts := createServer(func(name, pwd string) (bool, string) {
+		return true, "test"
 	})
 	defer ts.Close()
 	res, err := http.Get(ts.URL)
@@ -44,10 +45,10 @@ func doRequestWithPassword(t *testing.T, url string) *http.Response {
 
 func TestWithWrongPW(t *testing.T) {
 	var receivedName, receivedPwd string
-	ts := createServer(func(name, pwd string) bool {
+	ts := createServer(func(name, pwd string) (bool, string) {
 		receivedName = name
 		receivedPwd = pwd
-		return false // <--- deny any request
+		return false, "test" // <--- deny any request
 	})
 	defer ts.Close()
 	res := doRequestWithPassword(t, ts.URL)
@@ -63,10 +64,10 @@ func TestWithWrongPW(t *testing.T) {
 
 func TestWithCorrectPW(t *testing.T) {
 	var receivedName, receivedPwd string
-	ts := createServer(func(name, pwd string) bool {
+	ts := createServer(func(name, pwd string) (bool, string) {
 		receivedName = name
 		receivedPwd = pwd
-		return true // <--- accept any request
+		return true, "test" // <--- accept any request
 	})
 	defer ts.Close()
 	res := doRequestWithPassword(t, ts.URL)

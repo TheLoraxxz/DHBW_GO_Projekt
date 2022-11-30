@@ -1,44 +1,45 @@
 package export
 
 /*
-Um später einzubinden:
-http.HandleFunc("/", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.Handler))
-log.Fatalln(http.ListenAndServe(":8080", nil))
+Zweck: DownloadHandler um die generierte Ical zum Download aufzubereiten
 */
 
+//Mat-Nr. 8689159
 import (
 	"DHBW_GO_Projekt/authentifizierung"
 	"DHBW_GO_Projekt/dateisystem"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 )
 
-// Handler ToDo relativePfade + Parametrisierung vom Handler
-func Handler(w http.ResponseWriter, r *http.Request) { //für Download nötiger Handle
+func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("Download-Kalender")
 	if err != nil {
-		return
+		log.Fatalln(err)
 	}
-	_, user := authentifizierung.CheckCookie(&cookie.Value)
+	_, username := authentifizierung.CheckCookie(&cookie.Value)
 
-	file := ParsToIcal(dateisystem.GetTermine(user), user)
+	file := ParsToIcal(dateisystem.GetTermine(username), username)
 	err = serveFile(w, r, file)
 	if err != nil {
-		return
+		log.Fatalln(err)
 	}
 
 	err = os.Remove(file)
 	if err != nil {
-		return
+		log.Fatalln(err)
 	}
+
+	http.Redirect(w, r, "https:// "+r.Host+"/", 100)
 }
 
-func serveFile(writer http.ResponseWriter, request *http.Request, filePath string) (err error) { //stellt sicher, dass der Download pausiert werden kann
+func serveFile(writer http.ResponseWriter, request *http.Request, filePath string) (err error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return

@@ -1,7 +1,6 @@
 package dateisystem
 
 //Mat-Nr. 8689159
-//TODO Test anpassen | neue Attribute Testen
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -14,6 +13,8 @@ func NewTermin() *Termin { //erzeugt Pointer auf dummy Termin
 	t.Recurring = Never
 	t.Date = time.Date(2021, 8, 15, 14, 30, 45, 0, time.UTC)
 	t.EndDate = time.Date(2021, 8, 15, 15, 30, 45, 0, time.UTC)
+	t.Shared = false
+	t.ID = createID(time.Date(2021, 8, 15, 15, 30, 45, 0, time.UTC), time.Date(2021, 8, 15, 14, 30, 45, 0, time.UTC))
 	return &t
 }
 
@@ -23,6 +24,7 @@ func updateTermin(termin *Termin) { //führt die setter aus
 	termin.SetRecurring(termin, WEEKLY)
 	termin.SetDate(termin, time.Date(2007, 3, 2, 14, 2, 5, 0, time.UTC))
 	termin.SetEndeDate(termin, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC))
+	termin.SetShared(termin, true)
 }
 
 func TestTermin(t *testing.T) { //prüft ob der dummy Termin nicht Leer ist
@@ -44,5 +46,6 @@ func TestTerminUpdate(t *testing.T) { //prüft, ob die updates durchgeführt wur
 	assert.Equal(t, WEEKLY, termin.Recurring)
 	assert.Equal(t, "2007-03-02 14:02:05 +0000 UTC", termin.Date.String())
 	assert.Equal(t, "2007-03-02 15:02:05 +0000 UTC", termin.EndDate.String())
+	assert.Equal(t, true, termin.Shared)
 
 }

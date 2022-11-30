@@ -1,5 +1,10 @@
 package export
 
+/*
+BasicAuth für Download der Ical bereitzustellen --> grundlegend entnommen aus den Vorlesungsunterlagen
+*/
+
+//Mat-Nr. 8689159
 import (
 	"DHBW_GO_Projekt/authentifizierung"
 	"net/http"
@@ -19,7 +24,7 @@ func WrapperAuth(authenticator Authenticator, handler http.HandlerFunc) http.Han
 		user, pswd, ok := r.BasicAuth()
 		isUser, cookieText := authenticator.Authenticate(user, pswd)
 		if isUser == true {
-			// wenn user authentifiziert ist dann wird cookie erstellt und
+			// wenn user authentifiziert ist, dann wird ein cookie erstellt um später auf den Username zugreifen zu können
 			cookie := &http.Cookie{
 				Name:     "Download-Kalender",
 				Value:    cookieText,
@@ -42,8 +47,8 @@ func WrapperAuth(authenticator Authenticator, handler http.HandlerFunc) http.Han
 	}
 }
 
-// CheckUserValid User Prüfung
-func CheckUserValid(user, pswd string) (bool, string) { //prüft, ob zugriff Valide
+// CheckUserValid prüft, ob zugriff Valide
+func CheckUserValid(user, pswd string) (bool, string) {
 	check, cookie := authentifizierung.AuthenticateUser(&user, &pswd)
 	return check, cookie
 }

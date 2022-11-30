@@ -58,7 +58,8 @@ func main() {
 	http.Handle("/user/change", &changeUser)
 	http.Handle("/user", &user)
 	http.Handle("/logout", &logout)
-	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.Handler))
+	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.DownloadHandler))
+	http.HandleFunc("/downloadLogOut", export.WrapperAuth(export.AuthenticatorFunc(export.CheckOut), export.DownloadHandler))
 	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
