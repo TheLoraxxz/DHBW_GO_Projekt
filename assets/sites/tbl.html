@@ -239,12 +239,23 @@
             "<li> <b>Endtermin: </b>" + entry.EndDate + "</li>" +
             "</ul>" +
             "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">" +
-            "  <label for=\"ID\"></label>\n" +
-            " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"\n" +
+            "  <label for=\"ID\"></label>" +
+            " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"" +
             "                       value=\"" + entry.ID + "\">" +
+                "  <label for=\"shared\"></label>" +
+                " <input type=\"hidden\" class=\"form-control\" name=\"shared\" id=\"shared\"" +
+                "                       value=\"" + entry.Shared + "\">" +
             " <button type=\"submit\" class=\"btn float-end btn-outline-secondary\">Bearbeiten</button>" +
-            " </form>"+
-            "</div>";
+            " </form>";
+            if (entry.Shared) {
+                terminStr = terminStr +
+                    "<form action=\"/shared\" method=\"GET\" role=\"form\">" +
+                    "<label for=\"ID_shared\"></label>" +
+                    " <input type=\"hidden\" class=\"form-control\" name=\"terminID\" id=\"ID_shared\" value=\""+ entry.ID +"\">" +
+                    " <button type=\"submit\" class=\"btn btn-link btn-start\">Details anzeigen</button>" +
+                    "</form>";
+            }
+            terminStr = terminStr + "</div>";
         }
         document.getElementById("showTermins").innerHTML = terminStr;
     }

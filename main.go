@@ -20,8 +20,8 @@ type LogoutHandler struct{}
 type CreatUserHandler struct{}
 type ViewmanagerHandler struct {
 	vm             *ka.ViewManager
-	cookie         string
 	viewmanagerTpl *template.Template
+	user           string
 }
 
 var Server http.Server
@@ -75,7 +75,7 @@ func main() {
 	http.Handle("/user/create", &createUser)
 	http.Handle("/user/change", &changeUser)
 	http.Handle("/user", &user)
-	http.Handle("/user/view", &viewmanagerHandler)
+	http.Handle("/user/view/", &viewmanagerHandler)
 	http.Handle("/logout", &logout)
 	http.HandleFunc("/shared", AdminSiteServeHTTP)
 	http.HandleFunc("/shared/create/link", CreateLinkServeHTTP)

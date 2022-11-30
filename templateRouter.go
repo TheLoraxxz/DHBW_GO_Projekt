@@ -2,9 +2,11 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	ka "DHBW_GO_Projekt/kalenderansicht"
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -153,26 +155,65 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	}
 }
 
+// ServeHTTP
+// Hier werden all http-Request anfragen geregelt, die im Kontext der Terminansichten anfallen.
+// Zunächst wird der Cookie geprüft und ggf. die Termine/Infos des Users geladen.
+// Nach erfolgreicher Prüfung, wird die Anfrage an entweder den ListViewHandler oder den TableViewHandler weitergeleitet.
+func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//cookie-Check
+	isAllowed, username := checkIfIsAllowed(request)
+
+	//Fals kein Berechtigter-User: Weiterleiten-Host-Seite
+	if !isAllowed {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+
+	//Falls anderer User als zuvor
+	if username != v.user {
+		v.vm = ka.InitViewManager(username)
+		v.user = username
+
+		// Templates für die Tabellenansicht sowie die Listenansicht erstellen
+		path, err := os.Getwd()
+		if err != nil {
+			log.Fatal("Couldn't get rooted path name corresponding to the current directory")
+		}
+		v.viewmanagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+		template.Must(v.viewmanagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+		template.Must(v.viewmanagerTpl.New("editor.html").ParseFiles(path + "/assets/sites/editor.html"))
+	}
+
+	// Anfrage entsprechend weiterleiten (Listen- oder Tabellenansicht)
+	switch {
+	case strings.Contains(request.URL.String(), "/user/view/table"):
+		v.handleTableView(writer, request)
+	case strings.Contains(request.URL.String(), "/user/view/list"):
+		v.handleListView(writer, request)
+	}
+
+}
+
 // handleTableView
 // Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
 func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		switch {
-		case r.RequestURI == "/user/view/table?suche=minusMonat":
+		case r.URL.String() == "/user/view/table?suche=minusMonat":
 			v.vm.TvJumpMonthBack()
-		case r.RequestURI == "/user/view/table?suche=plusMonat":
+		case r.URL.String() == "/user/view/table?suche=plusMonat":
 			v.vm.TvJumpMonthFor()
-		case strings.Contains(r.RequestURI, "/user/view/table?monat="):
+		case strings.Contains(r.URL.String(), "/user/view/table?monat="):
 			monatStr := r.FormValue("monat")
 			monat, _ := strconv.Atoi(monatStr)
 			v.vm.TvSelectMonth(time.Month(monat))
-		case r.RequestURI == "/user/view/table?jahr=Zurueck":
+		case r.URL.String() == "/user/view/table?jahr=Zurueck":
 			v.vm.TvJumpYearForOrBack(-1)
-		case r.RequestURI == "/user/view/table?jahr=Vor":
+		case r.URL.String() == "/user/view/table?jahr=Vor":
 			v.vm.TvJumpYearForOrBack(1)
-		case r.RequestURI == "/user/view/table?datum=heute":
+		case r.URL.String() == "/user/view/table?datum=heute":
 			v.vm.TvJumpToToday()
-		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
+		case strings.Contains(r.URL.String(), "/user/view/table/editor"):
 			terminToEdit := v.vm.GetTerminInfos(r)
 			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
 			if er != nil {
@@ -184,9 +225,9 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 
 	if r.Method == "POST" {
 		switch {
-		case r.RequestURI == "/user/view/table?terminErstellen":
+		case r.URL.String() == "/user/view/table?terminErstellen":
 			v.vm.CreateTermin(r, v.vm.Username)
-		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
+		case strings.Contains(r.URL.String(), "/user/view/table/editor"):
 			v.vm.EditTermin(r, v.vm.Username)
 		}
 	}
@@ -202,18 +243,18 @@ func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Requ
 func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		switch {
-		case strings.Contains(r.RequestURI, "/user/view/list?selDate="):
+		case strings.Contains(r.URL.String(), "/user/view/list?selDate="):
 			dateStr := r.FormValue("selDate")
 			v.vm.LvSelectDate(dateStr)
-		case strings.Contains(r.RequestURI, "/user/view/list?Eintraege="):
+		case strings.Contains(r.URL.String(), "/user/view/list?Eintraege="):
 			amountStr := r.FormValue("Eintraege")
 			amount, _ := strconv.Atoi(amountStr)
 			v.vm.LvSelectEntriesPerPage(amount)
-		case r.RequestURI == "/user/view/list?Seite=Vor":
+		case r.URL.String() == "/user/view/list?Seite=Vor":
 			v.vm.LvJumpPageForward()
-		case r.RequestURI == "/user/view/list?Seite=Zurueck":
+		case r.URL.String() == "/user/view/list?Seite=Zurueck":
 			v.vm.LvJumpPageBack()
-		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+		case strings.Contains(r.URL.String(), "/user/view/list/editor"):
 			terminToEdit := v.vm.GetTerminInfos(r)
 			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
 			if er != nil {
@@ -225,9 +266,9 @@ func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 
 	if r.Method == "POST" {
 		switch {
-		case r.RequestURI == "/user/view/list?terminErstellen":
+		case r.URL.String() == "/user/view/list?terminErstellen":
 			v.vm.CreateTermin(r, v.vm.Username)
-		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+		case strings.Contains(r.URL.String(), "/user/view/list/editor"):
 			v.vm.EditTermin(r, v.vm.Username)
 		}
 	}
@@ -235,10 +276,6 @@ func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 	if er != nil {
 		log.Fatalln(er)
 	}
-}
-func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {

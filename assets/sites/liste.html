@@ -68,6 +68,14 @@
                         </li>
                     </ul>
                 </div>
+                <!---Formular um bei Shared Terminen, die Information dazu einzusehen--->
+                {{if .Shared}}
+                    <form action="/shared" method="GET" role="form">
+                        <label for="ID_shared"></label>
+                        <input type="hidden" class="form-control" name="terminID" id="ID_shared" value="{{.ID}}">
+                        <button type="submit" class="btn btn-link">Details anzeigen</button>
+                    </form>
+                {{end}}
                 <!---Formular zum Bearbeiten des Termins, übermittelt zu bearbeitende ID--->
                 <form action="/user/view/list/editor" method="GET" role="form">
                     <label for="ID"></label>
