@@ -105,4 +105,9 @@ func TestAdminSiteServeHTTP_wrongCookie(t *testing.T) {
 	//execute request
 	AdminSiteServeHTTP(rec, req)
 	assert.Equal(t, 100, rec.Result().StatusCode)
+	urls, err := rec.Result().Location()
+	assert.Equal(t, err, nil)
+	termin, _ := terminfindung.GetTerminFromShared(&user, &terminId)
+	assert.Equal(t, "wrongAuthentication", urls.Query().Get("type"))
+	assert.Equal(t, false, strings.Contains(termin.Info.Title, rec.Body.String()))
 }

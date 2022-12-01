@@ -15,7 +15,8 @@ import (
 func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
-		http.Redirect(writer, request, "https://"+request.Host+"/", http.StatusContinue)
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
 	termin := request.URL.Query().Get("terminID")
