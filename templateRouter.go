@@ -33,7 +33,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			}
 			http.SetCookie(writer, cookie)
 			//redirect to new site
-			http.Redirect(writer, request, "https://"+request.Host+"/user/create", http.StatusFound)
+			http.Redirect(writer, request, "https://"+request.Host+"/user/view", http.StatusFound)
 			return
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status

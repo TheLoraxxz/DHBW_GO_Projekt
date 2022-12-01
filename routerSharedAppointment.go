@@ -23,7 +23,8 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	selectedDay := request.URL.Query().Get("selected")
 	terminShared, err := terminfindung.GetTerminFromShared(&user, &termin)
 	if err != nil {
-		fmt.Println("Coudnt find Termin")
+		urls := "https://" + request.Host + "/error?type=shared_wrong_terminId&link=" + url.QueryEscape("/user/view")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
 	if len(selectedDay) != 0 {
@@ -32,20 +33,17 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 			http.Redirect(writer, request, "https://"+request.Host+"/error?type=shared_admin_WrongSelected&link="+url.QueryEscape("/shared?terminID="+termin), http.StatusContinue)
 			return
 		}
-		terminShared, err = terminfindung.GetTerminFromShared(&user, &termin)
-		if err != nil {
-			return
-		}
+		terminShared, _ = terminfindung.GetTerminFromShared(&user, &termin)
 	}
 	terminForHTML := terminShared.ConvertAdminToHTML()
 
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	if err != nil {
-		log.Fatal(err)
-	}
 	err = mainRoute.Execute(writer, terminForHTML)
 	if err != nil {
-		log.Fatal(err)
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		fmt.Println(err)
+		return
 	}
 }
 
