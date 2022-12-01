@@ -149,6 +149,7 @@ func (vm *ViewManager) EditTermin(r *http.Request, username string) {
 		//entfällt deshalb im Bearbeitungsmodus, da sonst doppelter Funktionsaufruf
 		vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 		vm.Lv.CreateTerminListEntries(vm.TerminCache)
+		vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
 	}
 }
 
@@ -166,6 +167,8 @@ func (vm *ViewManager) DeleteSharedTermin(id, username string) {
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+	vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
+
 }
 
 /**********************************************************************************************************************
@@ -174,7 +177,7 @@ Nach jedem ändern der Ansicht der TableView, müssen die Einträge
 des Users dem neu angezeigten Monat entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-// JumpMonthBack
+// TvJumpMonthBack
 // Springt einen Monat in der Webseiten Ansicht zurück
 func (vm *ViewManager) TvJumpMonthBack() {
 	vm.Tv.JumpMonthBack()
@@ -188,8 +191,9 @@ func (vm *ViewManager) TvJumpMonthFor() {
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 }
 
-// TvJumpToYear
-// Springt zu einem bestimmten Jahr
+// TvJumpYearForOrBack
+// Parameter: +1 oder -1
+// Springt zu ein Jahr vor oder zurück, je nachdem ob der Parameter +1 oder -1 ist
 func (vm *ViewManager) TvJumpYearForOrBack(summand int) {
 	vm.Tv.JumpYearForOrBack(summand)
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
@@ -216,6 +220,9 @@ Nach jedem ändern der Ansicht der ListView, müssen die Einträge
 des Users ab dem neu angezeigten Datum entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+// LvSelectDate
+// Parameter: Datum in string-form
+// Funktion setzt das angezeigte Datum der Terminansicht
 func (vm *ViewManager) LvSelectDate(dateStr string) {
 	//Datum Filtern und in das richtige Format überführen mithilfe eines Layouts
 	layout := "2006-01-02"
@@ -224,14 +231,52 @@ func (vm *ViewManager) LvSelectDate(dateStr string) {
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
 }
 
+// LvSelectEntriesPerPage
+// Parameter: int Wert
+// Funktion setzt die angezeigte Einträge-Anzahl in der Terminansicht auf übergebenen int Wert
 func (vm *ViewManager) LvSelectEntriesPerPage(amount int) {
 	vm.Lv.SelectEntriesPerPage(amount)
 }
 
+// LvJumpPageForward
+// Funktion springt eine Seite vor in der Listenansicht
 func (vm *ViewManager) LvJumpPageForward() {
 	vm.Lv.JumpPageForward()
 }
 
+// LvJumpPageBack
+// Funktion springt eine Seite zurück in der Listenansicht
 func (vm *ViewManager) LvJumpPageBack() {
 	vm.Lv.JumpPageBack()
+}
+
+/**********************************************************************************************************************
+Hier Folgen Funktionen, die dem Handeln der Filteransicht/FilterView dienen.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+// FvSelectEntriesPerPage
+// Parameter: int Wert
+// Funktion setzt die angezeigte Einträge-Anzahl in der Filteransicht auf übergebenen int Wert
+func (vm *ViewManager) FvSelectEntriesPerPage(amount int) {
+	vm.Fv.SelectEntriesPerPage(amount)
+}
+
+// FvJumpPageForward
+// Funktion springt eine Seite vor in der Filteransicht
+func (vm *ViewManager) FvJumpPageForward() {
+	vm.Fv.JumpPageForward()
+}
+
+// FvJumpPageBack
+// Funktion springt eine Seite zurück in der Filteransicht
+func (vm *ViewManager) FvJumpPageBack() {
+	vm.Fv.JumpPageBack()
+}
+
+// FvFilter
+// Parameter: Request mit Strings des Termin-Titels/der Termin-Beschreibung nach der, gefiltert werden soll
+func (vm *ViewManager) FvFilter(r *http.Request) {
+	filterTitle := r.FormValue("title")
+	filterDescription := r.FormValue("description")
+	vm.Fv.FilterTermins(filterTitle, filterDescription, vm.Username, vm.TerminCache)
 }

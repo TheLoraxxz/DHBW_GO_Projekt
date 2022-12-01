@@ -1,6 +1,8 @@
 {{ define "creator" }}
 <div id="terminCreation">
-<form action="?terminErstellen" method="POST" id="terminCreater" role="form" class="row mb-3 p-3  needs-validation" novalidate>
+<form action="" method="POST" id="terminCreater" role="form" class="row mb-3 p-3  needs-validation" novalidate>
+  <label for="create" class="col-sm-2 col-form-label " hidden></label>
+  <input type="hidden" class="form-control" id="create" name="create" value="true">
   <h3>Neuen Termin erstellen</h3>
   <!----------Radio für Wahl ob normaler Termin oder Terminvorschlag, normaler Termin als default-->
   <div class="form-check">

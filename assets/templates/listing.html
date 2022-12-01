@@ -10,8 +10,13 @@
             {{end}}
             <div class="card-body">
                 {{ $nextOccurrences := $.NextOccurrences $dayEntry }}
-                {{ $firstOccur := index $nextOccurrences 0}}
-                <h4 class="card-title">{{ $firstOccur.Format "2006-01-02" }}</h4>
+                <!----falls es keine nächsten Terminvorkommen gibt, liegt der Termin in der Vergangenheit--->
+                {{ if and $nextOccurrences}}
+                    {{ $firstOccur := index $nextOccurrences 0}}
+                        <h4 class="card-title">{{ $firstOccur.Format "2006-01-02" }}</h4>
+                    {{else}}
+                        <h4 class="card-title text-danger">Termin liegt in der Vergangenheit</h4>
+                    {{end}}
                 <h5>{{.Title}}</h5>
                 <h6 class="card-subtitle mb-2 text-muted">{{.Description}}</h6>
                 <!-------Filter Reccuring String-Repräsentation----->
@@ -62,14 +67,16 @@
                     <button type="submit" class="btn btn-link">Details anzeigen</button>
                 </form>
                 <!---Button um Terminvorschlag zu löschen --->
-                <form action="/user/view/list" method="GET" role="form">
+                <form action="" method="GET" role="form">
                     <label for="deleteSharedTermin"></label>
                     <input type="hidden" class="form-control" name="deleteSharedTermin" id="deleteSharedTermin" value="{{.ID}}">
                     <button type="submit" class="btn btn-link">Vorschlag Löschen</button>
                 </form>
                 {{else}}
                 <!---Formular zum Bearbeiten des Termins, übermittelt zu bearbeitende ID--->
-                <form action="/user/view/list/editor" method="GET" role="form">
+                <form action="" method="GET" role="form">
+                    <label for="edit" hidden></label>
+                    <input type="hidden" class="form-control" name="edit" id="edit" value="true">
                     <label for="ID"></label>
                     <input type="hidden" class="form-control" name="ID" id="ID" value="{{.ID}}">
                     <button type="submit" class="btn btn-link">Bearbeiten</button>
@@ -81,7 +88,7 @@
         <!---Button um Seite zurück zu springen-->
         <div class="row justify-content-md-center">
             <div class="col col-lg-2">
-                <form action="/user/view/list?Seite" method="GET" role="form" class="row mb-3 p-3 ">
+                <form action="" method="GET" role="form" class="row mb-3 p-3 ">
                     <label for="PageBack" class="col-sm-2 " hidden></label>
                     <input type="hidden" class="form-control" name="Seite" id="PageBack" value="Zurueck">
                     <button type="submit" class="btn btn-light">Zurück</button>
@@ -92,7 +99,7 @@
             </div>
             <!---Button um Seite vor zu springen-->
             <div class="col col-lg-2">
-                <form action="/user/view/list?Seite" method="GET" role="form" class="row mb-3 p-3 ">
+                <form action="" method="GET" role="form" class="row mb-3 p-3 ">
                     <label for="PageFor" class="col-sm-2 " hidden></label>
                     <input type="hidden" class="form-control" name="Seite" id="PageFor" value="Vor">
                     <button type="submit" class="btn btn-light">Vor</button>
@@ -103,7 +110,7 @@
 <!----------Rechte Spalte: wählen der Einträge pro Seite------------>
 <div class="col">
     <div class="row justify-content-md-center">
-        <form class="row g-3" action="/user/view/list?Eintraege" method="GET" role="form">
+        <form class="row g-3" action="?Eintraege" method="GET" role="form">
             <h4>Wähle Einträge pro Seite:</h4>
             <div class="col">
                 <label for="pageEntriesNr" hidden></label>

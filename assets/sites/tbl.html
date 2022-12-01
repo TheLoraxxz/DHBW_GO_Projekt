@@ -14,7 +14,7 @@
                     <!-------- Button Heute ------------>
                     <div class="row justify-content-md-center">
                         <div class="col col-lg-2">
-                            <form action="/user/view/table?datum=" method="GET" role="form" class="row mb-3 p-3 ">
+                            <form action="" method="GET" role="form" class="row mb-3 p-3 ">
                                 <label for="JumpToday" class="col-sm-2 "></label>
                                 <input type="hidden" class="form-control" name="datum" id="JumpToday" value="heute">
                                 <button type="submit" class="btn btn-secondary">Heute</button>
@@ -24,7 +24,7 @@
                     <!-------- Buttons Jahr-Switch ------------>
                     <div class="row justify-content-md-center">
                         <div class="col col-lg-2">
-                            <form action="/user/view/table?jahr=" method="GET" role="form">
+                            <form action="" method="GET" role="form">
                                 <label for="YearBack" class="col-sm-2 "></label>
                                 <input type="hidden" class="form-control" name="jahr" id="YearBack"
                                        value="Zurueck">
@@ -35,7 +35,7 @@
                             <b class="text-muted card-text w-25 p-2">{{.ShowYear}}</b>
                         </div>
                         <div class="col col-lg-2">
-                            <form action="/user/view/table?jahr=" method="GET" role="form">
+                            <form action="" method="GET" role="form">
                                 <label for="YearFor"></label>
                                 <input type="hidden" class="form-control" name="jahr" id="YearFor"
                                        value="Vor">
@@ -46,7 +46,7 @@
                     <!-------- Dropdown Monatswahl ------------>
                     <div class="row justify-content-md-center">
 
-                        <form action="/user/view/table?monat=" method="GET" role="form">
+                        <form action="" method="GET" role="form">
                             <div class="row g-3 justify-content-md-center">
                             <div class="col col-lg-2">
                                 <label for="monthSelect"></label>
@@ -83,7 +83,7 @@
                             <div class="card-body row justify-content-md-center">
                                 <div class="col-sm">
                                     <!--------Button Monat zurück ------------>
-                                    <form action="/user/view/table?suche=" method="GET" role="form">
+                                    <form action="" method="GET" role="form">
                                         <label for="monthBack"></label>
                                         <input type="hidden" class="form-control" name="suche" id="monthBack"
                                                value="minusMonat">
@@ -95,7 +95,7 @@
                                 </div>
                                 <div class="col-sm">
                                     <!--------Button Monat Vor ------------>
-                                    <form action="/user/view/table?suche=" method="GET" role="form">
+                                    <form action="" method="GET" role="form">
                                         <label for="monthFor"></label>
                                         <input type="hidden" class="form-control" name="suche" id="monthFor"
                                                value="plusMonat">
@@ -239,7 +239,7 @@
                     "</form>";
                 //Terminvorschlag löschen button
                 terminStr = terminStr +
-                    "  <form action=\"/user/view/table\" method=\"GET\" role=\"form\">" +
+                    "  <form action=\"\" method=\"GET\" role=\"form\">" +
                     "  <label for=\"deleteSharedTermin\"></label>" +
                     " <input type=\"hidden\" class=\"form-control\" name=\"deleteSharedTermin\" id=\"deleteSharedTermin\"" +
                     "                       value=\"" + entry.ID + "\">" +
@@ -249,7 +249,10 @@
             }else {
                 //Termin bearbeiten button
                 terminStr = terminStr +
-                    "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">" +
+                    "  <form action=\"\" method=\"GET\" role=\"form\">" +
+                    "  <label for=\"edit\" hidden></label>" +
+                    " <input type=\"hidden\" class=\"form-control\" name=\"edit\" id=\"edit\"" +
+                    "                       value=\"true\">" +
                     "  <label for=\"ID\"></label>" +
                     " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"" +
                     "                       value=\"" + entry.ID + "\">" +

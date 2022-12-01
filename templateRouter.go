@@ -158,13 +158,13 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 // Hier werden all http-Request anfragen geregelt, die im Kontext der Terminansichten anfallen.
 // Zunächst wird der Cookie geprüft und ggf. die Termine/Infos des Users geladen.
 // Nach erfolgreicher Prüfung, wird die Anfrage an entweder den ListViewHandler oder den TableViewHandler weitergeleitet.
-func (v *ViewManagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//cookie-Check
-	isAllowed, username := checkIfIsAllowed(request)
+	isAllowed, username := checkIfIsAllowed(r)
 
 	//Falls kein Berechtigter-User: Weiterleiten-Host-Seite
 	if !isAllowed {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		http.Redirect(w, r, "https://"+r.Host, http.StatusContinue)
 		return
 	}
 
@@ -174,14 +174,41 @@ func (v *ViewManagerHandler) ServeHTTP(writer http.ResponseWriter, request *http
 		v.vm.Username = username
 	}
 
-	// Anfrage entsprechend weiterleiten (Listen- oder Tabellenansicht)
+	//Termin bearbeiten/erstellen/löschen ist überall identisch
+	edit := r.FormValue("edit")
+	create := r.FormValue("create")
+	deleteShared := r.FormValue("deleteSharedTermin")
+	switch r.Method {
+	case "GET":
+		if edit == "true" {
+			terminToEdit := v.vm.GetTerminInfos(r)
+			er := v.viewManagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if er != nil {
+				log.Fatalln(er)
+			}
+			return
+		}
+		if deleteShared != "" {
+			terminToDeleteID := r.FormValue("deleteSharedTermin")
+			v.vm.DeleteSharedTermin(terminToDeleteID, v.vm.Username)
+		}
+	case "POST":
+		if edit == "true" {
+			v.vm.EditTermin(r, v.vm.Username)
+		}
+		if create == "true" {
+			v.vm.CreateTermin(r, v.vm.Username)
+		}
+	}
+
+	// Anfrage entsprechend weiterleiten (Listen- Tabellen- oder Filteransicht)
 	switch {
-	case strings.Contains(request.URL.String(), "/user/view/table"):
-		v.handleTableView(writer, request)
-	case strings.Contains(request.URL.String(), "/user/view/list"):
-		v.handleListView(writer, request)
-	case strings.Contains(request.URL.String(), "/user/view/filterTermins"):
-		v.handleFilterView(writer, request)
+	case strings.Contains(r.URL.String(), "/user/view/table"):
+		v.handleTableView(w, r)
+	case strings.Contains(r.URL.String(), "/user/view/list"):
+		v.handleListView(w, r)
+	case strings.Contains(r.URL.String(), "/user/view/filterTermins"):
+		v.handleFilterView(w, r)
 	}
 
 }
@@ -205,25 +232,6 @@ func (v ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Reque
 			v.vm.TvJumpYearForOrBack(1)
 		case r.URL.String() == "/user/view/table?datum=heute":
 			v.vm.TvJumpToToday()
-		case strings.Contains(r.URL.String(), "/user/view/table?deleteSharedTermin"):
-			terminToDeleteID := r.FormValue("deleteSharedTermin")
-			v.vm.DeleteSharedTermin(terminToDeleteID, v.vm.Username)
-		case strings.Contains(r.URL.String(), "/user/view/table/editor"):
-			terminToEdit := v.vm.GetTerminInfos(r)
-			er := v.viewManagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
-			if er != nil {
-				log.Fatalln(er)
-			}
-			return
-		}
-	}
-
-	if r.Method == "POST" {
-		switch {
-		case r.URL.String() == "/user/view/table?terminErstellen":
-			v.vm.CreateTermin(r, v.vm.Username)
-		case strings.Contains(r.URL.String(), "/user/view/table/editor"):
-			v.vm.EditTermin(r, v.vm.Username)
 		}
 	}
 
@@ -249,27 +257,9 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 			v.vm.LvJumpPageForward()
 		case r.URL.String() == "/user/view/list?Seite=Zurueck":
 			v.vm.LvJumpPageBack()
-		case strings.Contains(r.URL.String(), "/user/view/list?deleteSharedTermin"):
-			terminToDeleteID := r.FormValue("deleteSharedTermin")
-			v.vm.DeleteSharedTermin(terminToDeleteID, v.vm.Username)
-		case strings.Contains(r.URL.String(), "/user/view/list/editor"):
-			terminToEdit := v.vm.GetTerminInfos(r)
-			er := v.viewManagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
-			if er != nil {
-				log.Fatalln(er)
-			}
-			return
 		}
 	}
 
-	if r.Method == "POST" {
-		switch {
-		case r.URL.String() == "/user/view/list?terminErstellen":
-			v.vm.CreateTermin(r, v.vm.Username)
-		case strings.Contains(r.URL.String(), "/user/view/list/editor"):
-			v.vm.EditTermin(r, v.vm.Username)
-		}
-	}
 	er := v.viewManagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
 	if er != nil {
 		log.Fatalln(er)
@@ -281,8 +271,20 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 func (v *ViewManagerHandler) handleFilterView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		switch {
+		case strings.Contains(r.URL.String(), "/user/view/filterTermins?Eintraege"):
+			amountStr := r.FormValue("Eintraege")
+			amount, _ := strconv.Atoi(amountStr)
+			v.vm.FvSelectEntriesPerPage(amount)
+		case r.URL.String() == "/user/view/filterTermins?Seite=Vor":
+			v.vm.FvJumpPageForward()
+		case r.URL.String() == "/user/view/filterTermins?Seite=Zurueck":
+			v.vm.FvJumpPageBack()
 		}
-
+	}
+	if r.Method == "POST" {
+		if strings.Contains(r.URL.String(), "/user/view/filterTermins?title=") {
+			v.vm.FvFilter(r)
+		}
 	}
 
 	er := v.viewManagerTpl.ExecuteTemplate(w, "filterTermins.html", v.vm.Fv)
@@ -290,6 +292,7 @@ func (v *ViewManagerHandler) handleFilterView(w http.ResponseWriter, r *http.Req
 		log.Fatalln(er)
 	}
 }
+
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	cookie, err := request.Cookie("SessionID-Kalender")
 	if err != nil {

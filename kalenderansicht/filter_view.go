@@ -2,6 +2,7 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
+	"time"
 )
 
 type FilterView struct {
@@ -15,6 +16,7 @@ type FilterView struct {
 // Dient zur Initialisierung der FilterView zum Start des Programms.
 func InitFilterView(terminCache []ds.Termin) *FilterView {
 	var fv = new(FilterView)
+	fv.FilteredTermins = make([]ds.Termin, len(terminCache))
 	copy(fv.FilteredTermins, terminCache)
 	fv.SortEntries(fv.FilteredTermins)
 	fv.CurrentPage = 1
@@ -22,11 +24,10 @@ func InitFilterView(terminCache []ds.Termin) *FilterView {
 	return fv
 }
 
-// GetEntries
-// liefert die gefilterten Informationen
-func (fv FilterView) GetEntries() []ds.Termin {
-	return fv.FilteredTermins
-}
+/**********************************************************************************************************************
+Ab hier Folgen Funktionen, die den Benutzer Custom-Settings & Navigation innerhalb der Webseite ermöglichen.
+(Bsp.: Seitenanzahl festlegen, Seite weiter navigieren...)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 // SelectEntriesPerPage
 // Parameter: int, gewünschte Anzahl Einträge pro Seite
@@ -35,6 +36,52 @@ func (fv FilterView) GetEntries() []ds.Termin {
 func (fv *FilterView) SelectEntriesPerPage(amount int) {
 	fv.EntriesPerPage = amount
 	fv.CurrentPage = 1
+}
+
+// JumpPageForward
+// springt eine Seite in der Webseite weiter
+func (fv *FilterView) JumpPageForward() {
+	if fv.CurrentPage+1 <= fv.RequiredPages() {
+		fv.CurrentPage += 1
+	}
+}
+
+// JumpPageBack
+// springt eine Seite in der Webseite zurück
+func (fv *FilterView) JumpPageBack() {
+	if fv.CurrentPage-1 > 0 {
+		fv.CurrentPage -= 1
+	}
+}
+
+// GetEntries
+// Rückgabewert: Ein Slice mit den der entsprechenden Anzahl an Terminen, die auf der aktuellen Seite angezeigt werden
+// Funktion wird im template aufgerufen, um Termine anzuzeigen
+func (fv FilterView) GetEntries() []ds.Termin {
+	entries := make([]ds.Termin, 0, fv.EntriesPerPage)
+	sliceStart := fv.EntriesPerPage * (fv.CurrentPage - 1)
+
+	for entryNr := 0; entryNr < fv.EntriesPerPage; entryNr++ {
+		if sliceStart+entryNr < len(fv.FilteredTermins) {
+			entries = append(entries, fv.FilteredTermins[sliceStart+entryNr])
+		}
+	}
+	return entries
+}
+
+/**********************************************************************************************************************
+Ab hier Folgen Funktionen, die dem Filtern und Sortieren der Termine in der Filteransicht dienen
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+// RequiredPages
+// Berechnet je nachdem wie viele Einträge pro Seite gewünscht sind die benötigte Seitenanzahl und weist diese dem entsprechenden
+// Feld in dem Objekt ListView zu.
+func (fv FilterView) RequiredPages() int {
+	requiredPages := len(fv.FilteredTermins) / fv.EntriesPerPage
+	if len(fv.FilteredTermins)%fv.EntriesPerPage != 0 || requiredPages == 0 {
+		requiredPages += 1
+	}
+	return requiredPages
 }
 
 // SortEntries
@@ -57,13 +104,58 @@ func (fv FilterView) SortEntries(entries []ds.Termin) {
 	}
 }
 
-// RequiredPages
-// Berechnet je nachdem wie viele Einträge pro Seite gewünscht sind die benötigte Seizenanzahl und weist diese dem entsprechenden
-// Feld in dem Objekt ListView zu.
-func (fv FilterView) RequiredPages() int {
-	requiredPages := len(fv.FilteredTermins) / fv.EntriesPerPage
-	if len(fv.FilteredTermins)%fv.EntriesPerPage != 0 || requiredPages == 0 {
-		requiredPages += 1
+// NextOccurrences
+// Parameter: ein Termin
+// Rückgabewert: drei Instanzen des Typs time.Time
+// berechnet die nächsten drei Vorkommen des Termins ab heute
+func (fv FilterView) NextOccurrences(termin ds.Termin) []time.Time {
+	today := time.Now()
+	today = time.Date(today.Year(), today.Month(), today.Day(),
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
+	nextOccurrences := make([]time.Time, 0, 3)
+
+	occur := termin.Date
+	noMoreOccur := false
+	//solange nicht die drei nächsten Termine gefiltert worden sind
+	//und das letzte Vorkommen des Termins noch nicht erreicht worden ist, füge weitere Termine der Liste hinzu
+	//Wenn der Termin nur einmal vorkommt, sorgt die Variable noMoreOccur für einen Abbruch,
+	//so wird nicht 3 Mal derselbe Termin hinzugefügt.
+	for len(nextOccurrences) < 3 && (!occur.After(termin.EndDate)) && noMoreOccur == false {
+		if occur.After(today) || occur.Equal(today) {
+			nextOccurrences = append(nextOccurrences, occur)
+		}
+		switch termin.Recurring {
+		case ds.YEARLY:
+			occur = occur.AddDate(1, 0, 0)
+		case ds.MONTHLY:
+			occur = occur.AddDate(0, 1, 0)
+		case ds.WEEKLY:
+			occur = occur.AddDate(0, 0, 7)
+		case ds.DAILY:
+			occur = occur.AddDate(0, 0, 1)
+		case ds.Never:
+			noMoreOccur = true
+		}
 	}
-	return requiredPages
+	return nextOccurrences
+}
+
+// CreateTerminFilterEntries
+// Parameter: Slice mit allen Terminen des Nutzers.
+// Die Funktion überreicht der FilterAnsicht die aktuellste Liste der Termine.
+func (fv *FilterView) CreateTerminFilterEntries(terminCache []ds.Termin) {
+	fv.FilteredTermins = make([]ds.Termin, len(terminCache))
+	copy(fv.FilteredTermins, terminCache)
+	fv.SortEntries(fv.FilteredTermins)
+}
+
+func (fv *FilterView) FilterTermins(filterTitle, filterDescription, username string, terminCache []ds.Termin) {
+	//TODO Chris Filter Funktion aufrufern
+	//fv.FilteredTermins =
+	fv.SortEntries(fv.FilteredTermins)
 }
