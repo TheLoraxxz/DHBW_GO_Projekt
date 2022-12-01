@@ -19,6 +19,7 @@ var terminSharedCreateLinkPost = template.Must(template.ParseFiles("./assets/sit
 var terminSharedCreateDate = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 var terminSharedShowAllLinks = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-admin-showAll.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 var errorRoute = template.Must(template.ParseFiles("./assets/sites/error.html", "./assets/templates/footer.html"))
+var terminSharedPublic = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-public.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 
 // AdminSiteServeHTTP
 // handle for /shared --> gives back the overview
@@ -225,17 +226,23 @@ func ShowAllLinksServeHttp(writer http.ResponseWriter, request *http.Request) {
 // PublicSharedWebsite
 // public website for every user without authentication to access --> needs api key
 func PublicSharedWebsite(writer http.ResponseWriter, request *http.Request) {
-	//because go automatically returns it as unescaped query we need to redo it
 	var apikey string
+	//on post it edits it
 	if request.Method == http.MethodPost {
+		// check form and if not give back internal error
 		err := request.ParseForm()
 		if err != nil {
-			fmt.Println(err)
+			log.Println("coudn't parse form")
+			urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
+			http.Redirect(writer, request, urls, http.StatusContinue)
+			return
 		}
+		//get the apikey date key and voted --> in form is beeing added by js --> so i dont need to load it in get
 		apikey = url.QueryEscape(request.Form.Get("apiKey"))
 		dateKey := request.Form.Get("dateKey")
 		voted := request.Form.Get("voted")
 		votedBool := false
+		// https gives back on if checkbox is checked --> sp it checks whether it is the sam
 		if strings.Compare(voted, "on") == 0 {
 			votedBool = true
 		}
@@ -248,21 +255,23 @@ func PublicSharedWebsite(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 	} else {
+		// if not post it is set in the apikey --> is a long byte hash
 		apikey = url.QueryEscape(request.URL.Query().Get("apiKey"))
 	}
+	// gets the termin via api key
 	termin, user, err := terminfindung.GetTerminViaApiKey(&apikey)
 	if err != nil {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
 	htmlInput := termin.ConvertUserSiteToRightHTML(&user, &apikey)
-	linkRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-public.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	err = terminSharedPublic.Execute(writer, htmlInput)
 	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
-	}
-	err = linkRoute.Execute(writer, htmlInput)
-	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+		log.Println("coudn't execute form in all links")
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		return
 	}
 	return
 }

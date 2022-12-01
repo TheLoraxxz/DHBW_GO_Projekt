@@ -406,6 +406,106 @@ func TestShowAllLinksServeHttp_TerminIDNotSet(t *testing.T) {
 	assert.Equal(t, "https://"+req.Host+"/error?type=wrongAuthentication&link="+url.QueryEscape("/"), urls.String())
 }
 
-func TestPublicSharedWebsite(t *testing.T) {
+func TestPublicSharedWebsite_TestNormalGet(t *testing.T) {
+	//setup user
+	name := "useriusCoolTree"
+	link, err := terminfindung.CreatePerson(&name, &terminId, &user)
+	assert.Equal(t, nil, err)
 
+	req := httptest.NewRequest("GET", "localhost:443/shared/public?"+link, nil)
+	rec := httptest.NewRecorder()
+	//execute
+	PublicSharedWebsite(rec, req)
+	//should accept
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "function submitForm(apikey,date,voted) {"))
+
+}
+
+func TestPublicSharedWebsite_WrongApiKey(t *testing.T) {
+	//setup user
+	name := "test"
+	terminfindung.CreatePerson(&name, &terminId, &user)
+	// set wrong api key
+	req := httptest.NewRequest("GET", "localhost:443/shared/public?apiKey=test", nil)
+	rec := httptest.NewRecorder()
+	//execute
+	PublicSharedWebsite(rec, req)
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	urls, err := rec.Result().Location()
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "https://"+req.Host+"/error?type=wrongAuthentication&link="+url.QueryEscape("/"), urls.String())
+}
+
+func TestPublicSharedWebsite_PostRequestYesVote(t *testing.T) {
+	// create person and get termin for data manipulation
+	name := "newUserTestIsCool1"
+	link, err := terminfindung.CreatePerson(&name, &terminId, &user)
+	assert.Equal(t, nil, err)
+	termin, _ := terminfindung.GetTerminFromShared(&user, &terminId)
+	// prepare request
+	reader := strings.NewReader(link + "&dateKey=" + termin.VorschlagTermine[0].ID + "&voted=on")
+	req := httptest.NewRequest("POST", "localhost:443/shared/public", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+	PublicSharedWebsite(rec, req)
+	// check that it goes to same website
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "function submitForm(apikey,date,voted) {"))
+	// the termin should have been altered
+	termin, _ = terminfindung.GetTerminFromShared(&user, &terminId)
+	assert.Equal(t, true, termin.Persons[name].Votes[termin.VorschlagTermine[0].ID])
+
+}
+func TestPublicSharedWebsite_PostRequestNoVote(t *testing.T) {
+	// create person and get termin for data manipulation
+	name := "newUserTestIsCool2"
+	link, err := terminfindung.CreatePerson(&name, &terminId, &user)
+	assert.Equal(t, nil, err)
+	termin, _ := terminfindung.GetTerminFromShared(&user, &terminId)
+	// prepare request
+	reader := strings.NewReader(link + "&dateKey=" + termin.VorschlagTermine[0].ID + "&voted=off")
+	req := httptest.NewRequest("POST", "localhost:443/shared/public", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+	PublicSharedWebsite(rec, req)
+	// check that it goes to same website
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "function submitForm(apikey,date,voted) {"))
+	// the termin should have been altered
+	termin, _ = terminfindung.GetTerminFromShared(&user, &terminId)
+	assert.Equal(t, false, termin.Persons[name].Votes[termin.VorschlagTermine[0].ID])
+
+}
+
+func TestErrorSite_ServeHttp_EmptyGetter(t *testing.T) {
+	req := httptest.NewRequest("GET", "localhost:443/error", nil)
+	rec := httptest.NewRecorder()
+
+	ErrorSite_ServeHttp(rec, req)
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "Interner Error Problem"))
+}
+
+func TestErrorSite_ServeHttp_Correct(t *testing.T) {
+	req := httptest.NewRequest("GET", "localhost:443/error?type=internal&link="+url.QueryEscape("/"), nil)
+	rec := httptest.NewRecorder()
+	// execute
+	ErrorSite_ServeHttp(rec, req)
+	// check that the link is correctly set and the right error is given
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "Interner Server error"))
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "<a class=\"btn btn-primary\" href=\"https://"+req.Host+"/\">Zurück</a>"))
+}
+
+func TestErrorSite_ServeHttp_EmptyLink(t *testing.T) {
+	//link is not set
+	req := httptest.NewRequest("GET", "localhost:443/error?type=internal", nil)
+	rec := httptest.NewRecorder()
+	// execute
+	ErrorSite_ServeHttp(rec, req)
+	// check that the link is correctly set and the right error is given --> link should be just the host
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "Interner Server error"))
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "<a class=\"btn btn-primary\" href=\"https://"+req.Host+"\">Zurück</a>"))
 }
