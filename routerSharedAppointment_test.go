@@ -50,7 +50,7 @@ func TestAdminSiteServeHTTP_normalCookie(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("GET", "localhost:44/shared?terminID="+terminId, reader)
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, reader)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute request
@@ -77,7 +77,7 @@ func TestAdminSiteServeHTTP_selectDate(t *testing.T) {
 	enddate := time.Date(2022, 12, 13, 12, 12, 12, 12, time.UTC)
 	terminfindung.CreateNewProposedDate(startDate, enddate, &user, &terminId, false)
 	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("GET", "localhost:44/shared?terminID="+terminId+"&selected="+termin.VorschlagTermine[0].ID, reader)
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId+"&selected="+termin.VorschlagTermine[0].ID, reader)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute request
@@ -99,7 +99,7 @@ func TestAdminSiteServeHTTP_wrongCookie(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("GET", "localhost:44/shared?terminID="+terminId, reader)
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, reader)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute request
@@ -110,4 +110,24 @@ func TestAdminSiteServeHTTP_wrongCookie(t *testing.T) {
 	termin, _ := terminfindung.GetTerminFromShared(&user, &terminId)
 	assert.Equal(t, "wrongAuthentication", urls.Query().Get("type"))
 	assert.Equal(t, false, strings.Contains(termin.Info.Title, rec.Body.String()))
+}
+
+func TestCreateLinkServeHTTP_CreateTerminID(t *testing.T) {
+	//setup
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	reader := strings.NewReader("newUsername=user&newPassword=user")
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, reader)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute link
+	CreateLinkServeHTTP(rec, req)
+
 }

@@ -50,18 +50,25 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
-		http.Redirect(writer, request, "https://"+request.Host+"/", http.StatusContinue)
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
 	termin := request.URL.Query().Get("terminID")
 	if request.Method == http.MethodPost {
 		err := request.ParseForm()
 		if err != nil {
+			request.Method = "GET"
+			urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/shared?terminID="+termin)
+			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
 		name := request.Form.Get("name")
 		linkForPerson, err := terminfindung.CreatePerson(&name, &termin, &user)
 		if err != nil {
+			request.Method = "GET"
+			urls := "https://" + request.Host + "/error?type=shared_coudntCreatePerson&link=" + url.QueryEscape("/shared?terminID="+termin)
+			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
 		type links struct {
@@ -74,21 +81,31 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		}
 		postRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-showlink.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 		if err != nil {
-			log.Fatal("Coudnt export Parsefiles")
+			request.Method = "GET"
+			urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
+			http.Redirect(writer, request, urls, http.StatusContinue)
+			return
 		}
 		err = postRoute.Execute(writer, linksFortemp)
 		if err != nil {
-			log.Fatal("Coudnt Execute Parsefiles")
+			request.Method = "GET"
+			urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
+			http.Redirect(writer, request, urls, http.StatusContinue)
+			return
 		}
 		return
 	}
 	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-link.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		return
 	}
 	err = mainRoute.Execute(writer, termin)
 	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		return
 	}
 }
 

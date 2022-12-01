@@ -89,7 +89,8 @@ func main() {
 func setErrorconfigs() {
 	errorconfigs["shared_admin_WrongSelected"] = "Falsches Datum selektiert"
 	errorconfigs["emptyError"] = "Interner Error Problem"
-	errorconfigs["wrongAuthentication"] = "Falsche Authentifizierung"
+	errorconfigs["wrongAuthentication"] = "Falsche Authentifizierung / falsche Daten eingegeben"
 	errorconfigs["shared_wrong_terminId"] = "Konnte nicht den Termin Findung."
 	errorconfigs["internal"] = "Interner Server error"
+	errorconfigs["shared_coudntCreatePerson"] = "Person schon vorhanden oder falsche Zeichen enthalten"
 }
