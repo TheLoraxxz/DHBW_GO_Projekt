@@ -164,3 +164,25 @@ func FindInCacheByID(kalender []Termin, id string) Termin {
 	}
 	return Termin{}
 }
+
+// FilterByTitle wird genutzt, um Termin anhand seiner ID in einem Kalender wiederzufinden
+func FilterByTitle(kalender []Termin, title string) []Termin {
+	var k []Termin
+	for i := 0; i < len(kalender); i++ {
+		if kalender[i].Title == title {
+			k = AddToCache(kalender[i], k)
+		}
+	}
+	return k
+}
+
+// FilterByDescription wird genutzt, um Termin anhand seiner ID in einem Kalender wiederzufinden
+func FilterByDescription(kalender []Termin, description string) []Termin {
+	var k []Termin
+	for i := 0; i < len(kalender); i++ {
+		if kalender[i].Description == description {
+			k = AddToCache(kalender[i], k)
+		}
+	}
+	return k
+}
