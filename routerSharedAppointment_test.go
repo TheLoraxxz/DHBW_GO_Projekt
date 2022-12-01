@@ -49,8 +49,7 @@ func TestAdminSiteServeHTTP_normalCookie(t *testing.T) {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	}
-	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, reader)
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, nil)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute request
@@ -76,8 +75,7 @@ func TestAdminSiteServeHTTP_selectDate(t *testing.T) {
 	startDate := time.Date(2022, 12, 12, 12, 12, 12, 12, time.UTC)
 	enddate := time.Date(2022, 12, 13, 12, 12, 12, 12, time.UTC)
 	terminfindung.CreateNewProposedDate(startDate, enddate, &user, &terminId, false)
-	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId+"&selected="+termin.VorschlagTermine[0].ID, reader)
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId+"&selected="+termin.VorschlagTermine[0].ID, nil)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute request
@@ -98,8 +96,7 @@ func TestAdminSiteServeHTTP_wrongCookie(t *testing.T) {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	}
-	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, reader)
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, nil)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute request
@@ -112,7 +109,7 @@ func TestAdminSiteServeHTTP_wrongCookie(t *testing.T) {
 	assert.Equal(t, false, strings.Contains(termin.Info.Title, rec.Body.String()))
 }
 
-func TestCreateLinkServeHTTP_CreateTerminID(t *testing.T) {
+func TestCreateLinkServeHTTP_GETRequest(t *testing.T) {
 	//setup
 	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
 	cookie := &http.Cookie{
@@ -123,11 +120,13 @@ func TestCreateLinkServeHTTP_CreateTerminID(t *testing.T) {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	}
-	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, reader)
+	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, nil)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute link
 	CreateLinkServeHTTP(rec, req)
+	//should return statuscode 200
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "<h2>Neue Person einladen</h2>"))
 
 }

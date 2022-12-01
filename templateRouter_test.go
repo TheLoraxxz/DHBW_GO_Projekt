@@ -76,7 +76,7 @@ func TestRootHandler_ServeHTTP_wrongRequest(t *testing.T) {
 	assert.Equal(t, 0, len(rec.Result().Cookies()))
 	// should redirect to same website
 	url, _ := rec.Result().Location()
-	assert.Equal(t, "/", url.Path)
+	assert.Equal(t, "/error", url.Path)
 
 }
 

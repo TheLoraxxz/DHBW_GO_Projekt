@@ -12,33 +12,45 @@ import (
 	"time"
 )
 
+// define Templates
+var terminAdminSite = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+var terminSharedCreateLink = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-create-link.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+var terminSharedCreateLinkPost = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-showlink.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+var terminSharedCreateDate = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+
+// AdminSiteServeHTTP
+// handle for /shared --> gives back the overview
 func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//check that user is authenticated and if not redirect to error website and /
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
 		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
 		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
+	// get the terminID and selected for get
 	termin := request.URL.Query().Get("terminID")
 	selectedDay := request.URL.Query().Get("selected")
+	// select termin
 	terminShared, err := terminfindung.GetTerminFromShared(&user, &termin)
 	if err != nil {
 		urls := "https://" + request.Host + "/error?type=shared_wrong_terminId&link=" + url.QueryEscape("/user/view")
 		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
+	//get the selected date if select date is the wrong one it throws an error
 	if len(selectedDay) != 0 {
 		err := terminfindung.SelectDate(&selectedDay, &termin, &user)
 		if err != nil {
 			http.Redirect(writer, request, "https://"+request.Host+"/error?type=shared_admin_WrongSelected&link="+url.QueryEscape("/shared?terminID="+termin), http.StatusContinue)
 			return
 		}
+		// get teh right termin
 		terminShared, _ = terminfindung.GetTerminFromShared(&user, &termin)
 	}
 	terminForHTML := terminShared.ConvertAdminToHTML()
-
-	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	err = mainRoute.Execute(writer, terminForHTML)
+	// execute the admin path always if not (on error) it redirectes to error
+	err = terminAdminSite.Execute(writer, terminForHTML)
 	if err != nil {
 		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
 		http.Redirect(writer, request, urls, http.StatusContinue)
@@ -79,14 +91,7 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 			LinkBack:    "/shared?terminID=" + termin,
 			LinkForUser: "https://" + request.Host + "/shared/public?" + linkForPerson,
 		}
-		postRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-showlink.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-		if err != nil {
-			request.Method = "GET"
-			urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
-			http.Redirect(writer, request, urls, http.StatusContinue)
-			return
-		}
-		err = postRoute.Execute(writer, linksFortemp)
+		err = terminSharedCreateLinkPost.Execute(writer, linksFortemp)
 		if err != nil {
 			request.Method = "GET"
 			urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
@@ -95,13 +100,7 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
-	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-link.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	if err != nil {
-		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
-		http.Redirect(writer, request, urls, http.StatusContinue)
-		return
-	}
-	err = mainRoute.Execute(writer, termin)
+	err := terminSharedCreateLink.Execute(writer, termin)
 	if err != nil {
 		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
 		http.Redirect(writer, request, urls, http.StatusContinue)
@@ -142,11 +141,7 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	mainRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
-	}
-	err = mainRoute.Execute(writer, termin)
+	err := terminSharedCreateDate.Execute(writer, termin)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}
