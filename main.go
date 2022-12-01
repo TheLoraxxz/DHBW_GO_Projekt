@@ -2,8 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
-	ka "DHBW_GO_Projekt/kalenderansicht"
-	"DHBW_GO_Projekt/terminfindung"
+	"DHBW_GO_Projekt/export"
 	"flag"
 	"fmt"
 	"html/template"
@@ -91,6 +90,7 @@ func main() {
 	http.HandleFunc("/shared/create/app", ServeHTTPSharedAppCreateDate)
 	http.HandleFunc("/shared/showAllLink", ShowAllLinksServeHttp)
 	http.HandleFunc("/shared/public", PublicSharedWebsite)
+	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.DownloadHandler))
 	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)

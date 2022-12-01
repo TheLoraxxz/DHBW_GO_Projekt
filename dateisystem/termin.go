@@ -1,8 +1,13 @@
 package dateisystem
 
+/*
+Zweck: Struct inklusive Seter für Termine
+*/
+
 //Mat-Nr. 8689159
-//ToDo shared bool ergänzen
 import (
+	"golang.org/x/crypto/bcrypt"
+	"strings"
 	"time"
 )
 
@@ -30,6 +35,24 @@ type Termin struct {
 	ID          string    `json:"ID"`
 }
 
+// createID erzeugt neue ID
+func createID(dat time.Time, endDat time.Time) string {
+
+	u := time.Now().String()
+
+	id := dat.String() + endDat.String() + u
+
+	//generiert Hash --> gewährleistet hohe Kollisionsfreiheit bei IDs
+	bytes, _ := bcrypt.GenerateFromPassword([]byte(id), 14)
+	id = string(bytes)
+
+	//Entfernt problematische Chars aus Hash
+	id = strings.Replace(id, "/", "E", 99)
+	id = strings.Replace(id, ".", "D", 99)
+
+	return id
+}
+
 func (Termin) SetTitle(t *Termin, newTitle string) {
 	t.Title = newTitle
 }
@@ -48,10 +71,6 @@ func (Termin) SetDate(t *Termin, newDate time.Time) {
 
 func (Termin) SetEndeDate(t *Termin, newDate time.Time) {
 	t.EndDate = newDate
-}
-
-func (Termin) setID(t *Termin, id string) {
-	t.ID = id
 }
 
 func (Termin) SetShared(t *Termin, shared bool) {
