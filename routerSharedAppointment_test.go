@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -120,7 +121,7 @@ func TestCreateLinkServeHTTP_GETRequest(t *testing.T) {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	}
-	req := httptest.NewRequest("GET", "localhost:443/shared?terminID="+terminId, nil)
+	req := httptest.NewRequest("GET", "localhost:443/shared/create/link?terminID="+terminId, nil)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	//execute link
@@ -129,4 +130,207 @@ func TestCreateLinkServeHTTP_GETRequest(t *testing.T) {
 	assert.Equal(t, 200, rec.Result().StatusCode)
 	assert.Equal(t, true, strings.Contains(rec.Body.String(), "<h2>Neue Person einladen</h2>"))
 
+}
+
+func TestCreateLinkServeHTTP_noCoockie(t *testing.T) {
+	req := httptest.NewRequest("GET", "localhost:443/shared/create/link?terminID="+terminId, nil)
+	rec := httptest.NewRecorder()
+	CreateLinkServeHTTP(rec, req)
+
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	assert.Equal(t, false, strings.Contains(rec.Body.String(), "<h2>Neue Person einladen</h2>"))
+}
+
+func TestCreateLinkServeHTTP_RightPostRequest(t *testing.T) {
+	//setup
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	reader := strings.NewReader("name=testuser")
+
+	req := httptest.NewRequest("POST", "localhost:443/shared/create/link?terminID="+terminId, reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute link
+	CreateLinkServeHTTP(rec, req)
+	//tests that it should give back the right link and it should be code 200
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	termin, _ := terminfindung.GetTerminFromShared(&user, &terminId)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "https://example.com/shared/public?apiKey="+termin.Persons["testuser"].Url))
+}
+
+func TestCreateLinkServeHTTP_WrongPostRequest(t *testing.T) {
+	//setup
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	reader := strings.NewReader("/&?sas=?")
+
+	req := httptest.NewRequest("POST", "localhost:443/shared/create/link?terminID="+terminId, reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute link
+	CreateLinkServeHTTP(rec, req)
+	//tests that it should give back the right link and it should be code 200
+	assert.Equal(t, 100, rec.Result().StatusCode)
+}
+
+func TestServeHTTPSharedAppCreateDate_GetRequestNormal(t *testing.T) {
+	// setup statement
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	req := httptest.NewRequest("GET", "localhost:443/shared/create/app?terminID="+terminId, nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute statement
+	ServeHTTPSharedAppCreateDate(rec, req)
+	//should have the form in the response
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "<input required id=\"enddate\" type=\"date\" class=\"form-control\" name=\"enddate\">"))
+}
+
+func TestServeHTTPSharedAppCreateDate_WrongCookie(t *testing.T) {
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    "cookieValue",
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	req := httptest.NewRequest("GET", "localhost:443/shared/create/app?terminID="+terminId, nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute statement
+	ServeHTTPSharedAppCreateDate(rec, req)
+	//should be redirected
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	assert.Equal(t, false, strings.Contains(rec.Body.String(), "<input required id=\"enddate\" type=\"date\" class=\"form-control\" name=\"enddate\">"))
+}
+
+func TestServeHTTPSharedAppCreateDate_FalseTerminId(t *testing.T) {
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	req := httptest.NewRequest("GET", "localhost:443/shared/create/app?terminID=asdasd", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute statement
+	ServeHTTPSharedAppCreateDate(rec, req)
+	//should be redirected
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	assert.Equal(t, false, strings.Contains(rec.Body.String(), "<input required id=\"enddate\" type=\"date\" class=\"form-control\" name=\"enddate\">"))
+	//should redirect to right url should give authentication error
+	urls, err := rec.Result().Location()
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "https://"+req.Host+"/error?type=wrongAuthentication&link="+url.QueryEscape("/shared?terminID=asdasd"), urls.String())
+}
+
+func TestServeHTTPSharedAppCreateDate_POSTRequest(t *testing.T) {
+	//setup (right cookie in post)
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	reader := strings.NewReader("startdate=2022-12-12&enddate=2022-12-13")
+	req := httptest.NewRequest("POST", "localhost:443/shared/create/app?terminID="+terminId, reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute
+	termin, _ := terminfindung.GetTerminFromShared(&user, &terminId)
+	ServeHTTPSharedAppCreateDate(rec, req)
+	urls, err := rec.Result().Location()
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	termin2, _ := terminfindung.GetTerminFromShared(&user, &terminId)
+	//should have created one proposed termin
+	assert.Equal(t, 1, len(termin2.VorschlagTermine)-len(termin.VorschlagTermine))
+	assert.Equal(t, "https://"+req.Host+"/shared?terminID="+terminId, urls.String())
+}
+
+func TestServeHTTPSharedAppCreateDate_WrongDataFormat(t *testing.T) {
+	//setup (right cookie in post)
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	reader := strings.NewReader("startdate=23-332-32&enddate=23-34-66")
+	req := httptest.NewRequest("POST", "localhost:443/shared/create/app?terminID="+terminId, reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute
+	ServeHTTPSharedAppCreateDate(rec, req)
+	//should reject it
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	urls, err := rec.Result().Location()
+	assert.Equal(t, nil, err)
+	//the new link should be error and it should give back the continue site
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "\">Continue</a>."))
+	assert.Equal(t, "https://"+req.Host+"/error?type=wrong_date_format&link="+url.QueryEscape("/shared?terminID="+terminId), urls.String())
+}
+
+func TestServeHTTPSharedAppCreateDate_StartDateAfterEnddate(t *testing.T) {
+	//setup (right cookie in post)
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	reader := strings.NewReader("startdate=2022-12-14&enddate=2022-12-12")
+	req := httptest.NewRequest("POST", "localhost:443/shared/create/app?terminID="+terminId, reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute
+	ServeHTTPSharedAppCreateDate(rec, req)
+	//should reject it
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	urls, err := rec.Result().Location()
+	assert.Equal(t, nil, err)
+	//the new link should be error and it should give back the continue site
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "\">Continue</a>."))
+	assert.Equal(t, "https://"+req.Host+"/error?type=dateIsAfter&link="+url.QueryEscape("/shared/create/app?terminID="+terminId), urls.String())
 }

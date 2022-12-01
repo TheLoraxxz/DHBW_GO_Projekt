@@ -121,6 +121,7 @@ func CreatePerson(name *string, terminID *string, user *string) (urlToShow strin
 	//checks whether the input parameters are right
 	if len(*name) == 0 || len(*terminID) == 0 || len(*user) == 0 {
 		err = errors.New("name, TerminID and user need to be set")
+		return "", err
 	}
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()

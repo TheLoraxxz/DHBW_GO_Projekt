@@ -59,15 +59,21 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// CreateLinkServeHTTP
+// for createing a link
 func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//check if user is allowed
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
 		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
 		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
+	// get the terminID
 	termin := request.URL.Query().Get("terminID")
+	//if the data needs to be parsed then it automatically changes the structs
 	if request.Method == http.MethodPost {
+		// parse forms
 		err := request.ParseForm()
 		if err != nil {
 			request.Method = "GET"
@@ -75,14 +81,17 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
+		// get the name of the user that should be created
 		name := request.Form.Get("name")
 		linkForPerson, err := terminfindung.CreatePerson(&name, &termin, &user)
+		//if metho is wrong it automatically says no
 		if err != nil {
 			request.Method = "GET"
 			urls := "https://" + request.Host + "/error?type=shared_coudntCreatePerson&link=" + url.QueryEscape("/shared?terminID="+termin)
 			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
+		// make custom struckt for user
 		type links struct {
 			LinkForUser string
 			LinkBack    string
@@ -111,7 +120,8 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Request) {
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
 	termin := request.URL.Query().Get("terminID")
@@ -119,6 +129,9 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 		//if is submited the form it pases the request
 		err := request.ParseForm()
 		if err != nil {
+			request.Method = "GET"
+			urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/shared?terminID="+termin)
+			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
 		// get start date and enddate and parse it to time format
@@ -127,23 +140,35 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 		startDateFormated, err := time.Parse("2006-01-02", startDate)
 		enddateFormated, err := time.Parse("2006-01-02", endDate)
 		if err != nil {
+			request.Method = "GET"
+			urls := "https://" + request.Host + "/error?type=wrong_date_format&link=" + url.QueryEscape("/shared?terminID="+termin)
+			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
 		//create a new proposed date and redirect to the main website
 		err = terminfindung.CreateNewProposedDate(startDateFormated, enddateFormated, &user, &termin, false)
 		if err != nil {
+			request.Method = "GET"
+			urls := "https://" + request.Host + "/error?type=dateIsAfter&link=" + url.QueryEscape("/shared/create/app?terminID="+termin)
+			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
+		//on post redirect to main website
+		request.Method = "GET"
 		http.Redirect(writer, request, "https://"+request.Host+"/shared?terminID="+termin, http.StatusContinue)
 		return
 	}
-	if len(termin) == 0 {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+	_, err := terminfindung.GetTerminFromShared(&user, &termin)
+	if err != nil {
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/shared?terminID="+termin)
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
-	err := terminSharedCreateDate.Execute(writer, termin)
+	err = terminSharedCreateDate.Execute(writer, termin)
 	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		return
 	}
 
 }

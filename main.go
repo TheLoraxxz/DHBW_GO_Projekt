@@ -93,4 +93,6 @@ func setErrorconfigs() {
 	errorconfigs["shared_wrong_terminId"] = "Konnte nicht den Termin Findung."
 	errorconfigs["internal"] = "Interner Server error"
 	errorconfigs["shared_coudntCreatePerson"] = "Person schon vorhanden oder falsche Zeichen enthalten"
+	errorconfigs["wrong_date_format"] = "Falsches Datenformat eingegeben"
+	errorconfigs["dateIsAfter"] = "Das Startdatum ist nach dem Enddatum - bitte ändern"
 }
