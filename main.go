@@ -24,11 +24,12 @@ type ViewmanagerHandler struct {
 	viewmanagerTpl *template.Template
 }
 
+var errorconfigs = make(map[string]string)
 var Server http.Server
 
 func main() {
 	//flags and configuration of application
-	port := flag.String("port", "80", "define the port for the application. Default:80")
+	port := flag.String("port", "443", "define the port for the application. Default: 443")
 	adminUserName := flag.String("user", "admin", "Define Admin username for first login. Default: admin")
 	adminPassword := flag.String("passw", "admin", "Define Admin Password for first login to application. Defualt: admin")
 	basepath, err := os.Getwd()
@@ -38,10 +39,7 @@ func main() {
 		fmt.Println(err)
 		log.Fatal("Coudn't load users")
 	}
-	err = terminfindung.LoadDataToSharedTermin(&basepath)
-	if err != nil {
-		fmt.Println(err)
-	}
+	terminfindung.LoadDataToSharedTermin(&basepath)
 	//set a timer to write all users to plate every minute
 	timerSaveData := time.NewTimer(1 * time.Minute * 15)
 	go func() {
@@ -57,12 +55,11 @@ func main() {
 			fmt.Println(saveSharedErr)
 		}
 	}()
-
+	setErrorconfigs()
 	// setup server
 	Server = http.Server{
 		Addr: ":" + *port,
 	}
-
 	//http handles
 	//hier weitere handler hinzufügen in ähnlicher fashion für die verschiedenen Templates
 	root := RootHandler{}
@@ -82,9 +79,15 @@ func main() {
 	http.HandleFunc("/shared/create/app", ServeHTTPSharedAppCreateDate)
 	http.HandleFunc("/shared/showAllLink", ShowAllLinksServeHttp)
 	http.HandleFunc("/shared/public", PublicSharedWebsite)
+	http.HandleFunc("/error", ErrorSite_ServeHttp)
 	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
 	}
 
+}
+func setErrorconfigs() {
+	errorconfigs["shared_admin_WrongSelected"] = "Falsches Datum selektiert"
+	errorconfigs["emptyError"] = "Interner Error Problem"
+	errorconfigs["wrongAuthentication"] = "Falsche Authentifizierung"
 }

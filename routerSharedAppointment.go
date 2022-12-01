@@ -24,11 +24,11 @@ func AdminSiteServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		fmt.Println("Coudnt find Termin")
 		return
-
 	}
 	if len(selectedDay) != 0 {
 		err := terminfindung.SelectDate(&selectedDay, &termin, &user)
 		if err != nil {
+			http.Redirect(writer, request, "https://"+request.Host+"/error?type=shared_admin_WrongSelected&link="+url.QueryEscape("/shared?terminID="+termin), http.StatusContinue)
 			return
 		}
 		terminShared, err = terminfindung.GetTerminFromShared(&user, &termin)
@@ -213,6 +213,34 @@ func PublicSharedWebsite(writer http.ResponseWriter, request *http.Request) {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}
 	return
+}
+
+func ErrorSite_ServeHttp(writer http.ResponseWriter, request *http.Request) {
+	type errorConfig struct {
+		Text string
+		Link string
+	}
+	var config errorConfig
+	errorRoute, err := template.ParseFiles("./assets/sites/error.html", "./assets/templates/footer.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+	}
+	typeErr := request.URL.Query().Get("type")
+	link := request.URL.Query().Get("link")
+	if val, ok := errorconfigs[typeErr]; ok {
+		config = errorConfig{
+			Text: val,
+			Link: "https://" + request.Host + link,
+		}
+	} else {
+		config = errorConfig{
+			Text: errorconfigs["emptyError"],
+			Link: "https://" + request.Host,
+		}
+	}
+	errorRoute.Execute(writer, config)
+	return
+
 }
 
 func checkIfIsAllowed(request *http.Request) (isAllowed bool, username string) {
