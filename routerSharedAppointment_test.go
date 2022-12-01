@@ -334,3 +334,78 @@ func TestServeHTTPSharedAppCreateDate_StartDateAfterEnddate(t *testing.T) {
 	assert.Equal(t, true, strings.Contains(rec.Body.String(), "\">Continue</a>."))
 	assert.Equal(t, "https://"+req.Host+"/error?type=dateIsAfter&link="+url.QueryEscape("/shared/create/app?terminID="+terminId), urls.String())
 }
+
+func TestShowAllLinksServeHttp_GETRequest(t *testing.T) {
+	//create some persons
+	name := "test"
+	terminfindung.CreatePerson(&name, &terminId, &user)
+	name = "user"
+	terminfindung.CreatePerson(&name, &terminId, &user)
+	//setup (right cookie in post)
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	req := httptest.NewRequest("GET", "localhost:443/shared/showAllLink?terminID="+terminId, nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute statement
+	ShowAllLinksServeHttp(rec, req)
+
+	assert.Equal(t, 200, rec.Result().StatusCode)
+	assert.Equal(t, true, strings.Contains(rec.Body.String(), "</a>"))
+}
+
+func TestShowAllLinksServeHttp_no_cookie(t *testing.T) {
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    "cookieValue",
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	req := httptest.NewRequest("GET", "localhost:443/shared/showAllLink?terminID="+terminId, nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute statement
+	ShowAllLinksServeHttp(rec, req)
+	// should automatically return to base website and error
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	urls, err := rec.Result().Location()
+
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "https://"+req.Host+"/error?type=wrongAuthentication&link="+url.QueryEscape("/"), urls.String())
+}
+
+func TestShowAllLinksServeHttp_TerminIDNotSet(t *testing.T) {
+	//setup (right cookie in post)
+	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
+	cookie := &http.Cookie{
+		Name:     "SessionID-Kalender",
+		Value:    cookieValue,
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	req := httptest.NewRequest("GET", "localhost:443/shared/showAllLink?terminID=asd", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	//execute statement
+	ShowAllLinksServeHttp(rec, req)
+	// check that if not set it says authentication wrong
+	assert.Equal(t, 100, rec.Result().StatusCode)
+	urls, err := rec.Result().Location()
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "https://"+req.Host+"/error?type=wrongAuthentication&link="+url.QueryEscape("/"), urls.String())
+}
+
+func TestPublicSharedWebsite(t *testing.T) {
+
+}

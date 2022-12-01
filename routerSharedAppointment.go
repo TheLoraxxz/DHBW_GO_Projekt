@@ -17,6 +17,8 @@ var terminAdminSite = template.Must(template.ParseFiles("./assets/sites/terminfi
 var terminSharedCreateLink = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-create-link.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 var terminSharedCreateLinkPost = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-showlink.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 var terminSharedCreateDate = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-create-app.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+var terminSharedShowAllLinks = template.Must(template.ParseFiles("./assets/sites/terminfindung/termin-admin-showAll.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+var errorRoute = template.Must(template.ParseFiles("./assets/sites/error.html", "./assets/templates/footer.html"))
 
 // AdminSiteServeHTTP
 // handle for /shared --> gives back the overview
@@ -117,6 +119,8 @@ func CreateLinkServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// ServeHTTPSharedAppCreateDate
+// Creates appointemntn with whole dates
 func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Request) {
 	isAllowed, user := checkIfIsAllowed(request)
 	if !isAllowed {
@@ -166,6 +170,7 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 	}
 	err = terminSharedCreateDate.Execute(writer, termin)
 	if err != nil {
+		log.Println("Coudn't Execute Template in Create Date")
 		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
 		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
@@ -173,17 +178,25 @@ func ServeHTTPSharedAppCreateDate(writer http.ResponseWriter, request *http.Requ
 
 }
 
+// ShowAllLinksServeHttp
+// shows all links of user and termin if it is authenticate
 func ShowAllLinksServeHttp(writer http.ResponseWriter, request *http.Request) {
+	// check whether user is allowed to access site
 	isAllowed, userAdmin := checkIfIsAllowed(request)
 	if !isAllowed {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
+	// get the terminID and check whether one can acces it
 	termin := request.URL.Query().Get("terminID")
 	links, err := terminfindung.GetAllLinks(&userAdmin, &termin)
 	if err != nil {
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
+	// get the links and then add it to local struct
 	for key, user := range links {
 		links[key].Url = "https://" + request.Host + "/shared/public?terminID=" + url.QueryEscape(termin) + "&name=" + user.Name + "&user=" + userAdmin + "&apiKey=" + user.Url
 
@@ -193,21 +206,24 @@ func ShowAllLinksServeHttp(writer http.ResponseWriter, request *http.Request) {
 		Users     []terminfindung.UserTermin
 		Routeback string
 	}
+	//add object for templates
 	forTemplate := shared{
 		Users:     links,
 		Routeback: termin,
 	}
-	linkRoute, err := template.ParseFiles("./assets/sites/terminfindung/termin-admin-showAll.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	// execute
+	err = terminSharedShowAllLinks.Execute(writer, forTemplate)
 	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
-	}
-	err = linkRoute.Execute(writer, forTemplate)
-	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+		log.Println("Coudn't Execute Template in show all links")
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		return
 	}
 	return
 }
 
+// PublicSharedWebsite
+// public website for every user without authentication to access --> needs api key
 func PublicSharedWebsite(writer http.ResponseWriter, request *http.Request) {
 	//because go automatically returns it as unescaped query we need to redo it
 	var apikey string
@@ -257,10 +273,6 @@ func ErrorSite_ServeHttp(writer http.ResponseWriter, request *http.Request) {
 		Link string
 	}
 	var config errorConfig
-	errorRoute, err := template.ParseFiles("./assets/sites/error.html", "./assets/templates/footer.html")
-	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
-	}
 	typeErr := request.URL.Query().Get("type")
 	link := request.URL.Query().Get("link")
 	if val, ok := errorconfigs[typeErr]; ok {
