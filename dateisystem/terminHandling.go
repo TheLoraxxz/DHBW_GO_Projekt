@@ -169,7 +169,7 @@ func FindInCacheByID(kalender []Termin, id string) Termin {
 func FilterByTitle(kalender []Termin, title string) []Termin {
 	var k []Termin
 	for i := 0; i < len(kalender); i++ {
-		if kalender[i].Title == title {
+		if strings.Contains(kalender[i].Title, title) {
 			k = AddToCache(kalender[i], k)
 		}
 	}
@@ -180,7 +180,7 @@ func FilterByTitle(kalender []Termin, title string) []Termin {
 func FilterByDescription(kalender []Termin, description string) []Termin {
 	var k []Termin
 	for i := 0; i < len(kalender); i++ {
-		if kalender[i].Description == description {
+		if strings.Contains(kalender[i].Description, description) {
 			k = AddToCache(kalender[i], k)
 		}
 	}
