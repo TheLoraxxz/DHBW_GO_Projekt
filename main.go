@@ -96,3 +96,30 @@ func setErrorconfigs() {
 	errorconfigs["wrong_date_format"] = "Falsches Datenformat eingegeben"
 	errorconfigs["dateIsAfter"] = "Das Startdatum ist nach dem Enddatum - bitte ändern"
 }
+
+// ErrorSite_ServeHttp
+// this site renders error --> has type and link as get input and then renders the according errorconfigs
+// for using errorconfigs pls see above
+func ErrorSite_ServeHttp(writer http.ResponseWriter, request *http.Request) {
+	type errorConfig struct {
+		Text string
+		Link string
+	}
+	var config errorConfig
+	typeErr := request.URL.Query().Get("type")
+	link := request.URL.Query().Get("link")
+	if val, ok := errorconfigs[typeErr]; ok {
+		config = errorConfig{
+			Text: val,
+			Link: "https://" + request.Host + link,
+		}
+	} else {
+		config = errorConfig{
+			Text: errorconfigs["emptyError"],
+			Link: "https://" + request.Host,
+		}
+	}
+	errorRoute.Execute(writer, config)
+	return
+
+}

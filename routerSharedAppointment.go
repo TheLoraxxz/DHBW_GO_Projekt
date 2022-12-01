@@ -276,30 +276,6 @@ func PublicSharedWebsite(writer http.ResponseWriter, request *http.Request) {
 	return
 }
 
-func ErrorSite_ServeHttp(writer http.ResponseWriter, request *http.Request) {
-	type errorConfig struct {
-		Text string
-		Link string
-	}
-	var config errorConfig
-	typeErr := request.URL.Query().Get("type")
-	link := request.URL.Query().Get("link")
-	if val, ok := errorconfigs[typeErr]; ok {
-		config = errorConfig{
-			Text: val,
-			Link: "https://" + request.Host + link,
-		}
-	} else {
-		config = errorConfig{
-			Text: errorconfigs["emptyError"],
-			Link: "https://" + request.Host,
-		}
-	}
-	errorRoute.Execute(writer, config)
-	return
-
-}
-
 func checkIfIsAllowed(request *http.Request) (isAllowed bool, username string) {
 	cookie, err := request.Cookie("SessionID-Kalender")
 	//if cookie is not existing it returns back to the host
