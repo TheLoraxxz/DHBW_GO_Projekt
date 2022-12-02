@@ -43,7 +43,7 @@ func createID(dat time.Time, endDat time.Time) string {
 	id := dat.String() + endDat.String() + u
 
 	//generiert Hash --> gewährleistet hohe Kollisionsfreiheit bei IDs
-	bytes, _ := bcrypt.GenerateFromPassword([]byte(id), 14)
+	bytes, _ := bcrypt.GenerateFromPassword([]byte(id), 1)
 	id = string(bytes)
 
 	//Entfernt problematische Chars aus Hash
