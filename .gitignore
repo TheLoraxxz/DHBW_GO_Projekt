@@ -1,3 +1,4 @@
 /.idea
 coverage.out
-data/user/user-data.json
+*.json
+dateisystem/*.json

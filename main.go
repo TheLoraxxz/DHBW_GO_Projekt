@@ -2,8 +2,11 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	ka "DHBW_GO_Projekt/kalenderansicht"
+	"DHBW_GO_Projekt/terminfindung"
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -15,36 +18,48 @@ type ChangeUserHandler struct{}
 type UserHandler struct{}
 type LogoutHandler struct{}
 type CreatUserHandler struct{}
+type ViewmanagerHandler struct {
+	vm             *ka.ViewManager
+	cookie         string
+	viewmanagerTpl *template.Template
+}
 
+var errorconfigs = make(map[string]string)
 var Server http.Server
 
 func main() {
 	//flags and configuration of application
-	port := flag.String("port", "80", "define the port for the application. Default:80")
+	port := flag.String("port", "443", "define the port for the application. Default: 443")
 	adminUserName := flag.String("user", "admin", "Define Admin username for first login. Default: admin")
 	adminPassword := flag.String("passw", "admin", "Define Admin Password for first login to application. Defualt: admin")
 	basepath, err := os.Getwd()
 	// load user data from plate and if not create a new user
 	err = authentifizierung.LoadUserData(adminUserName, adminPassword, &basepath)
-	//set a timer to write all users to plate every minute
-	timerSaveData := time.NewTimer(1 * time.Minute)
-	go func() {
-		// timer waits until one minute is over and then saves the new data
-		<-timerSaveData.C
-		errOnSave := authentifizierung.SaveUserData(&basepath)
-		if errOnSave != nil {
-			fmt.Println(errOnSave)
-		}
-	}()
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal("Coudn't load users")
 	}
+	terminfindung.LoadDataToSharedTermin(&basepath)
+	//set a timer to write all users to plate every minute
+	timerSaveData := time.NewTimer(1 * time.Minute * 15)
+	go func() {
+		// timer waits until one minute is over and then saves the new data
+		<-timerSaveData.C
+		saveAuthErr := authentifizierung.SaveUserData(&basepath)
+		if saveAuthErr != nil {
+			fmt.Println(saveAuthErr)
+		}
+		// save every 30 minutes the whole shared termine
+		saveSharedErr := terminfindung.SaveSharedTermineToDisk(&basepath)
+		if saveSharedErr != nil {
+			fmt.Println(saveSharedErr)
+		}
+	}()
+	setErrorconfigs()
 	// setup server
 	Server = http.Server{
 		Addr: ":" + *port,
 	}
-
 	//http handles
 	//hier weitere handler hinzufügen in ähnlicher fashion für die verschiedenen Templates
 	root := RootHandler{}
@@ -52,14 +67,59 @@ func main() {
 	changeUser := ChangeUserHandler{}
 	user := UserHandler{}
 	logout := LogoutHandler{}
+	viewmanagerHandler := ViewmanagerHandler{}
 	http.Handle("/", &root)
 	http.Handle("/user/create", &createUser)
 	http.Handle("/user/change", &changeUser)
 	http.Handle("/user", &user)
+	http.Handle("/user/view", &viewmanagerHandler)
 	http.Handle("/logout", &logout)
+	http.HandleFunc("/shared", AdminSiteServeHTTP)
+	http.HandleFunc("/shared/create/link", CreateLinkServeHTTP)
+	http.HandleFunc("/shared/create/app", ServeHTTPSharedAppCreateDate)
+	http.HandleFunc("/shared/showAllLink", ShowAllLinksServeHttp)
+	http.HandleFunc("/shared/public", PublicSharedWebsite)
+	http.HandleFunc("/error", ErrorSite_ServeHttp)
 	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 		log.Fatal(err)
 	}
+
+}
+func setErrorconfigs() {
+	errorconfigs["shared_admin_WrongSelected"] = "Falsches Datum selektiert"
+	errorconfigs["emptyError"] = "Interner Error Problem"
+	errorconfigs["wrongAuthentication"] = "Falsche Authentifizierung / falsche Daten eingegeben"
+	errorconfigs["shared_wrong_terminId"] = "Konnte nicht den Termin Findung."
+	errorconfigs["internal"] = "Interner Server error"
+	errorconfigs["shared_coudntCreatePerson"] = "Person schon vorhanden oder falsche Zeichen enthalten"
+	errorconfigs["wrong_date_format"] = "Falsches Datenformat eingegeben"
+	errorconfigs["dateIsAfter"] = "Das Startdatum ist nach dem Enddatum - bitte ändern"
+}
+
+// ErrorSite_ServeHttp
+// this site renders error --> has type and link as get input and then renders the according errorconfigs
+// for using errorconfigs pls see above
+func ErrorSite_ServeHttp(writer http.ResponseWriter, request *http.Request) {
+	type errorConfig struct {
+		Text string
+		Link string
+	}
+	var config errorConfig
+	typeErr := request.URL.Query().Get("type")
+	link := request.URL.Query().Get("link")
+	if val, ok := errorconfigs[typeErr]; ok {
+		config = errorConfig{
+			Text: val,
+			Link: "https://" + request.Host + link,
+		}
+	} else {
+		config = errorConfig{
+			Text: errorconfigs["emptyError"],
+			Link: "https://" + request.Host,
+		}
+	}
+	errorRoute.Execute(writer, config)
+	return
 
 }

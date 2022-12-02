@@ -1,6 +1,7 @@
 package dateisystem
 
 //Mat-Nr. 8689159
+//TODO Test anpassen | neue Attribute Testen
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"

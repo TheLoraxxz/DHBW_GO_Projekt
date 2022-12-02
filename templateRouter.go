@@ -5,6 +5,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -30,14 +33,17 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			}
 			http.SetCookie(writer, cookie)
 			//redirect to new site
-			http.Redirect(writer, request, "https://"+request.Host+"/user/create", http.StatusFound)
+			http.Redirect(writer, request, "https://"+request.Host+"/user/view", http.StatusFound)
 			return
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
 			if len(cookieText) == 0 {
 				writer.WriteHeader(500)
 			} else {
-				http.Redirect(writer, request, "/", http.StatusContinue)
+				request.Method = "GET"
+				urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+				http.Redirect(writer, request, urls, http.StatusContinue)
+				return
 			}
 		}
 	}
@@ -51,125 +57,192 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	// get cookie
-	cookie, err := request.Cookie("SessionID-Kalender")
-	//if cookie is not existing it returns back to the host
-	if err != nil {
+	isAllowed, _ := checkIfIsAllowed(request)
+	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, _ := authentifizierung.CheckCookie(&cookie.Value)
-	if isAllowed {
-		//if it is post it should process the data
-		if request.Method == "POST" {
-			// if the parseform isnt correct it should return
-			err := request.ParseForm()
-			if err != nil {
-				http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-			}
-			//get the user from the form request
-			user := request.Form.Get("newUsername")
-			password := request.Form.Get("newPassword")
-			err = authentifizierung.CreateUser(&user, &password)
-			if err != nil {
-				http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-
-			}
-			//if successfull on post it should return back to the user
-			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+	//if it is post it should process the data
+	if request.Method == "POST" {
+		// if the parseform isnt correct it should return
+		err := request.ParseForm()
+		if err != nil {
+			http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		}
+		//get the user from the form request
+		user := request.Form.Get("newUsername")
+		password := request.Form.Get("newPassword")
+		err = authentifizierung.CreateUser(&user, &password)
+		if err != nil {
+			http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 
 		}
-		mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-		if err != nil {
-			log.Fatal("Coudnt export Parsefiles")
-			return
-		}
-		err = mainRoute.Execute(writer, nil)
-		if err != nil {
-			log.Fatal("Coudnt Execute Parsefiles")
-			return
-		}
-	} else {
+		//if successfull on post it should return back to the user
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+
+	}
+	mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+		return
+	}
+	err = mainRoute.Execute(writer, nil)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
+		return
 	}
 
 }
 
 func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	cookie, err := request.Cookie("SessionID-Kalender")
-	//if cookie is not existing it returns back to the host
-	if err != nil {
+	isAllowed, user := checkIfIsAllowed(request)
+	if !isAllowed {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, user := authentifizierung.CheckCookie(&cookie.Value)
-	if isAllowed {
-		if request.Method == "POST" {
-			//if post request it actually parses the form and trys to change the password and create a new cookie
-			err := request.ParseForm()
-			if err != nil {
-				return
-			}
-			//change the user to new user
-			password := request.Form.Get("oldPassword")
-			newPassword := request.Form.Get("newPassword")
-			cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
-			if err != nil {
-				http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
-				return
-			}
-			// set cookie so it automaticalyl updates and it doesnt throw one back to the login site
-			cookie := &http.Cookie{
-				Name:     "SessionID-Kalender",
-				Value:    cookies,
-				Path:     "/",
-				MaxAge:   3600,
-				Secure:   true,
-				SameSite: http.SameSiteLaxMode,
-			}
-			//set new cookie and redirect
-			http.SetCookie(writer, cookie)
+	if request.Method == "POST" {
+		//if post request it actually parses the form and trys to change the password and create a new cookie
+		err := request.ParseForm()
+		if err != nil {
+			return
+		}
+		//change the user to new user
+		password := request.Form.Get("oldPassword")
+		newPassword := request.Form.Get("newPassword")
+		cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
+		if err != nil {
 			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
 			return
+		}
+		// set cookie so it automatically updates and it doesnt throw one back to the login site
+		cookie := &http.Cookie{
+			Name:     "SessionID-Kalender",
+			Value:    cookies,
+			Path:     "/",
+			MaxAge:   3600,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		}
+		//set new cookie and redirect
+		http.SetCookie(writer, cookie)
+		http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+		return
 
-		}
-		//execute own template from userchange and put in footer and header
-		mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-		if err != nil {
-			log.Fatal("Coudnt export Parsefiles")
-		}
-		err = mainRoute.Execute(writer, nil)
-		if err != nil {
-			log.Fatal("Coudnt Execute Parsefiles")
-		}
-	} else {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+	}
+	//execute own template from userchange and put in footer and header
+	mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
+	if err != nil {
+		log.Fatal("Coudnt export Parsefiles")
+	}
+	err = mainRoute.Execute(writer, nil)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
 	}
 }
 
 func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	cookie, err := request.Cookie("SessionID-Kalender")
-	//if cookie is not existing it returns back to the host
+	isAllowed, username := checkIfIsAllowed(request)
+	if !isAllowed {
+		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		return
+	}
+	mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
 	if err != nil {
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	//if it is not allowed then continue with normal website else redirect to root
-	isAllowed, username := authentifizierung.CheckCookie(&cookie.Value)
-	if isAllowed {
-		mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-		if err != nil {
-			http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+	err = mainRoute.Execute(writer, username)
+	if err != nil {
+		log.Fatal("Coudnt Execute Parsefiles")
+	}
+}
+
+// handleTableView
+// Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
+func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		switch {
+		case r.RequestURI == "/user/view/table?suche=minusMonat":
+			v.vm.TvJumpMonthBack()
+		case r.RequestURI == "/user/view/table?suche=plusMonat":
+			v.vm.TvJumpMonthFor()
+		case strings.Contains(r.RequestURI, "/user/view/table?monat="):
+			monatStr := r.FormValue("monat")
+			monat, _ := strconv.Atoi(monatStr)
+			v.vm.TvSelectMonth(time.Month(monat))
+		case r.RequestURI == "/user/view/table?jahr=Zurueck":
+			v.vm.TvJumpYearForOrBack(-1)
+		case r.RequestURI == "/user/view/table?jahr=Vor":
+			v.vm.TvJumpYearForOrBack(1)
+		case r.RequestURI == "/user/view/table?datum=heute":
+			v.vm.TvJumpToToday()
+		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
+			terminToEdit := v.vm.GetTerminInfos(r)
+			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if er != nil {
+				log.Fatalln(er)
+			}
 			return
 		}
-		err = mainRoute.Execute(writer, username)
-		if err != nil {
-			log.Fatal("Coudnt Execute Parsefiles")
-		}
-	} else {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 	}
+
+	if r.Method == "POST" {
+		switch {
+		case r.RequestURI == "/user/view/table?terminErstellen":
+			v.vm.CreateTermin(r, v.vm.Username)
+		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
+			v.vm.EditTermin(r, v.vm.Username)
+		}
+	}
+
+	er := v.viewmanagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
+	if er != nil {
+		log.Fatalln(er)
+	}
+}
+
+// ListHandler
+// Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
+func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		switch {
+		case strings.Contains(r.RequestURI, "/user/view/list?selDate="):
+			dateStr := r.FormValue("selDate")
+			v.vm.LvSelectDate(dateStr)
+		case strings.Contains(r.RequestURI, "/user/view/list?Eintraege="):
+			amountStr := r.FormValue("Eintraege")
+			amount, _ := strconv.Atoi(amountStr)
+			v.vm.LvSelectEntriesPerPage(amount)
+		case r.RequestURI == "/user/view/list?Seite=Vor":
+			v.vm.LvJumpPageForward()
+		case r.RequestURI == "/user/view/list?Seite=Zurueck":
+			v.vm.LvJumpPageBack()
+		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+			terminToEdit := v.vm.GetTerminInfos(r)
+			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if er != nil {
+				log.Fatalln(er)
+			}
+			return
+		}
+	}
+
+	if r.Method == "POST" {
+		switch {
+		case r.RequestURI == "/user/view/list?terminErstellen":
+			v.vm.CreateTermin(r, v.vm.Username)
+		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
+			v.vm.EditTermin(r, v.vm.Username)
+		}
+	}
+	er := v.viewmanagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
+	if er != nil {
+		log.Fatalln(er)
+	}
+}
+func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {

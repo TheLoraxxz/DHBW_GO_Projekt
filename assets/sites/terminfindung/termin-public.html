@@ -1,0 +1,64 @@
+{{ template "header" . }}
+
+<div id="main" style="margin: 30px" class="container-fluid">
+    <h2>{{.User}}</h2>
+    <h5>{{.Info.Title}}</h5>
+    <p style="font-style: italic; max-width: 70%">{{.Info.Description}}</p>
+    <hr  style="width:90%;">
+    <h5>Vorschläge</h5>
+    <table class="table table-striped" style="width: 50%">
+        <thead>
+            <th>Datum</th>
+            <th>Abstimmen</th>
+        </thead>
+        <tbody>
+            {{range $index, $element := .ToVotes}}
+            <tr>
+                <td>{{$element.Term.Date.Format "02.01.2006"}} - {{$element.Term.EndDate.Format "02.01.2006"}}</td>
+                <td style="width: 250px">
+                {{if eq $element.Votedfor 1}}
+                    <p>Zugestimmt</p>
+                {{else}}
+                    {{if eq $element.Votedfor -1}}
+                        <p>Abgelehent</p>
+                    {{else}}
+                        <button onclick="submitForm({{$.APIKey}},{{$index}},true)" class="btn btn-success">Zustimmen</button>
+                        <button onclick="submitForm({{$.APIKey}},{{$index}},false)" class="btn btn-danger">Ablehnen</button>
+                    {{end}}
+                {{end}}
+                </td>
+            </tr>
+            {{end}}
+
+        </tbody>
+    </table>
+</div>
+<script>
+    function submitForm(apikey,date,voted) {
+        var form = document.createElement("form");
+        form.setAttribute("method","post")
+
+        var apiKeyInput = document.createElement("inpput")
+        apiKeyInput.setAttribute("type","text")
+        apiKeyInput.setAttribute("value",apikey)
+        apiKeyInput.setAttribute("name","apikey")
+
+        var dateInput = document.createElement("input")
+        dateInput.setAttribute("type","text")
+        dateInput.setAttribute("value",date)
+        dateInput.setAttribute("name","dateKey")
+
+        var votedElement =document.createElement("input")
+        votedElement.setAttribute("type","checkbox")
+        votedElement.setAttribute("name","voted")
+        votedElement.checked = voted;
+        form.appendChild(votedElement)
+        form.appendChild(dateInput)
+        form.appendChild(apiKeyInput)
+        document.getElementById("main").appendChild(form)
+        console.log(form)
+        form.submit()
+    }
+</script>
+
+{{ template "footer" . }}

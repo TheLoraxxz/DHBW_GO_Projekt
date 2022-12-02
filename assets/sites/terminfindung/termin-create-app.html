@@ -1,0 +1,20 @@
+{{ template "header" . }}
+
+<div class="container-fluid" style="margin: 40px">
+  <form style="width: 30%" method="post">
+    <h2>Neuen Vorschlagstermin erstellen</h2>
+    <div class="mb-3">
+      <label class="form-label" for="startdate">Startdatum</label>
+      <input required id="startdate" type="date" class="form-control" name="startdate">
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="enddate">Enddatum</label>
+      <input required id="enddate" type="date" class="form-control" name="enddate">
+    </div>
+    <button type="submit" class="btn btn-primary">Erstellen</button>
+    <input style="display: none" name="terminID" value="{{.}}">
+  </form>
+    <a style="margin-top: 20px" class="btn btn-dark" href="/shared?terminID={{.}}">Zurück</a>
+</div>
+
+{{ template "footer" . }}

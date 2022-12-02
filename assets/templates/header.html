@@ -1,17 +1,5 @@
 {{ define "header" }}
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Kalenderansicht</title>
-</head>
-<body>
-
-</body>
-</html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <title>Kalenderapplikation</title>
@@ -22,6 +10,7 @@
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
 <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">Kalender</a>
@@ -35,19 +24,18 @@
                         Ansicht
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">Kalenderansicht</a></li>
-                        <li><a class="dropdown-item" href="#">Listenansicht</a></li>
+                        <li><a class="dropdown-item" href="/user/view/table">Kalenderansicht</a></li>
+                        <li><a class="dropdown-item" href="/user/view/list">Listenansicht</a></li>
                     </ul>
                 <li class="nav-item">
                     <a class="nav-link">Herunterladen</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/user">Konto</a>
                 </li>
             </ul>
 
         </div>
         <a class="btn btn-outline-secondary" href="/logout">Abmelden</a>
+
+        <!--- listenansicht / tabellenansicht / download -->
 
     </div>
 
