@@ -1,6 +1,7 @@
 package authentifizierung
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 type UserJSON struct {
@@ -18,15 +20,44 @@ type UserJSON struct {
 	Passw string `json:"password"`
 }
 
+// struct for authentication and start and endtime
+type authentication struct {
+	endTime time.Time
+	user    string
+}
+
+type cookieStruct struct {
+	cookies map[string]authentication
+	lock    sync.RWMutex
+}
+
+var cookies = cookieStruct{
+	cookies: map[string]authentication{},
+	lock:    sync.RWMutex{},
+}
+
 // struct for user synchronisation
 type usersync struct {
 	lock  sync.RWMutex
 	users map[string]string
+	keys  map[string]authentication
 }
 
 var users = usersync{
 	lock:  sync.RWMutex{},
 	users: make(map[string]string, 5),
+}
+
+func DeleteOldCookies() {
+	cookies.lock.Lock()
+	defer cookies.lock.Unlock()
+	newCookies := make(map[string]authentication)
+	for key, val := range cookies.cookies {
+		if val.endTime.After(time.Now()) {
+			newCookies[key] = val
+		}
+	}
+	cookies.cookies = newCookies
 }
 
 // AuthenticateUser --> called on login --> creates cookie
@@ -36,11 +67,20 @@ func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie 
 		for _, oneOfUsers := range users.users {
 			err := bcrypt.CompareHashAndPassword([]byte(oneOfUsers), []byte(*pasw))
 			if err == nil && strings.Compare(val, oneOfUsers) == 0 {
-				bytes, hashError := bcrypt.GenerateFromPassword([]byte(*user+oneOfUsers), 2)
-				if hashError != nil {
+				varbytes := make([]byte, 100)
+				_, err = rand.Read(varbytes)
+				if err != nil {
 					return false, ""
 				}
-				return true, *user + "|" + string(bytes)
+				randomString := string(varbytes)
+				cookies.lock.Lock()
+				cookies.cookies[randomString] = authentication{
+					user:    *user,
+					endTime: time.Now().Add(15 * time.Minute),
+				}
+				correctPassw = true
+				cookies.lock.Unlock()
+				return true, *user + "|" + randomString
 			}
 		}
 	}
@@ -58,14 +98,14 @@ func CheckCookie(cookie *string) (isAllowed bool, userName string) {
 	username := (*cookie)[:strings.Index(*cookie, "|")]
 	cookieString := (*cookie)[strings.Index(*cookie, "|")+1:]
 	// if the username is as key in the map then it checks whether key is the same as the cookie
-	if _, found := users.users[username]; found == true {
-		//always checks whether the username given in the cookie is the same as the hashed value --> so one cant change the
-		// username and get more access rights or different access rights
-		err := bcrypt.CompareHashAndPassword([]byte(cookieString), []byte(username+users.users[username]))
-		// if it is the same then it returns true and the username
-		if err == nil {
-			return true, username
+	if val, found := cookies.cookies[cookieString]; found == true && username == val.user && val.endTime.After(time.Now()) {
+		cookies.lock.Lock()
+		defer cookies.lock.Unlock()
+		cookies.cookies[cookieString] = authentication{
+			user:    userName,
+			endTime: time.Now().Add(15 * time.Minute),
 		}
+		return true, username
 
 	}
 	return false, ""
