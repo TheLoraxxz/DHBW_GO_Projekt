@@ -1,0 +1,60 @@
+{{ define "creator" }}
+<div id="terminCreation">
+<form action="?terminErstellen" method="POST" id="terminCreater" role="form" class="row mb-3 p-3  needs-validation" novalidate>
+  <h3>Neuen Termin erstellen</h3>
+  <div>
+    <label for="title" class="col-sm-2 col-form-label ">Titel</label>
+    <input type="text" class="form-control" id="title" name="title" placeholder="Termin-Titel" required>
+  </div>
+  <div>
+    <label for="description" class="col-sm-2 col-form-label">Beschreibung</label>
+    <input type="text" class="form-control" id="description" name="description" placeholder="Hier eine Termin Beschreibung eingeben." required>
+  </div>
+  <div class="col-12 col-form-label">
+    <label for="rep">Wiederholungsinterrvall</label>
+    <select name="rep" id="rep" class="form-select" >
+      <option value="niemals">niemals</option>
+      <option value="täglich">täglich</option>
+      <option value="wöchentlich">wöchentlich</option>
+      <option value="monatlich">monatlich</option>
+      <option value="jährlich">jährlich</option>
+    </select>
+  </div>
+  <div class="col-md-6 col-form-label">
+    <label for="date" class="col-sm-2 ">Datum</label>
+    <input type="date" class="form-control" name="date" id="date" required>
+  </div>
+  <div class="col-md-6 col-form-label">
+    <label for="endDate" class="col-sm-2 ">Enddatum</label>
+    <input type="date" class="form-control" name="endDate" id="endDate" required>
+  </div>
+  <div class="col-12  p-3">
+    <button type="submit" class="btn btn-secondary" onclick="validateForm('terminCreater')">Termin erstellen</button>
+  </div>
+</form>
+</div>
+<!----end of template Creator------>
+{{end}}
+
+<!---hier erfolgt ein weiteres Template für den Javascript-Code.
+Dies wird benötigt, damit der Javascript-Code nicht mitten im HTML-Code eingefügt wird.--->
+{{ define "creatorScript" }}
+<!-----------------------------------Hier folgt benötigter javaScript Code------------------------------>
+<script>
+  // EXTERNE QUELLE: https://getbootstrap.com/docs/5.0/forms/validation/ (Code angepasst)
+  // validateForm
+  // Parameter: id des Formulars, welches auf Vollständigkeit geprüft wird.
+  // Hier wird das Formular auf vollständigkeit überprüft
+  function validateForm(id) {
+    const form = document.getElementById(id);
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false);
+  }
+</script>
+<!----end of template creatorScript------>
+{{end}}

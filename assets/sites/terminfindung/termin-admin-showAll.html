@@ -1,0 +1,31 @@
+{{ template "header" . }}
+
+<div style="margin: 50px" class="container-fluid">
+  <div class="row">
+    <h2 style="width: 10%" class="col">Links</h2>
+    <div class="col">
+      <a  class="btn btn-secondary" href="/shared?terminID={{.Routeback}}">Zurück</a>
+    </div>
+  </div>
+
+  <table class="table table-striped" style="width: 80%">
+    <thead>
+      <th>Person</th>
+      <th>Link</th>
+    </thead>
+    <tbody>
+    {{range $index, $element := .Users}}
+    <tr>
+      <td>{{$element.Name}} </td>
+      <td>
+        <a href="{{$element.Url}}">{{$element.Url}}</a>
+      </td>
+
+    </tr>
+    {{end}}
+    </tbody>
+
+  </table>
+
+</div>
+{{ template "footer" . }}

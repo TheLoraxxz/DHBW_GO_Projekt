@@ -1,0 +1,282 @@
+{{ template "header" . }}
+<div class="container-fluid">
+    <hr>
+    <div class="row justify-content-center align-items-center">
+
+        <div class="col ">
+            {{ template "creator" . }}
+            <!--------------Link Termin zu erstellen----------->
+            <div class="offcanvas offcanvas-top" tabindex="-1" id="offcanvasTop" aria-labelledby="offcanvasTopLabel">
+                <div class="offcanvas-header">
+                    <h5 id="offcanvasTopLabel">Offcanvas top</h5>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                            aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+
+                </div>
+            </div>
+        </div>
+        <div class="col text-light">
+            <div class="card text-center border-0">
+                <div class="card-body ">
+
+                    <!-------- Button Heute ------------>
+                    <div class="row justify-content-md-center">
+                        <div class="col col-lg-2">
+                            <form action="/user/view/table?datum=" method="GET" role="form" class="row mb-3 p-3 ">
+                                <label for="JumpToday" class="col-sm-2 "></label>
+                                <input type="hidden" class="form-control" name="datum" id="JumpToday" value="heute">
+                                <button type="submit" class="btn btn-secondary">Heute</button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-------- Buttons Jahr-Switch ------------>
+                    <div class="row justify-content-md-center">
+                        <div class="col col-lg-2">
+                            <form action="/user/view/table?jahr=" method="GET" role="form">
+                                <label for="YearBack" class="col-sm-2 "></label>
+                                <input type="hidden" class="form-control" name="jahr" id="YearBack"
+                                       value="Zurueck">
+                                <button type="submit" class="btn btn-outline-secondary">&larr;</button>
+                            </form>
+                        </div>
+                        <div class="col-md-auto">
+                            <b class="text-muted card-text w-25 p-2">{{.ShowYear}}</b>
+                        </div>
+                        <div class="col col-lg-2">
+                            <form action="/user/view/table?jahr=" method="GET" role="form">
+                                <label for="YearFor"></label>
+                                <input type="hidden" class="form-control" name="jahr" id="YearFor"
+                                       value="Vor">
+                                <button type="submit" class="btn btn-outline-secondary">&rarr;</button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-------- Dropdown Monatswahl ------------>
+                    <div class="row justify-content-md-center">
+
+                        <form action="/user/view/table?monat=" method="GET" role="form">
+                            <div class="row g-3 justify-content-md-center">
+                            <div class="col col-lg-2">
+                                <select name="monat" id="monthSelect" class="form-select">
+                                    <option value="1">Januar</option>
+                                    <option value="2">Februar</option>
+                                    <option value="3">März</option>
+                                    <option value="4">April</option>
+                                    <option value="5">Mai</option>
+                                    <option value="6">Juni</option>
+                                    <option value="7">Juli</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">Oktober</option>
+                                    <option value="11">November</option>
+                                    <option value="12">Dezember</option>
+                                </select>
+                            </div>
+                            </div>
+                            <br>
+                            <div class="row justify-content-md-center">
+                            <div class="col col-lg-2">
+                                <button type="submit" class="btn btn-secondary">Monat wählen</button>
+                            </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+                <table class="table table-secondary table-striped table-hover table-bordered">
+                    <caption class="caption-top">
+                        <div class="card text-center bg-light">
+                            <div class="card-body row justify-content-md-center">
+                                <div class="col-sm">
+                                    <!--------Button Monat zurück ------------>
+                                    <form action="/user/view/table?suche=" method="GET" role="form">
+                                        <label for="monthBack"></label>
+                                        <input type="hidden" class="form-control" name="suche" id="monthBack"
+                                               value="minusMonat">
+                                        <button type="submit" class="btn btn-outline-secondary">&larr;</button>
+                                    </form>
+                                </div>
+                                <div class="col-sm">
+                                    <b class="text-muted card-text w-25">{{.ShowMonth}} {{.ShowYear}}</b>
+                                </div>
+                                <div class="col-sm">
+                                    <!--------Button Monat Vor ------------>
+                                    <form action="/user/view/table?suche=" method="GET" role="form">
+                                        <label for="monthFor"></label>
+                                        <input type="hidden" class="form-control" name="suche" id="monthFor"
+                                               value="plusMonat">
+                                        <button type="submit" class="btn btn-outline-secondary">&rarr;</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Montag</th>
+                        <th scope="col">Dienstag</th>
+                        <th scope="col">Mittwoch</th>
+                        <th scope="col">Donnerstag</th>
+                        <th scope="col">Freitag</th>
+                        <th scope="col">Samstag</th>
+                        <th scope="col">Sonntag</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!------------Hier findet die Terminfilterung statt------------------->
+                    <tr>
+                        <!------------Je nachdem an welchen Wochentag der Monat beginnt werden leere Felder eingefügt------------------->
+                        {{range $index, $element := .MonthStarts}}
+                        <td></td>
+                        {{end}}
+                        <!------------Hier wird über die einzelnen Objekte dayInfos iteriert------------------->
+                        {{range $index, $element := .MonthEntries}}
+                        <td>
+                            {{if (call .IsToday .Day)}}
+                            <div class="card border-danger text-center border-1">
+                                <div class="card-body ">
+                                    <div class="text-danger">
+                                        Heute
+                                        <br>
+                                        <b class="text-danger">{{.Day.Day}} </b>
+                                        <hr>
+                                        Termine: {{len .Dayentries}}
+                                        <br>
+                                        <div class="d-grid gap-2 d-md-block">
+                                            <!-- Button show Termin -->
+                                            <button class="btn btn-link" type="button"
+                                                    data-bs-toggle="offcanvas" data-bs-target="#showTermins"
+                                                    aria-controls="offcanvasExample"
+                                                    onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">
+                                                anzeigen
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ else }}
+                            <div class="card border-secondary text-center border-1">
+                                <div class="card-body ">
+                                    <div>
+                                        <br>
+                                        <b>{{.Day.Day}} </b>
+                                        <hr>
+                                        Termine: {{len .Dayentries}}
+                                        <br>
+                                        <div class="d-grid gap-2 d-md-block">
+                                            <!-- Button show Termin -->
+                                            <button class="btn btn-link" type="button"
+                                                    data-bs-toggle="offcanvas" data-bs-target="#showTermins"
+                                                    aria-controls="offcanvasExample"
+                                                    onclick="showTermin({{.Day.Day}},{{.Day.Month}},{{.Day.Year}}, {{.Dayentries}})">
+                                                anzeigen
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{end}}
+
+                        </td>
+                        {{if (call .NeedsBreak .Day)}}
+                    </tr>
+                    <tr>
+                        {{end}}
+                        {{end}}
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col text-light">
+        </div>
+    </div>
+</div>
+
+<!--------------Hier werden die Termininforamtionen angezeigt (erscheint links im Bildschirm) ----------->
+<div class="offcanvas offcanvas-start overflow-auto" tabindex="-1" id="showTermins"
+     aria-labelledby="offcanvasExampleLabel">
+</div>
+
+
+{{ template "footer" . }}
+{{template "creatorScript" .}}
+
+<!--------------------Hier folgt benötigter JavaScript-Code--------------------------->
+
+<script>
+
+    // showTermin
+    // Parameter: 3 int Werte, Liste mit den Terminen eines bestimmten Tages
+    // Es wird Tag, Monat und Jahr und die Termineinträge des Tages übergeben, von dem die Termine angezeigt werden sollen.
+    // Die Funktion sorgt dafür, dass die Informationen im linken Teil des Bildschirms angezeigt werden.
+    // Unter den angezeigten Informationen jedes Eintrags wird ein Formular angezeigt, welches die Termin Id enthält.
+    // Wenn auf bearbeiten gedrückt wird, wird eine get-Anfrage an den Server gestellt.
+    // Dieser bekommt so mitgeteilt, welcher Termin bearbeitet/gelöscht werden soll.
+    function showTermin(day, month, year, dayentries) {
+        let terminStr = "<h5> Deine Termine am: <br>" + day + " " + month + " " + year + "</h5>";
+        for (let i = 0; i < dayentries.length; i++) {
+            let entry = dayentries[i];
+            if (entry.Shared){
+                terminStr = terminStr +
+                    "<div class=\"text-warning border border-warning px-1 py-1 mx-1 my-1  \">" +
+                    "<b> Geteilter-Terminvorschlag </b>"+
+                    "<br>";
+            }
+            else{
+                terminStr = terminStr +
+                    "<div  class=\"text-dark border border-dark px-1 py-1 mx-1 my-1 \">"
+            }
+            terminStr = terminStr + "<b class=\"text-dark\">" + entry.Title.toString() + "</b>"
+            + "<ul  class=\"text-dark\">" +
+            "<li> <b>Beschreibung:</b> " + entry.Description + "</li>" +
+            "<li><b> Wiederholung: </b>" + getRecurring(entry.Recurring) + "</li>" +
+            "<li> <b>Starttermin: </b>" + entry.Date + "</li>" +
+            "<li> <b>Endtermin: </b>" + entry.EndDate + "</li>" +
+            "</ul>" +
+            "  <form action=\"/user/view/table/editor\" method=\"GET\" role=\"form\">" +
+            "  <label for=\"ID\"></label>\n" +
+            " <input type=\"hidden\" class=\"form-control\" name=\"ID\" id=\"ID\"\n" +
+            "                       value=\"" + entry.ID + "\">" +
+            " <button type=\"submit\" class=\"btn float-end btn-outline-secondary\">Bearbeiten</button>" +
+            " </form>"+
+            "</div>";
+        }
+        document.getElementById("showTermins").innerHTML = terminStr;
+    }
+
+    // getRecurring
+    // Parameter: zahl
+    // Rückgabewert: der zahl entsprechende Wiederholung des Termins
+    // getRecurring dient dazu, dass dem Nutzer auf der Seite statt der Terminwiederholung entsprechende Zahl,
+    // die Wiederholung als String gezeigt wird.
+    // Die Funktion wird benötigt, wenn der User auf ein "anzeigen" Feld klickt.
+    function getRecurring(rec) {
+        let recurring;
+        switch (rec) {
+            case 0:
+                recurring = "täglich"
+                break;
+            case 1:
+                recurring = "wöchentlich"
+                break;
+            case 2:
+                recurring = "monatlich"
+                break;
+            case 3:
+                recurring = "jährlich"
+                break;
+            case 4:
+                recurring = "niemals"
+                break;
+            default:
+                recurring = "niemals"
+        }
+        return recurring
+    }
+
+</script>
