@@ -12,7 +12,7 @@ import (
 
 func TestRootHandler_ServeHTTP_reachable(t *testing.T) {
 	// create a new request
-	req := httptest.NewRequest("GET", "localhost:80", nil)
+	req := httptest.NewRequest("GET", "localhost:443", nil)
 	//check
 	recorder := httptest.NewRecorder()
 
@@ -27,7 +27,7 @@ func TestRootHandler_ServeHTTP_reachable(t *testing.T) {
 // TestRootHandler_ServeHTTP_GET
 // tests that it creates the setup message right and the button is shown which is only on login
 func TestRootHandler_ServeHTTP_GET(t *testing.T) {
-	req := httptest.NewRequest("GET", "localhost:80", nil)
+	req := httptest.NewRequest("GET", "localhost:443", nil)
 	rec := httptest.NewRecorder()
 	//checks that
 	RootHandler{}.ServeHTTP(rec, req)
@@ -42,7 +42,7 @@ func TestRootHandler_ServeHTTP_POST_rightRequest(t *testing.T) {
 	authentifizierung.CreateUser(&user, &user)
 	// create request with the right body
 	reader := strings.NewReader("user=admin&password=admin")
-	req := httptest.NewRequest("POST", "localhost:80", reader)
+	req := httptest.NewRequest("POST", "localhost:443", reader)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	// call function
@@ -51,7 +51,7 @@ func TestRootHandler_ServeHTTP_POST_rightRequest(t *testing.T) {
 	cookies := rec.Result().Cookies()
 	assert.Equal(t, 1, len(cookies))
 	assert.Equal(t, "SessionID-Kalender", cookies[0].Name)
-	//uri shoud not be localhost:80/ but on a different --> kalenderansicht/... or anything else but /
+	//uri shoud not be localhost:443/ but on a different --> kalenderansicht/... or anything else but /
 	assert.Equal(t, http.StatusFound, rec.Code)
 	url, err := rec.Result().Location()
 	assert.Equal(t, nil, err)
@@ -66,7 +66,7 @@ func TestRootHandler_ServeHTTP_wrongRequest(t *testing.T) {
 	authentifizierung.CreateUser(&user, &user)
 	//setup the caller
 	reader := strings.NewReader("user=admin&password=user")
-	req := httptest.NewRequest("POST", "localhost:80", reader)
+	req := httptest.NewRequest("POST", "localhost:443", reader)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	// call function
@@ -76,7 +76,7 @@ func TestRootHandler_ServeHTTP_wrongRequest(t *testing.T) {
 	assert.Equal(t, 0, len(rec.Result().Cookies()))
 	// should redirect to same website
 	url, _ := rec.Result().Location()
-	assert.Equal(t, "/", url.Path)
+	assert.Equal(t, "/error", url.Path)
 
 }
 
@@ -88,7 +88,7 @@ func TestLogoutHandler_ServeHTTP_RightInput(t *testing.T) {
 	authentifizierung.CreateUser(&user, &user)
 	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
 	// setup request call for logout
-	req := httptest.NewRequest("GET", "localhost:80/logout", nil)
+	req := httptest.NewRequest("GET", "localhost:443/logout", nil)
 	cookie := &http.Cookie{
 		Name:     "SessionID-Kalender",
 		Value:    cookieValue,
@@ -109,7 +109,7 @@ func TestLogoutHandler_ServeHTTP_RightInput(t *testing.T) {
 // tests what happens to logout if it is the wrong input
 func TestLogoutHandler_ServeHTTP_WrongInput(t *testing.T) {
 	//setup request
-	req := httptest.NewRequest("GET", "localhost:80/logout", nil)
+	req := httptest.NewRequest("GET", "localhost:443/logout", nil)
 	rec := httptest.NewRecorder()
 	LogoutHandler{}.ServeHTTP(rec, req)
 	//should return to the original path because an error occured
@@ -125,7 +125,7 @@ func TestCreatUserHandler_ServeHTTP_GETMetod(t *testing.T) {
 	authentifizierung.CreateUser(&user, &user)
 	_, cookieValue := authentifizierung.AuthenticateUser(&user, &user)
 	// setup request call for logout
-	req := httptest.NewRequest("GET", "localhost:80/user/create", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user/create", nil)
 	cookie := &http.Cookie{
 		Name:     "SessionID-Kalender",
 		Value:    cookieValue,
@@ -159,7 +159,7 @@ func TestCreatUserHandler_ServeHTTP_CorrectPost(t *testing.T) {
 	}
 	//setup the caller
 	reader := strings.NewReader("newUsername=user&newPassword=user")
-	req := httptest.NewRequest("POST", "localhost:80", reader)
+	req := httptest.NewRequest("POST", "localhost:443", reader)
 	req.AddCookie(cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
@@ -180,7 +180,7 @@ func TestCreatUserHandler_ServeHTTP_CorrectPost(t *testing.T) {
 func TestCreatUserHandler_ServeHTTP_NoCookie(t *testing.T) {
 	//setup the caller
 	reader := strings.NewReader("s &=&?! user")
-	req := httptest.NewRequest("POST", "localhost:80", reader)
+	req := httptest.NewRequest("POST", "localhost:443", reader)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	//execute handler
@@ -208,7 +208,7 @@ func TestCreatUserHandler_ServeHTTP_WrongInput(t *testing.T) {
 	}
 	//setup the caller
 	reader := strings.NewReader("s &=&?! user")
-	req := httptest.NewRequest("POST", "localhost:80", reader)
+	req := httptest.NewRequest("POST", "localhost:443", reader)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	req.AddCookie(cookie)
@@ -233,7 +233,7 @@ func TestCreateUserHandler_ServeHTTP_wrongCookie(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	//setup the caller
-	req := httptest.NewRequest("GET", "localhost:80/user", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user", nil)
 	rec := httptest.NewRecorder()
 	req.AddCookie(cookie)
 	//execute
@@ -258,7 +258,7 @@ func TestUserHandler_ServeHTTP_GETRequest(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	//setup the caller
-	req := httptest.NewRequest("GET", "localhost:80/user", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user", nil)
 	rec := httptest.NewRecorder()
 	req.AddCookie(cookie)
 	//execute
@@ -272,7 +272,7 @@ func TestUserHandler_ServeHTTP_GETRequest(t *testing.T) {
 // tests if it redirects on no cookie
 func TestUserHandler_ServeHTTP_NoCookie(t *testing.T) {
 	//setup call without cookie
-	req := httptest.NewRequest("GET", "localhost:80/user", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user", nil)
 	rec := httptest.NewRecorder()
 	UserHandler{}.ServeHTTP(rec, req)
 	//shouild redirect to newstatus
@@ -296,7 +296,7 @@ func TestUserHandler_ServeHTTP_wrongCookie(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	//setup the caller
-	req := httptest.NewRequest("GET", "localhost:80/user", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user", nil)
 	rec := httptest.NewRecorder()
 	req.AddCookie(cookie)
 	//execute
@@ -311,7 +311,7 @@ func TestUserHandler_ServeHTTP_wrongCookie(t *testing.T) {
 // tests if it redirects on no cookie
 func TestChangeUserHandler_ServeHTTP_NoCookie(t *testing.T) {
 	//setup call without cookie
-	req := httptest.NewRequest("GET", "localhost:80/user", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user", nil)
 	rec := httptest.NewRecorder()
 	ChangeUserHandler{}.ServeHTTP(rec, req)
 	//shouild redirect to newstatus
@@ -335,7 +335,7 @@ func TestChangeUserHandler_ServeHTTP_wrongCookie(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	//setup the caller
-	req := httptest.NewRequest("GET", "localhost:80/user", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user", nil)
 	rec := httptest.NewRecorder()
 	req.AddCookie(cookie)
 	//execute
@@ -362,7 +362,7 @@ func TestChangeUserHandler_ServeHTTP_GET(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	//setup the caller
-	req := httptest.NewRequest("GET", "localhost:80/user", nil)
+	req := httptest.NewRequest("GET", "localhost:443/user", nil)
 	rec := httptest.NewRecorder()
 	req.AddCookie(cookie)
 	//execute
@@ -387,7 +387,7 @@ func TestChangeUserHandler_ServeHTTP_CorrectPost(t *testing.T) {
 	}
 	//setup the caller
 	reader := strings.NewReader("oldPassword=admin&newPassword=user")
-	req := httptest.NewRequest("POST", "localhost:80", reader)
+	req := httptest.NewRequest("POST", "localhost:443", reader)
 	req.AddCookie(cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
@@ -422,7 +422,7 @@ func TestChangeUserHandler_ServeHTTP_wronguser(t *testing.T) {
 	}
 	//setup the caller and insert wrong password
 	reader := strings.NewReader("oldPassword=wrongPassword&newPassword=user")
-	req := httptest.NewRequest("POST", "localhost:80", reader)
+	req := httptest.NewRequest("POST", "localhost:443", reader)
 	req.AddCookie(cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
