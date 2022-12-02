@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -168,51 +169,224 @@ func createSpecificDate(year, day int, month time.Month) time.Time {
 	return testDate
 }
 
-/*
-**************************************************************************************************************
-Hier Folgen die Tests zum Termine erstellen/bearbeiten/löschen und die dafür benötigte Hilfsfunktion filterRepetioition
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
-
-func testfilterRepetition(t *testing.T) {
-	assert.Equal(t, ds.Never, filterRepetition("niemals"))
-	assert.Equal(t, ds.DAILY, filterRepetition("täglich"))
-	assert.Equal(t, ds.WEEKLY, filterRepetition("wöchentlich"))
-	assert.Equal(t, ds.MONTHLY, filterRepetition("monatlich"))
-	assert.Equal(t, ds.YEARLY, filterRepetition("jährlich"))
-}
-
-func testCreateTermin(t *testing.T) {
-	vm := new(ViewManager)
-	vm.Username = "testuser"
-	//Erstellen der Termininfos, die über die Request gesendet werden
+// createTerminRequest
+// Parameter: Die Werte für die Request
+// Rückgabewert: Request, um einen Termin zu erstellen.
+func createTerminRequest(shared, title, description, repeat, date, endDate, mode, id string) *http.Request {
 	data := url.Values{}
-	data.Add("title", "Test Termin")
-	data.Add("description", "Spaßiger Termin")
-	data.Add("repeat", "2") //Der Wert 2 entspricht der Wiederholung "täglich"
-	data.Add("date", "2022-11-11")
-	data.Add("endDate", "2030-11-11")
+	data.Add("ID", id)
+	data.Add("shared", shared)
+	data.Add("editing", mode)
+	data.Add("title", title)
+	data.Add("description", description)
+	data.Add("rep", repeat)
+	data.Add("date", date)
+	data.Add("endDate", endDate)
 
 	//Erstellen der Request
 	r, _ := http.NewRequest("POST", "?terminErstellen", strings.NewReader(data.Encode()))
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	return r
+}
 
-	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2030, 11, 11), false)
+/*
+**************************************************************************************************************++++++++++
+Hier Folgen die Tests zum Termine erstellen/bearbeiten/löschen und die dafür benötigte Hilfsfunktion filterRepetioition
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+
+func testfilterRepetition(t *testing.T) {
+	repetition, err := filterRepetition("niemals")
+	assert.NoError(t, err, "Es sollte kein Error auftreten.")
+	assert.Equal(t, ds.Never, repetition, "Die Wiederholung sollte niemals sein.")
+
+	repetition, err = filterRepetition("täglich")
+	assert.NoError(t, err, "Es sollte kein Error auftreten.")
+	assert.Equal(t, ds.DAILY, repetition, "Die Wiederholung sollte täglich sein.")
+
+	repetition, err = filterRepetition("wöchentlich")
+	assert.NoError(t, err, "Es sollte kein Error auftreten.")
+	assert.Equal(t, ds.WEEKLY, repetition, "Die Wiederholung sollte wöchentlich sein.")
+
+	repetition, err = filterRepetition("monatlich")
+	assert.NoError(t, err, "Es sollte kein Error auftreten.")
+	assert.Equal(t, ds.MONTHLY, repetition, "Die Wiederholung sollte monatlich sein.")
+
+	repetition, err = filterRepetition("jährlich")
+	assert.NoError(t, err, "Es sollte kein Error auftreten.")
+	assert.Equal(t, ds.YEARLY, repetition, "Die Wiederholung sollte jährlich sein.")
+
+	//Fehlertest
+	repetition, err = filterRepetition("banane")
+	assert.Error(t, err, "Es sollte ein Error auftreten.")
+	assert.Equal(t, "No_valid_repetition", err.Error(), "Es sollte ein Error des Typs: No_valid_repetition aufgetreten sein.")
+}
+
+func testCreateNotSharedTermin(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	sharedStr := "false"
+	title := "Test Termin"
+	description := "Spaßiger Termin"
+	repeatStr := "täglich"
+	dateStr := "2022-11-11"
+	endDateStr := "2030-11-11"
+
+	//Erstellen der Request
+	r := createTerminRequest(sharedStr, title, description, repeatStr, dateStr, endDateStr, "", "")
 
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
+
+	//Termin erstellen
 	vm.CreateTermin(r, vm.Username)
+
+	repeat, _ := filterRepetition(repeatStr)
+	date, _ := time.Parse("2006-01-02", dateStr)
+	endDate, _ := time.Parse("2006-01-02", endDateStr)
+	shared := false
+	if sharedStr == "true" {
+		shared = true
+	}
 
 	//Testen, ob ein Termin dem Cache hinzugefügt worden ist
 	assert.Equal(t, oldLen+1, len(vm.TerminCache), "Die Länge sollte um eins erhöht worden sein.")
 	//Testen, ob Termin im Cache mit den Infos aus dem erstellten Termin übereinstimmen
-	assert.Equal(t, termin.Title, vm.TerminCache[0].Title, "Die Termin-Titel sollten überein stimmen.")
-	assert.Equal(t, termin.Description, vm.TerminCache[0].Description, "Die Termin-Beschreibungen sollten überein stimmen.")
-	assert.Equal(t, termin.Date, vm.TerminCache[0].Date, "Die Termin-Startdaten sollten überein stimmen.")
-	assert.Equal(t, termin.Recurring, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten überein stimmen.")
-	assert.Equal(t, termin.EndDate, vm.TerminCache[0].EndDate, "Die Termin-Enddaten sollten überein stimmen.")
+	assert.Equal(t, shared, vm.TerminCache[0].Shared, "Es sollte kein Terminvorschlag sein: sharedStr = false.")
+	assert.Equal(t, title, vm.TerminCache[0].Title, "Die Termin-Titel sollten überein stimmen.")
+	assert.Equal(t, description, vm.TerminCache[0].Description, "Die Termin-Beschreibungen sollten überein stimmen.")
+	assert.Equal(t, repeat, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten überein stimmen.")
+	assert.Equal(t, date, vm.TerminCache[0].Date, "Die Termin-Startdaten sollten überein stimmen.")
+	assert.Equal(t, endDate, vm.TerminCache[0].EndDate, "Die Termin-Enddaten sollten überein stimmen.")
 
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
+}
+func testCreateTerminTitleError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	sharedStr := "false"
+	title := ""
+	description := "Spaßiger Termin"
+	repeatStr := "täglich"
+	dateStr := "2022-11-11"
+	endDateStr := "2030-11-11"
+
+	//Erstellen der Request
+	r := createTerminRequest(sharedStr, title, description, repeatStr, dateStr, endDateStr, "", "")
+
+	//Termin erstellen
+	err := vm.CreateTermin(r, vm.Username)
+	assert.Error(t, err, "Es sollte einen Error geben.")
+	assert.Equal(t, "Missing_title", err.Error(), "Es sollte ein Error des Typs: Missing_title aufgetreten sein.")
+
+}
+func testCreateTerminDescriptionError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	sharedStr := "false"
+	title := "Test Termin"
+	description := ""
+	repeatStr := "täglich"
+	dateStr := "2022-11-11"
+	endDateStr := "2030-11-11"
+
+	//Erstellen der Request
+	r := createTerminRequest(sharedStr, title, description, repeatStr, dateStr, endDateStr, "", "")
+
+	//Termin erstellen
+	err := vm.CreateTermin(r, vm.Username)
+	assert.Error(t, err, "Es sollte einen Error geben.")
+	assert.Equal(t, "Missing_description", err.Error(), "Es sollte ein Error des Typs: Missing_description aufgetreten sein.")
+
+}
+func testCreateTerminFilterRepetitionError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	sharedStr := "false"
+	title := "Test Termin"
+	description := "beschreibung"
+	repeatStr := "bananaaaaaaaaaaaaa"
+	dateStr := "2022-11-11"
+	endDateStr := "2030-11-11"
+
+	//Erstellen der Request
+	r := createTerminRequest(sharedStr, title, description, repeatStr, dateStr, endDateStr, "", "")
+
+	//Termin erstellen
+	err := vm.CreateTermin(r, vm.Username)
+	assert.Error(t, err, "Es sollte einen Error geben.")
+	assert.Equal(t, "No_valid_repetition", err.Error(), "Es sollte ein Error des Typs: No_valid_repetition aufgetreten sein.")
+
+}
+func testCreateTerminFilterDateError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	sharedStr := "false"
+	title := "Test Termin"
+	description := "beschreibung"
+	repeatStr := "täglich"
+	dateStr := "2022/11-11"
+	endDateStr := "2030-11-11"
+
+	//Erstellen der Request
+	r := createTerminRequest(sharedStr, title, description, repeatStr, dateStr, endDateStr, "", "")
+
+	//Termin erstellen
+	err := vm.CreateTermin(r, vm.Username)
+	assert.Error(t, err, "Es sollte einen Error geben.")
+	assert.Equal(t, "wrong_date_format", err.Error(), "Es sollte ein Error des Typs: wrong_date_format aufgetreten sein.")
+
+}
+func testCreateSharedTermin(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+	//Erstellen der Termininfos, die über die Request gesendet werden
+	sharedStr := "true"
+	title := "Test Terminvorschlag"
+	description := "Spaßiger Terminvorschlag"
+	repeatStr := "wöchentlich"
+	dateStr := "2022-11-11"
+	endDateStr := "2030-11-11"
+
+	//Erstellen der Request
+	r := createTerminRequest(sharedStr, title, description, repeatStr, dateStr, endDateStr, "", "")
+	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
+	oldLen := len(vm.TerminCache)
+	vm.CreateTermin(r, vm.Username)
+	repeat, _ := filterRepetition(repeatStr)
+	date, _ := time.Parse("2006-01-02", dateStr)
+	endDate, _ := time.Parse("2006-01-02", endDateStr)
+	shared := false
+	if sharedStr == "true" {
+		shared = true
+	}
+
+	//Testen, ob ein Termin dem Cache hinzugefügt worden ist
+	assert.Equal(t, oldLen+1, len(vm.TerminCache), "Die Länge sollte um eins erhöht worden sein.")
+	//Testen, ob Termin im Cache mit den Infos aus dem erstellten Termin übereinstimmen
+	assert.Equal(t, shared, vm.TerminCache[0].Shared, "Es sollte ein Terminvorschlag sein: shared = true.")
+	assert.Equal(t, title, vm.TerminCache[0].Title, "Die Termin-Titel sollten überein stimmen.")
+	assert.Equal(t, description, vm.TerminCache[0].Description, "Die Termin-Beschreibungen sollten überein stimmen.")
+	assert.Equal(t, repeat, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten sollten überein stimmen.")
+	assert.Equal(t, date, vm.TerminCache[0].Date, "Die  Termin-Startdaten sollten überein stimmen.")
+	assert.Equal(t, endDate, vm.TerminCache[0].EndDate, "Die Termin-Enddaten sollten überein stimmen.")
+
+	//Termin wurde bei den Terminvorschlägen angelegt
+	terminvorschlag, err := terminfindung.GetTerminFromShared(&vm.Username, &vm.TerminCache[0].ID)
+	assert.NoError(t, err, "Es sollte kein Error aufgetreten sein.")
+	assert.Equal(t, vm.TerminCache[0], terminvorschlag.Info, "Die Termine sollten identisch sein.")
 	//Löschen der erstellten Testdaten
 	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
@@ -223,34 +397,38 @@ func testCreateTermin(t *testing.T) {
 func testCreateTerminLogicCheck(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
+
 	//Erstellen der Termininfos, die über die Request gesendet werden
-	data := url.Values{}
-	data.Add("title", "Test Termin")
-	data.Add("description", "Spaßiger Termin")
-	data.Add("repeat", "2") //Der Wert 2 entspricht der Wiederholung "täglich"
-	data.Add("date", "2022-11-11")
-	//Hier hat der Nutzer einen Endtermin eingegeben, der zeitlich vor dem Starttermin ist
-	data.Add("endDate", "2021-11-11")
+	sharedStr := "false"
+	title := "Test Termin"
+	description := "Spaßiger Termin"
+	repeatStr := "täglich"
+	dateStr := "2021-07-01"
+	endDateStr := "2019-10-08"
 
 	//Erstellen der Request
-	r, _ := http.NewRequest("POST", "?terminErstellen", strings.NewReader(data.Encode()))
-	r.Header.Add("", "")
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	r := createTerminRequest(sharedStr, title, description, repeatStr, dateStr, endDateStr, "", "")
 
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
 	vm.CreateTermin(r, vm.Username)
 
+	repeat, _ := filterRepetition(repeatStr)
+	date, _ := time.Parse("2006-01-02", dateStr)
+	shared := false
+	if sharedStr == "true" {
+		shared = true
+	}
+
 	//Testen, ob ein Termin dem Cache hinzugefügt worden ist
 	assert.Equal(t, oldLen+1, len(vm.TerminCache), "Die Länge sollte um eins erhöht worden sein.")
 	//Testen, ob Termin im Cache dem neuen Termin entspricht
-	assert.Equal(t, termin.Title, vm.TerminCache[0].Title, "Die Termin-Titel sollten überein stimmen.")
-	assert.Equal(t, termin.Description, vm.TerminCache[0].Description, "Die Termin-Beschreibungen sollten überein stimmen.")
-	assert.Equal(t, termin.Date, vm.TerminCache[0].Date, "Die Termin-Startdaten sollten überein stimmen.")
-	assert.Equal(t, termin.Recurring, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten überein stimmen.")
-	assert.Equal(t, termin.EndDate, vm.TerminCache[0].EndDate, "Die Termin-Enddaten sollten überein stimmen.")
+	assert.Equal(t, shared, vm.TerminCache[0].Shared, "Es sollte kein Terminvorschlag sein: shared = false.")
+	assert.Equal(t, title, vm.TerminCache[0].Title, "Die Termin-Titel sollten überein stimmen.")
+	assert.Equal(t, description, vm.TerminCache[0].Description, "Die Termin-Beschreibungen sollten überein stimmen.")
+	assert.Equal(t, repeat, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten überein stimmen.")
+	assert.Equal(t, date, vm.TerminCache[0].Date, "Die Termin-Startdaten sollten überein stimmen.")
+	assert.Equal(t, date, vm.TerminCache[0].EndDate, "Das Termin-Enddaten sollten mit dem Termin-Startdatum überein stimmen.")
 
 	//Löschen der erstellten Testdaten
 	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
@@ -270,28 +448,38 @@ func testGetTerminInfos(t *testing.T) {
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	assert.Equal(t, termin, vm.GetTerminInfos(r), "Die Termine sollten identisch sein.")
+	terminInfos, err := vm.GetTerminInfos(r)
+	assert.NoError(t, err)
+	assert.Equal(t, termin, terminInfos, "Die Termine sollten identisch sein.")
+}
+
+func testGetTerminInfosIdError(t *testing.T) {
+	//Erstelle einen wöchentlichen Termin zum Testen
+	vm := createTestTermin(ds.WEEKLY)
+
+	//Erstellen der Request-Werte
+	data := url.Values{}
+	data.Add("ID", "hihihi")
+
+	//Erstellen der Request
+	r, _ := http.NewRequest("POST", "/editor", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	_, err := vm.GetTerminInfos(r)
+	assert.Error(t, err, "Es sollte ein Error aufgetreten sein.")
+	assert.Equal(t, "shared_wrong_terminId", err.Error(), "Es sollte ein Error des Typs: shared_wrong_terminId aufgetreten sein.")
 }
 
 func testEditTerminDelete(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
 	//Testtermin erstellen und der Request hinzufügen
-	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 12), false)
 	vm.TerminCache = append(vm.TerminCache, termin)
 
-	//Erstellen der Termin-infos, die über die Request gesendet werden
-	data := url.Values{}
-
 	//Erstellen der Lösch-Request, Wert 2 entspricht einer Lösch-Anfrage
-	data = url.Values{}
-	data.Add("ID", termin.ID)
-	data.Add("editing", "2")
-
-	//Erstellen der Request
-	r, _ := http.NewRequest("POST", "../editor", strings.NewReader(data.Encode()))
-	r.Header.Add("", "")
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r := createTerminRequest("false", termin.Title, termin.Description, strconv.Itoa(int(termin.Recurring)), "2022-11-11", "2022-11-12", "delete", termin.ID)
 
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
@@ -316,11 +504,9 @@ func testEditTerminEdit(t *testing.T) {
 	//Länge des TerminCaches vor dem Bearbeiten
 	oldLen := len(vm.TerminCache)
 
-	//Erstellen der Termin-infos, die über die Request gesendet werden
+	//Erstellen der Bearbeiten-infos, die über die Request gesendet werden
 	data := url.Values{}
-	//Erstellen der Bearbeiten-Request
-	data = url.Values{}
-	data.Add("editing", "1")
+	data.Add("editing", "editing")
 	data.Add("title", "Test Termin Bearbeitet")
 	data.Add("description", "Spaßiger bearbeiteter Termin")
 	data.Add("rep", "wöchentlich")
@@ -333,24 +519,85 @@ func testEditTerminEdit(t *testing.T) {
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	//bearbeiteter Termin zum Überprüfen
-	editetTermin := NewTerminObj("Test Termin Bearbeitet", "Spaßiger bearbeiteter Termin", ds.WEEKLY, createSpecificDate(2022, 11, 11), createSpecificDate(2023, 01, 11), false)
-
 	//Termin bearbeiten
 	vm.EditTermin(r, vm.Username)
 
 	//Testen, ob die Terminanzahl in dem Cache gleich geblieben ist
 	assert.Equal(t, oldLen, len(vm.TerminCache), "Die Länge sollte gleich geblieben sein.")
 	//Testen, ob Termin im Cache dem neuen bearbeiteten Termin entspricht
-	assert.Equal(t, editetTermin.Title, vm.TerminCache[0].Title, "Die Termin-Titel sollten überein stimmen.")
-	assert.Equal(t, editetTermin.Description, vm.TerminCache[0].Description, "Die Termin-Beschreibungen sollten überein stimmen.")
-	assert.Equal(t, editetTermin.Date, vm.TerminCache[0].Date, "Die Termin-Startdaten sollten überein stimmen.")
-	assert.Equal(t, editetTermin.Recurring, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten überein stimmen.")
-	assert.Equal(t, editetTermin.EndDate, vm.TerminCache[0].EndDate, "Die Termin-Enddaten sollten überein stimmen.")
+	assert.Equal(t, false, vm.TerminCache[0].Shared, "Die Termin-Titel sollten überein stimmen.")
+	assert.Equal(t, "Test Termin Bearbeitet", vm.TerminCache[0].Title, "Die Termin-Titel sollten überein stimmen.")
+	assert.Equal(t, "Spaßiger bearbeiteter Termin", vm.TerminCache[0].Description, "Die Termin-Beschreibungen sollten überein stimmen.")
+	assert.Equal(t, ds.WEEKLY, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten überein stimmen.")
+	assert.Equal(t, createSpecificDate(2022, 11, 11), vm.TerminCache[0].Date, "Die Termin-Startdaten sollten überein stimmen.")
+	assert.Equal(t, createSpecificDate(2023, 01, 11), vm.TerminCache[0].EndDate, "Die Termin-Enddaten sollten überein stimmen.")
 
 	//Löschen des Termins
 	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, vm.TerminCache[0].ID, vm.Username)
 }
+
+func testEditTerminIdError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+	//Testtermin erstellen und der Request hinzufügen
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	vm.TerminCache = append(vm.TerminCache, termin)
+
+	//Erstellen der Lösch-Request
+	r := createTerminRequest("false", termin.Title, termin.Description, strconv.Itoa(int(termin.Recurring)), "2022-11-11", "2022-11-12", "editing", "")
+
+	//Termin bearbeiten
+	err := vm.EditTermin(r, vm.Username)
+
+	//Testen, ob der Termin aus dem Cache gelöscht worden ist
+	assert.Error(t, err, "Es sollte ein Error aufgetreten sein.")
+	assert.Equal(t, "shared_wrong_terminId", err.Error(), "Es sollte ein Error des Typs: shared_wrong_terminId aufgetreten sein.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
+}
+func testEditTerminTitleError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+	//Testtermin erstellen und der Request hinzufügen
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	vm.TerminCache = append(vm.TerminCache, termin)
+
+	//Erstellen der Lösch-Request
+	r := createTerminRequest("false", "", termin.Description, strconv.Itoa(int(termin.Recurring)), "2022-11-11", "2022-11-12", "editing", termin.ID)
+
+	//Termin bearbeiten
+	err := vm.EditTermin(r, vm.Username)
+
+	//Testen, ob der Termin aus dem Cache gelöscht worden ist
+	assert.Error(t, err, "Es sollte ein Error aufgetreten sein.")
+	assert.Equal(t, "Missing_title", err.Error(), "Es sollte ein Error des Typs: Missing_title aufgetreten sein.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
+}
+
+func testEditTerminEditingModeError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+	//Testtermin erstellen und der Request hinzufügen
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	vm.TerminCache = append(vm.TerminCache, termin)
+
+	//Erstellen der Lösch-Request
+	r := createTerminRequest("false", termin.Title, termin.Description, strconv.Itoa(int(termin.Recurring)), "2022-11-11", "2022-11-12", "eating", termin.ID)
+
+	//Termin bearbeiten
+	err := vm.EditTermin(r, vm.Username)
+
+	//Testen, ob der Termin aus dem Cache gelöscht worden ist
+	assert.Error(t, err, "Es sollte ein Error aufgetreten sein.")
+	assert.Equal(t, "wrong_editing_mode", err.Error(), "Es sollte ein Error des Typs: wrong_editing_mode aufgetreten sein.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
+}
+
 func testDeleteSharedTermin(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
@@ -358,11 +605,44 @@ func testDeleteSharedTermin(t *testing.T) {
 
 	vm.TerminCache = append(vm.TerminCache, testTermin)
 	terminfindung.CreateSharedTermin(&testTermin, &vm.Username)
+
+	//Testen, ob Termin im Cache ist
 	assert.Equal(t, testTermin, vm.TerminCache[0], "Der Termin sollte auf dem Cache sein.")
 
+	//Termin wurde bei den Terminvorschlägen angelegt
+	terminvorschlag, err := terminfindung.GetTerminFromShared(&vm.Username, &vm.TerminCache[0].ID)
+	assert.NoError(t, err, "Es sollte kein Error aufgetreten sein.")
+	assert.Equal(t, vm.TerminCache[0], terminvorschlag.Info, "Die Termine sollten identisch sein.")
+
+	//testen, ob Termin vom Cache entfernt wurde
 	vm.DeleteSharedTermin(testTermin.ID, vm.Username)
 	assert.Equal(t, 0, len(vm.TerminCache), "Der Cache sollte leer sein.")
+}
 
+func testDeleteSharedTerminIdError(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+	testTermin := NewTerminObj("test go", "hui", ds.DAILY, time.Now(), time.Now().AddDate(1, 0, 0), true)
+
+	vm.TerminCache = append(vm.TerminCache, testTermin)
+	terminfindung.CreateSharedTermin(&testTermin, &vm.Username)
+
+	//Testen, ob Termin im Cache ist
+	assert.Equal(t, testTermin, vm.TerminCache[0], "Der Termin sollte auf dem Cache sein.")
+
+	//Termin wurde bei den Terminvorschlägen angelegt
+	terminvorschlag, err := terminfindung.GetTerminFromShared(&vm.Username, &vm.TerminCache[0].ID)
+	assert.NoError(t, err, "Es sollte kein Error aufgetreten sein.")
+	assert.Equal(t, vm.TerminCache[0], terminvorschlag.Info, "Die Termine sollten identisch sein.")
+
+	//Termin bearbeiten
+	err = vm.DeleteSharedTermin("bababa", vm.Username)
+
+	//Testen, ob der Termin aus dem Cache gelöscht worden ist
+	assert.Error(t, err, "Es sollte ein Error aufgetreten sein.")
+
+	//Löschen der erstellten Testdaten
+	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 /*
@@ -499,6 +779,14 @@ func testLvSelectDate(t *testing.T) {
 	assert.Equal(t, newDate, vm.Lv.SelectedDate, "Die zwei Daten sollten identisch sein.")
 }
 
+func testLvSelectDateError(t *testing.T) {
+	vm := new(ViewManager)
+	newDate := generateRandomDate()
+	err := vm.LvSelectDate(newDate.Format("2006/01-02"))
+	assert.Error(t, err, "Es sollte ein Fehler aufgetreten sein.")
+	assert.Equal(t, "wrong_date_format", err.Error(), "Es sollte ein Fehler aufgetreten sein.")
+}
+
 func testLvSelectEntriesPerPage(t *testing.T) {
 	vm := new(ViewManager)
 	entriesPerPage := 5
@@ -605,12 +893,13 @@ func testFvJumpPageBack(t *testing.T) {
 	for i := 0; i < len(testTermine30); i++ {
 		vm.TerminCache = ds.AddToCache(testTermine30[i], vm.TerminCache)
 	}
-	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+	vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
 
 	//Aktuelle Seite auf Seite 2 setzten
-	vm.Lv.CurrentPage = 2
-	vm.LvJumpPageBack()
-	assert.Equal(t, 1, vm.Fv.CurrentPage, "Die Seite sollte 1sein.")
+	vm.Fv.CurrentPage = 2
+	assert.Equal(t, 2, vm.Fv.CurrentPage, "Die Seite sollte 2 sein.")
+	vm.FvJumpPageBack()
+	assert.Equal(t, 1, vm.Fv.CurrentPage, "Die Seite sollte 1 sein.")
 }
 func testFvFilter(t *testing.T) {
 	//Test-termin erstellen: ab heute
@@ -657,12 +946,26 @@ func TestViewManager(t *testing.T) {
 	//createWeeklyTestTermin()
 	//Tests zum Erstellens/Bearbeitens/Löschens eines Termins
 	t.Run("testRuns filterRepetition", testfilterRepetition)
-	t.Run("testRuns CreateTermin", testCreateTermin)
+	//Verschiedene Tests zum Erstellens eines Termins
+	t.Run("testRuns CreateTermin", testCreateNotSharedTermin)
+	t.Run("testRuns CreateSharedTermin", testCreateSharedTermin)
 	t.Run("testRuns CreateTerminLogicCheck", testCreateTerminLogicCheck)
+	t.Run("testRuns CreateTerminTitleError", testCreateTerminTitleError)
+	t.Run("testRuns CreateTerminDescriptionError", testCreateTerminDescriptionError)
+	t.Run("testRuns CreateTerminFilterRepetitionError", testCreateTerminFilterRepetitionError)
+	t.Run("testRuns CreateTerminFilterDateError", testCreateTerminFilterDateError)
+	//Tests um Termin-Infos zu erhalten: Dies wird zum Anzeigen eines zu bearbeitenden Termins benötigt
 	t.Run("testRuns GetTerminInfos", testGetTerminInfos)
+	t.Run("testRuns GetTerminInfosIdError", testGetTerminInfosIdError)
+	//Verschiedene Tests zum Bearbeiten eines Termins
 	t.Run("testRuns EditTermin-Delete", testEditTerminDelete)
 	t.Run("testRuns EditTermin-Edit", testEditTerminEdit)
+	t.Run("testRuns EditTerminIdError", testEditTerminIdError)
+	t.Run("testRuns EditTerminEditingModeError", testEditTerminEditingModeError)
+	t.Run("testRuns EditTerminTitleError", testEditTerminTitleError)
+	//Verschiedene Tests zum Löschen eines Termins
 	t.Run("testRuns DeleteShared-Termin", testDeleteSharedTermin)
+	t.Run("testRuns DeleteShared-Termin ID-Error", testDeleteSharedTerminIdError)
 
 	//Tests zum Managen der TableView
 	t.Run("testRuns TvJumpMonthFor", testTvJumpMonthFor)
@@ -673,6 +976,7 @@ func TestViewManager(t *testing.T) {
 
 	//Tests zum Managen der ListView
 	t.Run("testRuns LvSelectDate", testLvSelectDate)
+	t.Run("testRuns LvSelectDateError", testLvSelectDateError)
 	t.Run("testRuns LvSelectEntriesPerPage", testLvSelectEntriesPerPage)
 	t.Run("testRuns LvJumpPageForward", testLvJumpPageForward)
 	t.Run("testRuns LvJumpPageBack", testLvJumpPageBack)

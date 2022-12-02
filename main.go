@@ -2,6 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	"DHBW_GO_Projekt/export"
 	ka "DHBW_GO_Projekt/kalenderansicht"
 	"DHBW_GO_Projekt/terminfindung"
 	"flag"
@@ -23,6 +24,7 @@ type ViewManagerHandler struct {
 	viewManagerTpl *template.Template
 }
 
+var errorconfigs = make(map[string]string)
 var Server http.Server
 
 func main() {
@@ -105,6 +107,11 @@ func setErrorconfigs() {
 	errorconfigs["shared_coudntCreatePerson"] = "Person schon vorhanden oder falsche Zeichen enthalten"
 	errorconfigs["wrong_date_format"] = "Falsches Datenformat eingegeben"
 	errorconfigs["dateIsAfter"] = "Das Startdatum ist nach dem Enddatum - bitte ändern"
+	errorconfigs["No_valid_repetition"] = "Die Termin-Wiederholung ist ungültig"
+	errorconfigs["Missing_title"] = "Es wurde kein Termin-Titel eingegeben."
+	errorconfigs["Missing_description"] = "Es wurde keine Termin-Beschreibung eingegeben."
+	errorconfigs["wrong_editing_mode"] = "Dieser Bearbeitungsmodus ist ungültig."
+	errorconfigs["Unvalid_Entries_Per_Page"] = "Ungültige Anzahl an Einträgen eingegeben."
 }
 
 // ErrorSite_ServeHttp
