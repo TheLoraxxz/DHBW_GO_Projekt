@@ -1,8 +1,9 @@
 package kalenderansicht
 
 import (
-	"fmt"
+	"DHBW_GO_Projekt/terminfindung"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -22,6 +23,39 @@ Diese werden auch in den Tests von TableView und ListView genutzt.
 //Slice, der mit Testterminen gefüllt wird, damit dies für mehrere Tests nur einmal durchgeführt werden muss
 var testTermine30 []ds.Termin
 
+// newTerminObj erzeugt einen transitiven Termin
+func NewTerminObj(title string, description string, rep ds.Repeat, date time.Time, endDate time.Time, shared bool) ds.Termin {
+
+	t := ds.Termin{
+		Title:       title,
+		Description: description,
+		Recurring:   rep,
+		Date:        date,
+		EndDate:     endDate,
+		Shared:      shared,
+		ID:          createDummyID(date, endDate)}
+
+	return t
+}
+
+// createID erzeugt neue ID für die Testtermine
+func createDummyID(dat time.Time, endDat time.Time) string {
+
+	u := time.Now().String()
+
+	id := dat.String() + endDat.String() + u
+
+	//generiert Hash --> gewährleistet hohe Kollisionsfreiheit bei IDs
+	bytes, _ := bcrypt.GenerateFromPassword([]byte(id), 14)
+	id = string(bytes)
+
+	//Entfernt problematische Chars aus Hash
+	id = strings.Replace(id, "/", "E", 99)
+	id = strings.Replace(id, ".", "D", 99)
+
+	return id
+}
+
 // create30TestTermins
 // Rückgabewert: Slice mit 30 testterminen
 // Funktionen wird benötigt um ein Slice mit Test-Terminen zu Begin des Testvorgangs zu erstellen.
@@ -33,9 +67,9 @@ func create30TestTermins() []ds.Termin {
 	//Slice mit Testterminen erstellen
 	testTermine30 := make([]ds.Termin, 0, 30)
 	// 5 testTermine30 erstellen
-	testTermin1 := ds.NewTerminObj("testTermin1", "test", ds.MONTHLY, testTerminStarts, testTerminEnds, false)
-	testTermin2 := ds.NewTerminObj("testTermin2", "test", ds.YEARLY, testTerminStarts, testTerminEnds, false)
-	testTermin3 := ds.NewTerminObj("testTermin3", "test", ds.WEEKLY, testTerminStarts, testTerminEnds, false)
+	testTermin1 := NewTerminObj("testTermin1", "test hi", ds.MONTHLY, testTerminStarts, testTerminEnds, false)
+	testTermin2 := NewTerminObj("testTermin2", "test hi", ds.YEARLY, testTerminStarts, testTerminEnds, false)
+	testTermin3 := NewTerminObj("testTermin3", "test", ds.WEEKLY, testTerminStarts, testTerminEnds, false)
 
 	for i := 0; i < 10; i++ {
 		testTermine30 = append(testTermine30, testTermin1)
@@ -92,7 +126,6 @@ func generateRandomDateInSpecificMonth(year int, month time.Month) time.Time {
 		0,
 		time.UTC,
 	)
-	fmt.Println(randomDate)
 	return randomDate
 }
 
@@ -107,13 +140,13 @@ func createTestTermin(repeat ds.Repeat) *ViewManager {
 
 	switch repeat {
 	case ds.WEEKLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", ds.WEEKLY, createSpecificDate(year, day, month), createSpecificDate(year+1, day, month), false, vm.Username)
+		newTermin := NewTerminObj("test Title", "test", ds.WEEKLY, createSpecificDate(year, day, month), createSpecificDate(year+1, day, month), false)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	case ds.YEARLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", ds.YEARLY, createSpecificDate(year, day, month), createSpecificDate(year+2, day, month), false, vm.Username)
+		newTermin := NewTerminObj("test Title", "test", ds.YEARLY, createSpecificDate(year, day, month), createSpecificDate(year+2, day, month), false)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	case ds.MONTHLY:
-		newTermin := ds.CreateNewTermin("test Title", "test", ds.MONTHLY, createSpecificDate(year-1, day, month), createSpecificDate(year+1, day, month), false, vm.Username)
+		newTermin := NewTerminObj("test Title", "test", ds.MONTHLY, createSpecificDate(year-1, day, month), createSpecificDate(year+1, day, month), false)
 		vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 	}
 	return vm
@@ -165,7 +198,7 @@ func testCreateTermin(t *testing.T) {
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2030, 11, 11), false)
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2030, 11, 11), false)
 
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
@@ -204,7 +237,7 @@ func testCreateTerminLogicCheck(t *testing.T) {
 	r.Header.Add("", "")
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
 
 	//Länge des TerminCaches vor dem Hinzufügen des neuen Termins
 	oldLen := len(vm.TerminCache)
@@ -244,7 +277,7 @@ func testEditTerminDelete(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
 	//Testtermin erstellen und der Request hinzufügen
-	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
 	vm.TerminCache = append(vm.TerminCache, termin)
 
 	//Erstellen der Termin-infos, die über die Request gesendet werden
@@ -277,7 +310,7 @@ func testEditTerminEdit(t *testing.T) {
 	vm.Username = "testuser"
 
 	//Testtermin erstellen und der Request hinzufügen
-	termin := ds.NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
 	vm.TerminCache = append(vm.TerminCache, termin)
 
 	//Länge des TerminCaches vor dem Bearbeiten
@@ -301,7 +334,7 @@ func testEditTerminEdit(t *testing.T) {
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	//bearbeiteter Termin zum Überprüfen
-	editetTermin := ds.NewTerminObj("Test Termin Bearbeitet", "Spaßiger bearbeiteter Termin", ds.WEEKLY, createSpecificDate(2022, 11, 11), createSpecificDate(2023, 01, 11), false)
+	editetTermin := NewTerminObj("Test Termin Bearbeitet", "Spaßiger bearbeiteter Termin", ds.WEEKLY, createSpecificDate(2022, 11, 11), createSpecificDate(2023, 01, 11), false)
 
 	//Termin bearbeiten
 	vm.EditTermin(r, vm.Username)
@@ -315,8 +348,21 @@ func testEditTerminEdit(t *testing.T) {
 	assert.Equal(t, editetTermin.Recurring, vm.TerminCache[0].Recurring, "Die Termin-Wiederholungen sollten überein stimmen.")
 	assert.Equal(t, editetTermin.EndDate, vm.TerminCache[0].EndDate, "Die Termin-Enddaten sollten überein stimmen.")
 
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
+	//Löschen des Termins
+	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, vm.TerminCache[0].ID, vm.Username)
+}
+func testDeleteSharedTermin(t *testing.T) {
+	vm := new(ViewManager)
+	vm.Username = "testuser"
+	testTermin := NewTerminObj("test go", "hui", ds.DAILY, time.Now(), time.Now().AddDate(1, 0, 0), true)
+
+	vm.TerminCache = append(vm.TerminCache, testTermin)
+	terminfindung.CreateSharedTermin(&testTermin, &vm.Username)
+	assert.Equal(t, testTermin, vm.TerminCache[0], "Der Termin sollte auf dem Cache sein.")
+
+	vm.DeleteSharedTermin(testTermin.ID, vm.Username)
+	assert.Equal(t, 0, len(vm.TerminCache), "Der Cache sollte leer sein.")
+
 }
 
 /*
@@ -353,8 +399,6 @@ func testTvJumpMonthFor(t *testing.T) {
 		//JumpedMonthFor Variable auf true setzen
 		jumpedMonthFor = true
 	}
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 func testTvJumpMonthBack(t *testing.T) {
 
@@ -377,8 +421,6 @@ func testTvJumpMonthBack(t *testing.T) {
 	//Der Termin startet ab 02.11.2021 und findet moantlich statt
 	//Monat ist nun Oktober 2022
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[time.Now().Day()-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testTvJumpYearForOrBack(t *testing.T) {
@@ -403,9 +445,6 @@ func testTvJumpYearForOrBack(t *testing.T) {
 
 	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[time.Now().Day()-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
-
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testTvSelectMonth(t *testing.T) {
@@ -425,9 +464,6 @@ func testTvSelectMonth(t *testing.T) {
 
 	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[time.Now().Day()-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
-
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testTvJumpToToday(t *testing.T) {
@@ -448,9 +484,6 @@ func testTvJumpToToday(t *testing.T) {
 
 	//Testen, ob der Termin in den richtigen stellen in dem Slice MonthEntries von der tableView hinzugefügt worden ist
 	assert.Equal(t, vm.TerminCache[0], vm.Tv.MonthEntries[time.Now().Day()-1].Dayentries[0], "Die Termine sollten übereinstimmen.")
-
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 /*
@@ -468,7 +501,7 @@ func testLvSelectDate(t *testing.T) {
 
 func testLvSelectEntriesPerPage(t *testing.T) {
 	vm := new(ViewManager)
-	entriesPerPage := 1
+	entriesPerPage := 5
 	vm.LvSelectEntriesPerPage(entriesPerPage)
 	assert.Equal(t, entriesPerPage, vm.Lv.EntriesPerPage, "Die Anzahl der Einträge pro Seite sollte 5 sein.")
 }
@@ -494,8 +527,6 @@ func testLvJumpPageForward(t *testing.T) {
 	vm.LvJumpPageForward()
 	assert.Equal(t, 2, vm.Lv.CurrentPage, "Die Seite sollte 2 sein.")
 
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 
 func testLvJumpPageBack(t *testing.T) {
@@ -521,9 +552,99 @@ func testLvJumpPageBack(t *testing.T) {
 	vm.Lv.CurrentPage = 2
 	vm.LvJumpPageBack()
 	assert.Equal(t, 1, vm.Lv.CurrentPage, "Die Seite sollte 1sein.")
+}
 
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
+/*
+**************************************************************************************************************
+Hier Folgen die Tests zum Managen der FilterView
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+
+func testFvSelectEntriesPerPage(t *testing.T) {
+	vm := new(ViewManager)
+	entriesPerPage := 5
+	vm.FvSelectEntriesPerPage(entriesPerPage)
+	assert.Equal(t, entriesPerPage, vm.Fv.EntriesPerPage, "Die Anzahl der Einträge pro Seite sollte 5 sein.")
+}
+
+func testFvJumpPageForward(t *testing.T) {
+	//Test-termin erstellen: ab heute
+	vm := createTestTermin(ds.WEEKLY)
+	vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
+	vm.FvJumpPageForward()
+	assert.Equal(t, 1, vm.Fv.CurrentPage, "Die Seite sollte 1 sein, da es nur einen Eintrag gibt.")
+
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
+	//dem Cache mehrere Termine hinzufügen
+	for i := 0; i < len(testTermine30); i++ {
+		vm.TerminCache = ds.AddToCache(testTermine30[i], vm.TerminCache)
+	}
+
+	vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
+	vm.FvJumpPageForward()
+	assert.Equal(t, 2, vm.Fv.CurrentPage, "Die Seite sollte 2 sein.")
+}
+func testFvJumpPageBack(t *testing.T) {
+	//Test-termin erstellen: ab heute
+	vm := createTestTermin(ds.WEEKLY)
+	vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
+	vm.Fv.JumpPageForward()
+	assert.Equal(t, 1, vm.Fv.CurrentPage, "Die Seite sollte 1 sein, da die Seitennummer nicht kleiner als 1 sein kann..")
+
+	//Falls der Slice mit Testterminen noch nicht erstellt worden ist, diesen erstellen
+	//Ist der Fall, wenn Test einzeln ausgeführt wird
+	if len(testTermine30) == 0 {
+		testTermine30 = create30TestTermins()
+	}
+
+	//dem Cache mehrere Termine hinzufügen
+	for i := 0; i < len(testTermine30); i++ {
+		vm.TerminCache = ds.AddToCache(testTermine30[i], vm.TerminCache)
+	}
+	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+
+	//Aktuelle Seite auf Seite 2 setzten
+	vm.Lv.CurrentPage = 2
+	vm.LvJumpPageBack()
+	assert.Equal(t, 1, vm.Fv.CurrentPage, "Die Seite sollte 1sein.")
+}
+func testFvFilter(t *testing.T) {
+	//Test-termin erstellen: ab heute
+	vm := new(ViewManager)
+
+	todayYear := time.Now().Year()
+	todayMonth := time.Now().Month()
+	todayDay := time.Now().Day()
+	today := time.Date(todayYear, todayMonth, todayDay, 0, 0, 0, 0, time.UTC)
+
+	//Daten für Testtermine erstellen
+
+	//Slice mit Testterminen erstellen, jeder Wiederholungstyp dabei
+	testTermine := make([]ds.Termin, 5)
+	testTermine[0] = NewTerminObj("test go", "ich", ds.DAILY, today, today.AddDate(1, 0, 0), false)
+	testTermine[1] = NewTerminObj("test ist", "lala", ds.WEEKLY, today, today.AddDate(1, 0, 0), false)
+	testTermine[2] = NewTerminObj("test eine", "ich bin toll", ds.YEARLY, today, today.AddDate(1, 0, 0), false)
+	//dem Cache die Termine hinzufügen
+	for i := 0; i < len(testTermine); i++ {
+		vm.TerminCache = ds.AddToCache(testTermine[i], vm.TerminCache)
+	}
+	vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
+
+	// Filter-Request erstellen
+	data := url.Values{}
+	data.Add("title", "test")
+	data.Add("description", "ich")
+
+	r, _ := http.NewRequest("POST", "", strings.NewReader(data.Encode()))
+	r.Header.Add("", "")
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	vm.FvFilter(r)
+	assert.Equal(t, 2, len(vm.Fv.FilteredTermins), "Es sollten 2 Termine herausgefiltert worden sein.")
 }
 
 /*
@@ -533,8 +654,6 @@ Aufrufen aller Tests
 */
 
 func TestViewManager(t *testing.T) {
-	//slice mit Testterminen erstellen, benötigt viel Zeit: daher ein globales Slice
-	testTermine30 = create30TestTermins()
 	//createWeeklyTestTermin()
 	//Tests zum Erstellens/Bearbeitens/Löschens eines Termins
 	t.Run("testRuns filterRepetition", testfilterRepetition)
@@ -543,6 +662,7 @@ func TestViewManager(t *testing.T) {
 	t.Run("testRuns GetTerminInfos", testGetTerminInfos)
 	t.Run("testRuns EditTermin-Delete", testEditTerminDelete)
 	t.Run("testRuns EditTermin-Edit", testEditTerminEdit)
+	t.Run("testRuns DeleteShared-Termin", testDeleteSharedTermin)
 
 	//Tests zum Managen der TableView
 	t.Run("testRuns TvJumpMonthFor", testTvJumpMonthFor)
@@ -556,4 +676,10 @@ func TestViewManager(t *testing.T) {
 	t.Run("testRuns LvSelectEntriesPerPage", testLvSelectEntriesPerPage)
 	t.Run("testRuns LvJumpPageForward", testLvJumpPageForward)
 	t.Run("testRuns LvJumpPageBack", testLvJumpPageBack)
+
+	//Tests zum Managen der FilerView
+	t.Run("testRuns FvSelectEntriesPerPage", testFvSelectEntriesPerPage)
+	t.Run("testRuns FvJumpPageForward", testFvJumpPageForward)
+	t.Run("testRuns FvJumpPageBack", testFvJumpPageBack)
+	t.Run("testRuns FvFilter", testFvFilter)
 }

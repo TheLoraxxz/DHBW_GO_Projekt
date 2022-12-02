@@ -279,10 +279,7 @@ func (v *ViewManagerHandler) handleFilterView(w http.ResponseWriter, r *http.Req
 			v.vm.FvJumpPageForward()
 		case r.URL.String() == "/user/view/filterTermins?Seite=Zurueck":
 			v.vm.FvJumpPageBack()
-		}
-	}
-	if r.Method == "POST" {
-		if strings.Contains(r.URL.String(), "/user/view/filterTermins?title=") {
+		case strings.Contains(r.URL.String(), "/user/view/filterTermins?title="):
 			v.vm.FvFilter(r)
 		}
 	}

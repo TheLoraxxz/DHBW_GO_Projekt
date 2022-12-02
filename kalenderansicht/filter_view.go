@@ -154,8 +154,13 @@ func (fv *FilterView) CreateTerminFilterEntries(terminCache []ds.Termin) {
 	fv.SortEntries(fv.FilteredTermins)
 }
 
-func (fv *FilterView) FilterTermins(filterTitle, filterDescription, username string, terminCache []ds.Termin) {
-	//TODO Chris Filter Funktion aufrufern
-	//fv.FilteredTermins =
+func (fv *FilterView) FilterTermins(filterTitle, filterDescription string, allTermins []ds.Termin) {
+	fv.FilteredTermins = allTermins
+	if filterTitle != "" {
+		fv.FilteredTermins = ds.FilterByTitle(fv.FilteredTermins, filterTitle)
+	}
+	if filterDescription != "" {
+		fv.FilteredTermins = ds.FilterByDescription(fv.FilteredTermins, filterDescription)
+	}
 	fv.SortEntries(fv.FilteredTermins)
 }

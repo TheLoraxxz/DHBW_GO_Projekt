@@ -3,6 +3,8 @@ package main
 import (
 	"DHBW_GO_Projekt/authentifizierung"
 	"DHBW_GO_Projekt/export"
+	ka "DHBW_GO_Projekt/kalenderansicht"
+	"DHBW_GO_Projekt/terminfindung"
 	"flag"
 	"fmt"
 	"html/template"

@@ -278,5 +278,5 @@ func (vm *ViewManager) FvJumpPageBack() {
 func (vm *ViewManager) FvFilter(r *http.Request) {
 	filterTitle := r.FormValue("title")
 	filterDescription := r.FormValue("description")
-	vm.Fv.FilterTermins(filterTitle, filterDescription, vm.Username, vm.TerminCache)
+	vm.Fv.FilterTermins(filterTitle, filterDescription, vm.TerminCache)
 }
