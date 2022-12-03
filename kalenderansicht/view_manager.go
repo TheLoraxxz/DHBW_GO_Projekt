@@ -195,7 +195,7 @@ func (vm *ViewManager) DeleteSharedTermin(id, username string) (err error) {
 	//Termin aus den Vorschlägen entfernen
 	err = terminfindung.DeleteSharedTermin(&id, &username)
 	if err != nil {
-		return
+		return errors.New("shared_wrong_terminId")
 	}
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)

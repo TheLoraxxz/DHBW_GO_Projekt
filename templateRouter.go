@@ -176,25 +176,29 @@ func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Falls vm noch nicht initialisiert
 	if v.vm == nil {
 		v.vm = ka.InitViewManager(username)
-		v.vm.Username = username
 	}
 
 	//Termin bearbeiten/erstellen/löschen ist überall identisch
 	edit := r.FormValue("edit")
 	create := r.FormValue("create")
 	deleteShared := r.FormValue("deleteSharedTermin")
+
+	//Filter current url (table or list?) wird benötigt für einen Redirect, falls ein Error aufritt
+	pathWithoutParameters := strings.Split(r.RequestURI, "?")[0]
+	pathView := strings.Split(pathWithoutParameters, "/")[3]
+
 	switch r.Method {
 	case "GET":
 		if edit == "true" {
 			terminToEdit, err := v.vm.GetTerminInfos(r)
 			if err != nil {
-				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
 			err = v.viewManagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
 			if err != nil {
-				urls := "https://" + r.Host + "/error?type=internal&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/"+pathView)
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
@@ -204,7 +208,7 @@ func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			terminToDeleteID := r.FormValue("deleteSharedTermin")
 			err := v.vm.DeleteSharedTermin(terminToDeleteID, v.vm.Username)
 			if err != nil {
-				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
@@ -213,7 +217,7 @@ func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if edit == "true" {
 			err := v.vm.EditTermin(r, v.vm.Username)
 			if err != nil {
-				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
@@ -221,7 +225,7 @@ func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if create == "true" {
 			err := v.vm.CreateTermin(r, v.vm.Username)
 			if err != nil {
-				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
@@ -244,32 +248,34 @@ func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
 func (v ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		queryValues := r.URL.RawQuery
 		switch {
-		case r.URL.String() == "/user/view/table?suche=minusMonat":
+
+		case queryValues == "suche=minusMonat":
 			v.vm.TvJumpMonthBack()
-		case r.URL.String() == "/user/view/table?suche=plusMonat":
+		case queryValues == "suche=plusMonat":
 			v.vm.TvJumpMonthFor()
-		case strings.Contains(r.URL.String(), "/user/view/table?monat="):
+		case strings.Contains(queryValues, "monat="):
 			monatStr := r.FormValue("monat")
 			monat, err := strconv.Atoi(monatStr)
 			if err != nil || monat < 1 || monat > 12 {
-				urls := "https://" + r.Host + "/error?type=NowValidMonth&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=NowValidMonth&link=" + url.QueryEscape("/user/view/table")
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
 			v.vm.TvSelectMonth(time.Month(monat))
-		case r.URL.String() == "/user/view/table?jahr=Zurueck":
+		case queryValues == "jahr=Zurueck":
 			v.vm.TvJumpYearForOrBack(-1)
-		case r.URL.String() == "/user/view/table?jahr=Vor":
+		case queryValues == "jahr=Vor":
 			v.vm.TvJumpYearForOrBack(1)
-		case r.URL.String() == "/user/view/table?datum=heute":
+		case queryValues == "datum=heute":
 			v.vm.TvJumpToToday()
 		}
 	}
 
 	err := v.viewManagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
 	if err != nil {
-		urls := "https://" + r.Host + "/error?type=internal&link=" + r.URL.Path + url.QueryEscape("/")
+		urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/table")
 		http.Redirect(w, r, urls, http.StatusContinue)
 		return
 	}
@@ -279,34 +285,35 @@ func (v ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Reque
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
 func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		queryValues := r.URL.RawQuery
 		switch {
-		case strings.Contains(r.URL.String(), "/user/view/list?selDate="):
+		case strings.Contains(queryValues, "selDate="):
 			dateStr := r.FormValue("selDate")
 			err := v.vm.LvSelectDate(dateStr)
 			if err != nil {
-				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/list")
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
-		case strings.Contains(r.URL.String(), "/user/view/list?Eintraege"):
+		case strings.Contains(queryValues, "Eintraege="):
 			amountStr := r.FormValue("Eintraege")
 			amount, err := strconv.Atoi(amountStr)
 			if err != nil || !(amount == 5 || amount == 10 || amount == 15) {
-				urls := "https://" + r.Host + "/error?type=Unvalid_Entries_Per_Page&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=Unvalid_Entries_Per_Page&link=" + url.QueryEscape("/user/view/list")
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
 			v.vm.LvSelectEntriesPerPage(amount)
-		case r.URL.String() == "/user/view/list?Seite=Vor":
+		case queryValues == "Seite=Vor":
 			v.vm.LvJumpPageForward()
-		case r.URL.String() == "/user/view/list?Seite=Zurueck":
+		case queryValues == "Seite=Zurueck":
 			v.vm.LvJumpPageBack()
 		}
 	}
 
 	err := v.viewManagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
 	if err != nil {
-		urls := "https://" + r.Host + "/error?type=internal&link=" + r.URL.Path + url.QueryEscape("/")
+		urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/list")
 		http.Redirect(w, r, urls, http.StatusContinue)
 		return
 	}
@@ -316,28 +323,29 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
 func (v *ViewManagerHandler) handleFilterView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		queryValues := r.URL.RawQuery
 		switch {
-		case strings.Contains(r.URL.String(), "/user/view/filterTermins?Eintraege"):
+		case strings.Contains(queryValues, "Eintraege"):
 			amountStr := r.FormValue("Eintraege")
 			amount, err := strconv.Atoi(amountStr)
 			if err != nil || !(amount == 5 || amount == 10 || amount == 15) {
-				urls := "https://" + r.Host + "/error?type=Unvalid_Entries_Per_Page&link=" + r.URL.Path + url.QueryEscape("/")
+				urls := "https://" + r.Host + "/error?type=Unvalid_Entries_Per_Page&link=" + url.QueryEscape("/user/view/filterTermins")
 				http.Redirect(w, r, urls, http.StatusContinue)
 				return
 			}
 			v.vm.FvSelectEntriesPerPage(amount)
-		case r.URL.String() == "/user/view/filterTermins?Seite=Vor":
+		case queryValues == "Seite=Vor":
 			v.vm.FvJumpPageForward()
-		case r.URL.String() == "/user/view/filterTermins?Seite=Zurueck":
+		case queryValues == "Seite=Zurueck":
 			v.vm.FvJumpPageBack()
-		case strings.Contains(r.URL.String(), "/user/view/filterTermins?title="):
+		case strings.Contains(queryValues, "title=") || strings.Contains(queryValues, "description="):
 			v.vm.FvFilter(r)
 		}
 	}
 
 	err := v.viewManagerTpl.ExecuteTemplate(w, "filterTermins.html", v.vm.Fv)
 	if err != nil {
-		urls := "https://" + r.Host + "/error?type=internal&link=" + r.URL.Path + url.QueryEscape("/")
+		urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/filterTermins")
 		http.Redirect(w, r, urls, http.StatusContinue)
 		return
 	}

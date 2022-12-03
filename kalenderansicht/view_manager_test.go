@@ -24,7 +24,7 @@ Diese werden auch in den Tests von TableView und ListView genutzt.
 //Slice, der mit Testterminen gefüllt wird, damit dies für mehrere Tests nur einmal durchgeführt werden muss
 var testTermine30 []ds.Termin
 
-// newTerminObj erzeugt einen transitiven Termin
+// newTerminObj erzeugt einen test Termin
 func NewTerminObj(title string, description string, rep ds.Repeat, date time.Time, endDate time.Time, shared bool) ds.Termin {
 
 	t := ds.Termin{
@@ -489,16 +489,13 @@ func testEditTerminDelete(t *testing.T) {
 
 	//Testen, ob der Termin aus dem Cache gelöscht worden ist
 	assert.Equal(t, oldLen-1, len(vm.TerminCache), "Die Länge sollte um 1 reduziert worden sein.")
-
-	//Löschen der erstellten Testdaten
-	vm.TerminCache = ds.DeleteAll(vm.TerminCache, vm.Username)
 }
 func testEditTerminEdit(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
 
 	//Testtermin erstellen und der Request hinzufügen
-	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := ds.CreateNewTermin("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false, vm.Username)
 	vm.TerminCache = append(vm.TerminCache, termin)
 
 	//Länge des TerminCaches vor dem Bearbeiten
@@ -540,10 +537,10 @@ func testEditTerminIdError(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
 	//Testtermin erstellen und der Request hinzufügen
-	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := ds.CreateNewTermin("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false, vm.Username)
 	vm.TerminCache = append(vm.TerminCache, termin)
 
-	//Erstellen der Lösch-Request
+	//Erstellen der bearbeiten-Request
 	r := createTerminRequest("false", termin.Title, termin.Description, strconv.Itoa(int(termin.Recurring)), "2022-11-11", "2022-11-12", "editing", "")
 
 	//Termin bearbeiten
@@ -560,7 +557,7 @@ func testEditTerminTitleError(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
 	//Testtermin erstellen und der Request hinzufügen
-	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := ds.CreateNewTermin("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false, vm.Username)
 	vm.TerminCache = append(vm.TerminCache, termin)
 
 	//Erstellen der Lösch-Request
@@ -581,7 +578,7 @@ func testEditTerminEditingModeError(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
 	//Testtermin erstellen und der Request hinzufügen
-	termin := NewTerminObj("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false)
+	termin := ds.CreateNewTermin("Test Termin", "Spaßiger Termin", ds.DAILY, createSpecificDate(2022, 11, 11), createSpecificDate(2022, 11, 11), false, vm.Username)
 	vm.TerminCache = append(vm.TerminCache, termin)
 
 	//Erstellen der Lösch-Request
@@ -601,7 +598,7 @@ func testEditTerminEditingModeError(t *testing.T) {
 func testDeleteSharedTermin(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
-	testTermin := NewTerminObj("test go", "hui", ds.DAILY, time.Now(), time.Now().AddDate(1, 0, 0), true)
+	testTermin := ds.CreateNewTermin("test go", "hui", ds.DAILY, time.Now(), time.Now().AddDate(1, 0, 0), true, vm.Username)
 
 	vm.TerminCache = append(vm.TerminCache, testTermin)
 	terminfindung.CreateSharedTermin(&testTermin, &vm.Username)
@@ -622,7 +619,7 @@ func testDeleteSharedTermin(t *testing.T) {
 func testDeleteSharedTerminIdError(t *testing.T) {
 	vm := new(ViewManager)
 	vm.Username = "testuser"
-	testTermin := NewTerminObj("test go", "hui", ds.DAILY, time.Now(), time.Now().AddDate(1, 0, 0), true)
+	testTermin := ds.CreateNewTermin("test go", "hui", ds.DAILY, time.Now(), time.Now().AddDate(1, 0, 0), true, vm.Username)
 
 	vm.TerminCache = append(vm.TerminCache, testTermin)
 	terminfindung.CreateSharedTermin(&testTermin, &vm.Username)
