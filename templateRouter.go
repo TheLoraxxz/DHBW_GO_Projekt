@@ -88,7 +88,8 @@ func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request
 
 	err := createUserRouter.Execute(writer, nil)
 	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/user")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
 
@@ -111,7 +112,8 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 		newPassword := request.Form.Get("newPassword")
 		cookies, err := authentifizierung.ChangeUser(&user, &password, &newPassword)
 		if err != nil {
-			http.Redirect(writer, request, "https://"+request.Host+"/user", http.StatusContinue)
+			urls := "https://" + request.Host + "/error?type=wrongPassword&link=" + url.QueryEscape("/user")
+			http.Redirect(writer, request, urls, http.StatusContinue)
 			return
 		}
 		// set cookie so it automatically updates and it doesnt throw one back to the login site
@@ -132,19 +134,26 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 	//execute own template from userchange and put in footer and header
 	err := changeUserRoute.Execute(writer, nil)
 	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		return
 	}
 }
 
 func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	isAllowed, username := checkIfIsAllowed(request)
 	if !isAllowed {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
+		request.Method = "GET"
+		urls := "https://" + request.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
 		return
 	}
 	err := userOverview.Execute(writer, username)
 	if err != nil {
-		log.Fatal("Coudnt Execute Parsefiles")
+		request.Method = "GET"
+		urls := "https://" + request.Host + "/error?type=internal&link=" + url.QueryEscape("/")
+		http.Redirect(writer, request, urls, http.StatusContinue)
+		return
 	}
 }
 
