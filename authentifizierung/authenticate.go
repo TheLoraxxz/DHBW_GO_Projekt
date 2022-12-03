@@ -1,13 +1,13 @@
 package authentifizierung
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,6 +35,8 @@ var cookies = cookieStruct{
 	cookies: map[string]authentication{},
 	lock:    sync.RWMutex{},
 }
+
+const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
 // struct for user synchronisation
 type usersync struct {
@@ -68,7 +70,9 @@ func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie 
 			err := bcrypt.CompareHashAndPassword([]byte(oneOfUsers), []byte(*pasw))
 			if err == nil && strings.Compare(val, oneOfUsers) == 0 {
 				varbytes := make([]byte, 100)
-				_, err = rand.Read(varbytes)
+				for i := range varbytes {
+					varbytes[i] = letters[rand.Int63()%int64(len(letters))]
+				}
 				if err != nil {
 					return false, ""
 				}
@@ -79,8 +83,9 @@ func AuthenticateUser(user *string, pasw *string) (correctPassw bool, newCookie 
 					endTime: time.Now().Add(15 * time.Minute),
 				}
 				correctPassw = true
+				newCookie = *user + "|" + randomString
 				cookies.lock.Unlock()
-				return true, *user + "|" + randomString
+				return
 			}
 		}
 	}

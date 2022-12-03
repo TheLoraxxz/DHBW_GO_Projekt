@@ -54,6 +54,7 @@ func main() {
 		if saveSharedErr != nil {
 			fmt.Println(saveSharedErr)
 		}
+		authentifizierung.DeleteOldCookies()
 	}()
 	setErrorconfigs()
 	// setup server
