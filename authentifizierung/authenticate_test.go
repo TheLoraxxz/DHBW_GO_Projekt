@@ -3,7 +3,6 @@ package authentifizierung
 import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // tests pon create user
@@ -57,9 +57,11 @@ func TestAuthenticateUser_CookieMngmt(t *testing.T) {
 	username := cookie[:strings.Index(cookie, "|")]
 	cookie = cookie[strings.Index(cookie, "|")+1:]
 	// schauen, dass der neue hash richtig generiert ist
-	isSame := bcrypt.CompareHashAndPassword([]byte(cookie), []byte("admin"+users.users["admin"]))
-	assert.Equal(t, nil, isSame)
 	assert.Equal(t, user, username)
+	assert.Equal(t, 100, len(cookie))
+	assert.NotEmpty(t, cookies.cookies[cookie])
+	// check that the end time is roughly in 15 minutes right before it
+	assert.Equal(t, true, time.Now().Add(14*time.Minute).Before(cookies.cookies[cookie].endTime))
 }
 
 // tests that cookie check is true on right input
@@ -69,12 +71,31 @@ func TestCheckCookie_True(t *testing.T) {
 	password := "admin"
 	_ = CreateUser(&user, &password)
 	//cookie is manually created
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin"+users.users["admin"]), 2)
-	cookie := "admin|" + string(hashedPassword)
+	allowed, authenticatedCookie := AuthenticateUser(&user, &password)
 	//checked whether cookie is equal
-	isAllowed, username := CheckCookie(&cookie)
+	assert.Equal(t, true, allowed)
+	isAllowed, username := CheckCookie(&authenticatedCookie)
 	assert.Equal(t, true, isAllowed)
 	assert.Equal(t, "admin", username)
+}
+
+func TestCheckCookie_minutesRunOut(t *testing.T) {
+	users.users = make(map[string]string)
+	user := "admin"
+	password := "admin"
+	_ = CreateUser(&user, &password)
+	//cookie is manually created
+	_, authenticatedCookie := AuthenticateUser(&user, &password)
+	//checked whether cookie is equal
+	authenticatedCookie = authenticatedCookie[strings.Index(authenticatedCookie, "|")+1:]
+	// set the timer before so it is automatically turned down
+	cookies.cookies[authenticatedCookie] = authentication{
+		user:    cookies.cookies[authenticatedCookie].user,
+		endTime: time.Now().Add(-time.Minute * 1),
+	}
+	//should be discarded
+	allowed, user := CheckCookie(&authenticatedCookie)
+	assert.Equal(t, false, allowed)
 }
 
 // checks that authenticate user and check cookie work with each other
@@ -357,4 +378,46 @@ func TestLoadUserData_Wrong_Directory(t *testing.T) {
 	assert.Equal(t, 1, len(users.users))
 	//remove the path to prevent errors on startup of application
 	_ = os.Remove(path)
+}
+
+// TestDeleteOldCookies_noDeletion
+// checks that it doesn't delete if they are both on time
+func TestDeleteOldCookies_noDeletion(t *testing.T) {
+	users.users = make(map[string]string)
+	cookies.cookies = make(map[string]authentication)
+	user := "admin"
+	CreateUser(&user, &user)
+	AuthenticateUser(&user, &user)
+	user = "user"
+	CreateUser(&user, &user)
+	AuthenticateUser(&user, &user)
+	assert.Equal(t, 2, len(cookies.cookies))
+	DeleteOldCookies()
+	assert.Equal(t, 2, len(cookies.cookies))
+
+}
+
+// TestDeleteOldCookies_DeletionBecauseToOld
+// checks that it does delete those cookies who are too old
+func TestDeleteOldCookies_DeletionBecauseToOld(t *testing.T) {
+	// create two users
+	users.users = make(map[string]string)
+	cookies.cookies = make(map[string]authentication)
+	user := "admin"
+	CreateUser(&user, &user)
+	AuthenticateUser(&user, &user)
+	user = "user"
+	CreateUser(&user, &user)
+	// get cookie from one and subtract it so it is on the old cookie
+	_, cookie := AuthenticateUser(&user, &user)
+	cookie = cookie[strings.Index(cookie, "|")+1:]
+	cookies.cookies[cookie] = authentication{
+		user:    cookies.cookies[cookie].user,
+		endTime: time.Now().Add(-1 * time.Minute),
+	}
+	// it should reduce by one through delete old cookies
+	assert.Equal(t, 2, len(cookies.cookies))
+	DeleteOldCookies()
+	assert.Equal(t, 1, len(cookies.cookies))
+
 }

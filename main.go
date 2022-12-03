@@ -54,6 +54,7 @@ func main() {
 		if saveSharedErr != nil {
 			fmt.Println(saveSharedErr)
 		}
+		authentifizierung.DeleteOldCookies()
 	}()
 	setErrorconfigs()
 	// setup server
@@ -95,6 +96,7 @@ func setErrorconfigs() {
 	errorconfigs["shared_coudntCreatePerson"] = "Person schon vorhanden oder falsche Zeichen enthalten"
 	errorconfigs["wrong_date_format"] = "Falsches Datenformat eingegeben"
 	errorconfigs["dateIsAfter"] = "Das Startdatum ist nach dem Enddatum - bitte ändern"
+	errorconfigs["wrongPassword"] = "Das alte Password ist dasselbe wie das neue oder das alte eingegebene Password war falsch"
 }
 
 // ErrorSite_ServeHttp
