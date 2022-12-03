@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+var mainRoute = template.Must(template.ParseFiles("./assets/sites/index.html", "./assets/templates/footer.html"))
+var createUserRouter = template.Must(template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+var changeUserRoute = template.Must(template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+var userOverview = template.Must(template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
+
 func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "POST" {
 		err := request.ParseForm()
@@ -47,8 +52,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			}
 		}
 	}
-	mainRoute, err := template.ParseFiles("./assets/sites/index.html", "./assets/templates/footer.html")
-	err = mainRoute.Execute(writer, nil)
+	err := mainRoute.Execute(writer, nil)
 	if err != nil {
 		log.Fatal("Coudnt export Parsefiles")
 	}
@@ -81,12 +85,8 @@ func (createUser CreatUserHandler) ServeHTTP(writer http.ResponseWriter, request
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 
 	}
-	mainRoute, err := template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
-		return
-	}
-	err = mainRoute.Execute(writer, nil)
+
+	err := createUserRouter.Execute(writer, nil)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 		return
@@ -130,11 +130,7 @@ func (changeUser ChangeUserHandler) ServeHTTP(writer http.ResponseWriter, reques
 
 	}
 	//execute own template from userchange and put in footer and header
-	mainRoute, err := template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	if err != nil {
-		log.Fatal("Coudnt export Parsefiles")
-	}
-	err = mainRoute.Execute(writer, nil)
+	err := changeUserRoute.Execute(writer, nil)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}
@@ -146,12 +142,7 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
 		return
 	}
-	mainRoute, err := template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html")
-	if err != nil {
-		http.Redirect(writer, request, "https://"+request.Host, http.StatusContinue)
-		return
-	}
-	err = mainRoute.Execute(writer, username)
+	err := userOverview.Execute(writer, username)
 	if err != nil {
 		log.Fatal("Coudnt Execute Parsefiles")
 	}
