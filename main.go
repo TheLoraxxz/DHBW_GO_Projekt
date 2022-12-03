@@ -2,6 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	"DHBW_GO_Projekt/export"
 	ka "DHBW_GO_Projekt/kalenderansicht"
 	"DHBW_GO_Projekt/terminfindung"
 	"flag"
@@ -61,6 +62,7 @@ func main() {
 	Server = http.Server{
 		Addr: ":" + *port,
 	}
+
 	//http handles
 	//hier weitere handler hinzufügen in ähnlicher fashion für die verschiedenen Templates
 	root := RootHandler{}
@@ -75,6 +77,7 @@ func main() {
 	http.Handle("/user", &user)
 	http.Handle("/user/view", &viewmanagerHandler)
 	http.Handle("/logout", &logout)
+	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.DownloadHandler))
 	http.HandleFunc("/shared", AdminSiteServeHTTP)
 	http.HandleFunc("/shared/create/link", CreateLinkServeHTTP)
 	http.HandleFunc("/shared/create/app", ServeHTTPSharedAppCreateDate)

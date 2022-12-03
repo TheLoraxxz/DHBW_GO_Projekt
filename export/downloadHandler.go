@@ -1,29 +1,50 @@
 package export
 
 /*
-Um später einzubinden:
-http.HandleFunc("/", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.Handler))
-log.Fatalln(http.ListenAndServe(":8080", nil))
+Zweck: DownloadHandler um die generierte Ical zum Download aufzubereiten
 */
 
+//Mat-Nr. 8689159
 import (
+	"DHBW_GO_Projekt/authentifizierung"
+	"DHBW_GO_Projekt/dateisystem"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 )
 
-// Handler ToDo relativePfade + Parametrisierung vom Handler
-func Handler(w http.ResponseWriter, r *http.Request) { //für Download nötiger Handle
-	err := serveFile(w, r, "C:\\Users\\chris\\Documents\\GitHub\\DHBW_GO_Projekt\\export\\export\\mik.ics")
+func DownloadHandler(w http.ResponseWriter, r *http.Request) {
+
+	//erhalte Usernamen
+	cookie, err := r.Cookie("Download-Kalender")
 	if err != nil {
-		return
+		log.Fatalln(err)
+	}
+	check, username := authentifizierung.CheckCookie(&cookie.Value)
+
+	//validiere Gültigkeit des Cookies
+	if check {
+		//erzeuge Ical
+		file := ParsToIcal(dateisystem.GetTermine(username), username)
+		//erstelle Download
+		err = serveFile(w, r, file)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		//lösche Ical
+		err = os.Remove(file)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
-func serveFile(writer http.ResponseWriter, request *http.Request, filePath string) (err error) { //stellt sicher, dass der Download pausiert werden kann
+func serveFile(writer http.ResponseWriter, request *http.Request, filePath string) (err error) {
+	//lese Datei ein
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
@@ -34,6 +55,7 @@ func serveFile(writer http.ResponseWriter, request *http.Request, filePath strin
 
 		}
 	}(file)
+	//lese Meta Informationen ein
 	fileHeader := make([]byte, 512)
 	_, err = file.Read(fileHeader)
 	if err != nil {
@@ -43,9 +65,11 @@ func serveFile(writer http.ResponseWriter, request *http.Request, filePath strin
 	if err != nil {
 		return err
 	}
+	//schreibe Response Header
 	writer.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s""`, fileInfo.Name()))
 	writer.Header().Set("Content-Type", http.DetectContentType(fileHeader))
 	writer.Header().Set("Accept-Ranges", "bytes")
+	//lege Länge der Antwort fest
 	requestRange := request.Header.Get("range")
 	if requestRange == "" {
 		writer.Header().Set("Content-Length", strconv.Itoa(int(fileInfo.Size())))
@@ -59,6 +83,7 @@ func serveFile(writer http.ResponseWriter, request *http.Request, filePath strin
 		}
 		return nil
 	}
+	//definiert was zurückgesendet werden soll
 	requestRange = requestRange[6:]
 	splitRange := strings.Split(requestRange, "-")
 	if len(splitRange) != 2 {
@@ -78,9 +103,11 @@ func serveFile(writer http.ResponseWriter, request *http.Request, filePath strin
 	if begin >= end {
 		return fmt.Errorf("range begin cannot be bigger than range end")
 	}
+	//aktualisiere Länge der Antwort
 	writer.Header().Set("Content-Length", strconv.FormatInt(end-begin+1, 10))
 	writer.Header().Set("Content-Range",
 		fmt.Sprintf("bytes %d-%d/%d", begin, end, fileInfo.Size()))
+	//Markiere Antwort vorübergehend als unvollständig
 	writer.WriteHeader(http.StatusPartialContent)
 	_, err = file.Seek(begin, 0)
 	if err != nil {

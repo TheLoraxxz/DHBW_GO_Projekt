@@ -9,7 +9,7 @@ import (
 
 func TestNewTerminObj(t *testing.T) { //prüft das erstellen transitiver Termine
 
-	ter := NewTerminObj("test", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true) //erzeugt dummy Termin
+	ter := newTerminObj("test", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true) //erzeugt dummy Termin
 
 	assert.NotEqual(t, "", ter.Title)
 	assert.NotEqual(t, "", ter.Description)
@@ -21,8 +21,6 @@ func TestNewTerminObj(t *testing.T) { //prüft das erstellen transitiver Termine
 }
 
 func TestLoadTermin(t *testing.T) { //prüft das Laden von Objekten
-
-	DeleteAll(GetTermine("mik"), "mik")
 
 	ter := CreateNewTermin("test", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
 
@@ -42,17 +40,16 @@ func TestGetTermine(t *testing.T) { //prüft ob das erzeugte Slice die korrekten
 
 	kTest := GetTermine("mik")
 
-	assert.Equal(t, ter, kTest[1])
+	assert.Equal(t, ter, FindInCacheByID(kTest, ter.ID))
 
 	DeleteAll(kTest, "mik")
 }
 
 func TestAddToCache(t *testing.T) { //prüft, ob Termin dem Caching hinzugefügt wurde
 
-	DeleteAll(GetTermine("mik"), "mik")
 	var k []Termin
 
-	ter := NewTerminObj("testa", "test", YEARLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true)
+	ter := newTerminObj("testa", "test", YEARLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true)
 
 	k = AddToCache(ter, k)
 
@@ -62,8 +59,6 @@ func TestAddToCache(t *testing.T) { //prüft, ob Termin dem Caching hinzugefügt
 }
 
 func TestDeleteTermin(t *testing.T) { //prüft ob die JSONs korrekt gelöscht werden
-
-	DeleteAll(GetTermine("mik"), "mik")
 
 	n := CreateNewTermin("testo", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
 	deleteTermin(n.ID, "mik")
@@ -75,7 +70,6 @@ func TestDeleteTermin(t *testing.T) { //prüft ob die JSONs korrekt gelöscht we
 
 func TestStoreCache(t *testing.T) { //prüft, ob sich der gesamte Cache speichern lässt
 
-	DeleteAll(GetTermine("mik"), "mik")
 	var k []Termin
 
 	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
@@ -103,8 +97,6 @@ func TestDeleteAll(t *testing.T) { //prüft, ob ein gesamter Kalender gelöscht 
 
 func TestDeleteFromCache(t *testing.T) { //prüft, ob Termin aus dem Caching gelöscht werden kann, ohne Verzeichnis neu einlesen zu müssen
 
-	DeleteAll(GetTermine("mik"), "mik")
-
 	k := GetTermine("mik")
 	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
 	ter := CreateNewTermin("testb", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
@@ -117,8 +109,7 @@ func TestDeleteFromCache(t *testing.T) { //prüft, ob Termin aus dem Caching gel
 	DeleteAll(k, "mik")
 }
 
-func TestFindInCacheByID(t *testing.T) {
-	DeleteAll(GetTermine("mik"), "mik")
+func TestFindInCacheByID(t *testing.T) { //prüft, ob sich Termin anhand der ID finden lässt
 
 	k := GetTermine("mik")
 	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
@@ -129,6 +120,33 @@ func TestFindInCacheByID(t *testing.T) {
 	ter = FindInCacheByID(k, ter.ID)
 
 	assert.Equal(t, k[1], ter)
+
+	DeleteAll(k, "mik")
+}
+
+func TestFilterByDescription(t *testing.T) { //prüft Filter anhand der Beschreibung
+	k := GetTermine("mik")
+	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
+	ter := CreateNewTermin("testb", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
+	k = AddToCache(ter, k)
+	k = AddToCache(CreateNewTermin("testc", "tesn", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k) //soll heraus gefiltert werden
+
+	fk := FilterByDescription(k, "test")
+
+	assert.Equal(t, k[:2], fk)
+
+	DeleteAll(k, "mik")
+}
+
+func TestFilterByTitle(t *testing.T) {
+	k := GetTermine("mik")
+	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
+	ter := CreateNewTermin("testab", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
+	k = AddToCache(ter, k)
+	k = AddToCache(CreateNewTermin("testc", "tes", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k) //soll heraus gefiltert werden
+
+	fk := FilterByTitle(k, "testa")
+	assert.Equal(t, k[:2], fk)
 
 	DeleteAll(k, "mik")
 }

@@ -1,5 +1,10 @@
 package export
 
+/*
+Zweck: Generiert die zu exportierende Ical
+*/
+
+//Mat-Nr. 8689159
 import (
 	"DHBW_GO_Projekt/dateisystem"
 	"fmt"
@@ -12,11 +17,11 @@ const (
 	dateLayout = "20060102T150405"
 )
 
-func ParsToIcal(k []dateisystem.Termin, username string) {
-	checkForDirectory()
-	file := "export/" + username + ".ics"
+func ParsToIcal(k []dateisystem.Termin, username string) string {
+	createDirectory() // legt export Verzeichnis an
 	fileForMac := "export/" + username + ".ical"
 
+	//schreibt Ical
 	p :=
 		"BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:BoBoGo/DE\nMETHOD:PUBLISH\nBEGIN:VEVENT\nUID:" +
 			username + "\nDTSTAMP:" +
@@ -46,19 +51,20 @@ func ParsToIcal(k []dateisystem.Termin, username string) {
 
 	p = p + "END:VEVENT\nEND:VCALENDAR"
 
-	writeI(file, p)
-	writeI(fileForMac, p)
+	writeIcal(fileForMac, p)
+
+	return fileForMac
 }
 
-func checkForDirectory() {
+func createDirectory() {
 	err := os.MkdirAll("export/", 755) //erzeugt das Exportverzeichnis, falls noch nicht existent
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func writeI(file string, parsed string) {
-	f, err := os.Create(file)
+func writeIcal(file string, parsed string) {
+	f, err := os.Create(file) //legt Export-Datei an
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,7 +74,7 @@ func writeI(file string, parsed string) {
 
 		}
 	}(f)
-	_, err2 := f.WriteString(parsed)
+	_, err2 := f.WriteString(parsed) //schreibt String
 	if err2 != nil {
 		log.Fatal(err2)
 	}

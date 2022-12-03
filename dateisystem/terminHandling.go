@@ -1,18 +1,21 @@
 package dateisystem
 
+/*
+Zweck: Stellt alle Funktionen zum Verwalten von Terminen bereit
+*/
+
 //Mat-Nr. 8689159
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"os"
 	"strings"
 	"time"
 )
 
-// NewTerminObj erzeugt einen transitiven Termin; NUR FÜR TESTS EMPFOHLEN
-func NewTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time, shared bool) Termin {
+// newTerminObj erzeugt einen transitiven Termin
+func newTerminObj(title string, description string, rep Repeat, date time.Time, endDate time.Time, shared bool) Termin {
 
 	t := Termin{
 		Title:       title,
@@ -23,6 +26,13 @@ func NewTerminObj(title string, description string, rep Repeat, date time.Time, 
 		Shared:      shared,
 		ID:          createID(date, endDate)}
 
+	return t
+}
+
+// CreateNewTermin erzeugt einen persistenten Termin
+func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, shared bool, username string) Termin {
+	t := newTerminObj(title, description, rep, date, endDate, shared)
+	StoreTerminObj(t, username)
 	return t
 }
 
@@ -41,11 +51,13 @@ func StoreTerminObj(termin Termin, username string) {
 	_ = os.WriteFile(path, p, 0755)             //schreibt json in Datei
 }
 
-// CreateNewTermin erzeugt einen persistenten Termin
-func CreateNewTermin(title string, description string, rep Repeat, date time.Time, endDate time.Time, shared bool, username string) Termin {
-	t := NewTerminObj(title, description, rep, date, endDate, shared)
-	StoreTerminObj(t, username)
-	return t
+// StoreCache speichert alle Elemente Caches von User "username"
+func StoreCache(kalender []Termin, username string) {
+	k := kalender
+
+	for i := 0; i < len(k); i++ {
+		StoreTerminObj(k[i], username)
+	}
 }
 
 // GetTermine liefert slice mit allen terminen eines Users zurück
@@ -79,15 +91,6 @@ func GetTermine(username string) []Termin {
 	return k
 }
 
-// StoreCache speichert alle Elemente Caches von User "username"
-func StoreCache(kalender []Termin, username string) {
-	k := kalender
-
-	for i := 0; i < len(k); i++ {
-		StoreTerminObj(k[i], username)
-	}
-}
-
 // LoadTermin kreiert Termin aus json, "username" mapped Termine und Nutzer
 func LoadTermin(id string, username string) Termin {
 	file := getFile(id, username)
@@ -112,15 +115,6 @@ func LoadTermin(id string, username string) Termin {
 	return t
 }
 
-// deleteTermin löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
-func deleteTermin(id string, username string) {
-	file := getFile(id, username)
-	err := os.Remove(file)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
 // DeleteAll löscht alle Termine eines Users, liefert []Termin(nil) zurück
 func DeleteAll(kalender []Termin, username string) []Termin {
 	k := kalender
@@ -136,7 +130,8 @@ func DeleteAll(kalender []Termin, username string) []Termin {
 // DeleteFromCache löscht einzelnes Element aus dem Cache und ggf. die dazugehörige json
 func DeleteFromCache(kalender []Termin, id string, username string) []Termin {
 	var kNew []Termin
-	file := getFile(kalender[0].ID, username)
+
+	file := getFile(FindInCacheByID(kalender, id).ID, username) //findet Dateinamen für den zu entfernenden Termin
 
 	for i := 0; i < len(kalender); i++ {
 		if kalender[i].ID != id {
@@ -151,22 +146,16 @@ func DeleteFromCache(kalender []Termin, id string, username string) []Termin {
 	return kNew
 }
 
-// createID erzeugt neue ID
-func createID(dat time.Time, endDat time.Time) string {
-
-	u := time.Now().String()
-
-	id := dat.String() + endDat.String() + u
-
-	bytes, _ := bcrypt.GenerateFromPassword([]byte(id), 14)
-	id = string(bytes)
-
-	id = strings.Replace(id, "/", "E", 99)
-	id = strings.Replace(id, ".", "D", 99)
-
-	return id
+// deleteTermin löscht json mit den Informationen zum Termin, "username" mapped Termine und Nutzer
+func deleteTermin(id string, username string) {
+	file := getFile(id, username)
+	err := os.Remove(file)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
+// FindInCacheByID wird genutzt, um Termin anhand seiner ID in einem Kalender wiederzufinden
 func FindInCacheByID(kalender []Termin, id string) Termin {
 	for i := 0; i < len(kalender); i++ {
 		if kalender[i].ID == id {
@@ -174,4 +163,26 @@ func FindInCacheByID(kalender []Termin, id string) Termin {
 		}
 	}
 	return Termin{}
+}
+
+// FilterByTitle wird genutzt, um Termin anhand seiner ID in einem Kalender wiederzufinden
+func FilterByTitle(kalender []Termin, title string) []Termin {
+	var k []Termin
+	for i := 0; i < len(kalender); i++ {
+		if strings.Contains(kalender[i].Title, title) {
+			k = AddToCache(kalender[i], k)
+		}
+	}
+	return k
+}
+
+// FilterByDescription wird genutzt, um Termin anhand seiner ID in einem Kalender wiederzufinden
+func FilterByDescription(kalender []Termin, description string) []Termin {
+	var k []Termin
+	for i := 0; i < len(kalender); i++ {
+		if strings.Contains(kalender[i].Description, description) {
+			k = AddToCache(kalender[i], k)
+		}
+	}
+	return k
 }

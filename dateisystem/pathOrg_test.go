@@ -1,5 +1,6 @@
 package dateisystem
 
+//Mat-Nr. 8689159
 import (
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -7,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestGetDirectory(t *testing.T) {
+func TestGetDirectory(t *testing.T) { //Testet, ob das richtige Modul geladen wurde
 	directory := GetDirectory("mik")
 	directory = filepath.Dir(directory)
 	con, _ := os.Getwd()
@@ -15,7 +16,7 @@ func TestGetDirectory(t *testing.T) {
 	assert.Equal(t, con, directory)
 }
 
-func TestGetFile(t *testing.T) {
+func TestGetFile(t *testing.T) { //Test ob der korrekte Dateiname gefunden wurde
 	file := getFile("test", "mik")
 	_, file = filepath.Split(file)
 
