@@ -64,7 +64,7 @@ func createDirectory() {
 }
 
 func writeIcal(file string, parsed string) {
-	f, err := os.Create(file) //legt export Datei an
+	f, err := os.Create(file) //legt Export-Datei an
 	if err != nil {
 		log.Fatal(err)
 	}
