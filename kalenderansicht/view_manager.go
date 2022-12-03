@@ -123,8 +123,10 @@ func (vm *ViewManager) CreateTermin(r *http.Request, username string) (err error
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 
 	//Falls es sich um einen Terminvorschlag handelt, muss dieser noch den Terminvorschlägen hinzugefügt werden
-	terminfindung.CreateSharedTermin(&newTermin, &username)
-
+	_, err = terminfindung.CreateSharedTermin(&newTermin, &username)
+	if err != nil {
+		return errors.New("shared_wrong_terminId")
+	}
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
