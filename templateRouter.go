@@ -270,7 +270,11 @@ func (v ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Reque
 			v.vm.TvJumpYearForOrBack(1)
 		case queryValues == "datum=heute":
 			v.vm.TvJumpToToday()
+		default:
+			//Angezeigte Datum wieder auf heute setzten, da Seite neu geladen
+			v.vm.TvJumpToToday()
 		}
+
 	}
 
 	err := v.viewManagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
@@ -308,7 +312,12 @@ func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Reque
 			v.vm.LvJumpPageForward()
 		case queryValues == "Seite=Zurueck":
 			v.vm.LvJumpPageBack()
+		default:
+			//Angezeigte Datum wieder auf heute setzten, da Seite neu geladen
+			currentDate := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC)
+			v.vm.LvSelectDate(currentDate.Format("2006-01-02"))
 		}
+
 	}
 
 	err := v.viewManagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)

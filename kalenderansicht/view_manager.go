@@ -183,6 +183,7 @@ func (vm *ViewManager) EditTermin(r *http.Request, username string) (err error) 
 		vm.Lv.CreateTerminListEntries(vm.TerminCache)
 		vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
 	}
+
 	return
 }
 

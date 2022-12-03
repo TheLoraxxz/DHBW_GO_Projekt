@@ -505,6 +505,35 @@ func testViewManager_TvJumpToToday(t *testing.T) {
 	newYear = strconv.Itoa(newDate.Year())
 	assert.True(t, strings.Contains(rec.Body.String(), newMonth+" "+newYear), "Es sollte heutiger Monat & Jahr angezeigt werden (von heute aus gesehen). ")
 }
+func testViewManager_TvReload(t *testing.T) {
+	//Test-Setups
+	setupCookie(true)
+	setupHandler()
+
+	//Setup the caller um ein anderes Datum zu setzen
+	//Test-Setups
+	req := httptest.NewRequest("GET", "localhost:443/user/view/table?jahr=Zurueck", nil)
+	rec := httptest.NewRecorder()
+	req.AddCookie(cookie)
+
+	//Execute: überprüfen, ob Datum wirklich nicht heute
+	vmHandler.ServeHTTP(rec, req)
+	newDate := time.Now().AddDate(-1, 0, 0)
+	newYear := strconv.Itoa(newDate.Year())
+	assert.True(t, strings.Contains(rec.Body.String(), newYear), "Es sollte das vorherige Jahr angezeigt werden (von heute aus gesehen). ")
+
+	//Setup the caller, wenn Seite neu geladen wird (ohne Parameter)
+	req = httptest.NewRequest("GET", "localhost:443/user/view/table", nil)
+	rec = httptest.NewRecorder()
+	req.AddCookie(cookie)
+
+	//Execute um zu kontrollieren, ob Datum gesetzt wurde
+	vmHandler.ServeHTTP(rec, req)
+	newDate = time.Now()
+	newMonth := newDate.Month().String()
+	newYear = strconv.Itoa(newDate.Year())
+	assert.True(t, strings.Contains(rec.Body.String(), newMonth+" "+newYear), "Es sollte das heutige Datum angezeigt werden. ")
+}
 
 /*
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -644,6 +673,32 @@ func testViewManager_LvJumpPageBack(t *testing.T) {
 
 	//delete Test Termins
 	teardownDeleteTermin()
+}
+func testViewManager_LvReload(t *testing.T) {
+	//Test-Setups
+	setupCookie(true)
+	setupHandler()
+
+	//Setup the caller um ein anderes Datum zu setzen
+	reader := "2023-01-30"
+	req := httptest.NewRequest("GET", "localhost:443/user/view/list?selDate="+reader, nil)
+	rec := httptest.NewRecorder()
+	req.AddCookie(cookie)
+
+	//Execute um zu kontrollieren, ob Datum gesetzt wurde
+	vmHandler.ServeHTTP(rec, req)
+	newDate := "2023-01-30"
+	assert.True(t, strings.Contains(rec.Body.String(), newDate), "Es sollte das gewählte Datum angezeigt werden (von heute aus gesehen). ")
+
+	//Setup the caller, wenn Seite neu geladen wird (ohne Parameter)
+	req = httptest.NewRequest("GET", "localhost:443/user/view/list", nil)
+	rec = httptest.NewRecorder()
+	req.AddCookie(cookie)
+
+	//Execute um zu kontrollieren, ob Datum gesetzt wurde
+	vmHandler.ServeHTTP(rec, req)
+	today := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC)
+	assert.True(t, strings.Contains(rec.Body.String(), today.Format("2006-01-02")), "Es sollte das heutige Datum angezeigt werden. ")
 }
 
 /*
@@ -822,6 +877,9 @@ func TestViewManagerHandler_ServeHTTP(t *testing.T) {
 	//Tests, um in der Tabellen-Ansicht zum heutigen Datum zu springen
 	t.Run("testRuns ViewManager_TvJumpToToday", testViewManager_TvJumpToToday)
 
+	//Tests, falls Tabellen-Ansicht neu geladen wurde
+	t.Run("testRuns ViewManager_TvReload", testViewManager_TvReload)
+
 	/*
 		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		Tests, die in an den List-Handler weitergeleitet werden
@@ -836,6 +894,9 @@ func TestViewManagerHandler_ServeHTTP(t *testing.T) {
 	//Tests, um in der Listen-Ansicht eine Seite Vor- oder Zurück zu springen
 	t.Run("testRuns ViewManager_LvJumpPageForward", testViewManager_LvJumpPageForward)
 	t.Run("testRuns ViewManager_LvJumpPageBack", testViewManager_LvJumpPageBack)
+
+	//Tests, falls Listen-Ansicht neu geladen wurde
+	t.Run("testRuns ViewManager_TvReload", testViewManager_LvReload)
 
 	/*
 		+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
