@@ -11,11 +11,14 @@ import (
 	"time"
 )
 
+// all the routes
 var mainRoute = template.Must(template.ParseFiles("./assets/sites/index.html", "./assets/templates/footer.html"))
 var createUserRouter = template.Must(template.ParseFiles("./assets/sites/user-create.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 var changeUserRoute = template.Must(template.ParseFiles("./assets/sites/user-change.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 var userOverview = template.Must(template.ParseFiles("./assets/sites/user.html", "./assets/templates/footer.html", "./assets/templates/header.html"))
 
+// ServeHTTP
+// is for the root handler
 func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "POST" {
 		err := request.ParseForm()
