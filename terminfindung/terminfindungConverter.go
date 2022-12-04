@@ -116,8 +116,16 @@ func (termin TerminFindung) ConvertUserSiteToRightHTML(user *string, apikey *str
 func SaveSharedTermineToDisk(basepath *string) error {
 	allTermine.mutex.Lock()
 	defer allTermine.mutex.Unlock()
+	// thorw out all empty terminfindung objects --> happens if one deletes a shared termin
+	newTermine := map[string]TerminFindung{}
+	for key, val := range allTermine.shared {
+		if !(val.User == "") {
+			newTermine[key] = val
+		}
+	}
 	// set to ../data/shared-termin/shared-termin-data.json
-	file, err := json.MarshalIndent(allTermine.shared, "", " ")
+	allTermine.shared = newTermine
+	file, err := json.MarshalIndent(newTermine, "", " ")
 	if err != nil {
 		return fmt.Errorf("coudn't Convert to JSON data - Error: %w", err)
 	}

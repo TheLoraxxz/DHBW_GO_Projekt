@@ -1,7 +1,7 @@
 package export
 
 /*
-BasicAuth für Download der Ical bereitzustellen --> grundlegend entnommen aus den Vorlesungsunterlagen
+BasicAuth für Download der Ical bereitzustellen --> weites gehend entnommen aus der Vorlesung
 */
 
 //Mat-Nr. 8689159

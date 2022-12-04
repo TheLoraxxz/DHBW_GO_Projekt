@@ -54,6 +54,7 @@ func main() {
 		if saveSharedErr != nil {
 			fmt.Println(saveSharedErr)
 		}
+		authentifizierung.DeleteOldCookies()
 	}()
 	setErrorconfigs()
 	// setup server
@@ -85,12 +86,12 @@ func main() {
 	http.Handle("/user", &user)
 	http.Handle("/user/view/", &viewManagerHdl)
 	http.Handle("/logout", &logout)
+	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.DownloadHandler))
 	http.HandleFunc("/shared", AdminSiteServeHTTP)
 	http.HandleFunc("/shared/create/link", CreateLinkServeHTTP)
 	http.HandleFunc("/shared/create/app", ServeHTTPSharedAppCreateDate)
 	http.HandleFunc("/shared/showAllLink", ShowAllLinksServeHttp)
 	http.HandleFunc("/shared/public", PublicSharedWebsite)
-	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.DownloadHandler))
 	http.HandleFunc("/error", ErrorSite_ServeHttp)
 	// start server
 	if err := Server.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
@@ -107,6 +108,7 @@ func setErrorconfigs() {
 	errorconfigs["shared_coudntCreatePerson"] = "Person schon vorhanden oder falsche Zeichen enthalten"
 	errorconfigs["wrong_date_format"] = "Falsches Datenformat eingegeben"
 	errorconfigs["dateIsAfter"] = "Das Startdatum ist nach dem Enddatum - bitte ändern"
+	errorconfigs["wrongPassword"] = "Das alte Password ist dasselbe wie das neue oder das alte eingegebene Password war falsch"
 	errorconfigs["No_valid_repetition"] = "Die Termin-Wiederholung ist ungültig"
 	errorconfigs["Missing_title"] = "Es wurde kein Termin-Titel eingegeben."
 	errorconfigs["Missing_description"] = "Es wurde keine Termin-Beschreibung eingegeben."

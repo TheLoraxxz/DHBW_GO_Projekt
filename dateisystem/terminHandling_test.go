@@ -109,7 +109,7 @@ func TestDeleteFromCache(t *testing.T) { //prüft, ob Termin aus dem Caching gel
 	DeleteAll(k, "mik")
 }
 
-func TestFindInCacheByID(t *testing.T) {
+func TestFindInCacheByID(t *testing.T) { //prüft, ob sich Termin anhand der ID finden lässt
 
 	k := GetTermine("mik")
 	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
@@ -124,12 +124,12 @@ func TestFindInCacheByID(t *testing.T) {
 	DeleteAll(k, "mik")
 }
 
-func TestFilterByDescription(t *testing.T) {
+func TestFilterByDescription(t *testing.T) { //prüft Filter anhand der Beschreibung
 	k := GetTermine("mik")
 	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
 	ter := CreateNewTermin("testb", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
 	k = AddToCache(ter, k)
-	k = AddToCache(CreateNewTermin("testc", "tes", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
+	k = AddToCache(CreateNewTermin("testc", "tesn", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k) //soll heraus gefiltert werden
 
 	fk := FilterByDescription(k, "test")
 
@@ -141,12 +141,12 @@ func TestFilterByDescription(t *testing.T) {
 func TestFilterByTitle(t *testing.T) {
 	k := GetTermine("mik")
 	k = AddToCache(CreateNewTermin("testa", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
-	ter := CreateNewTermin("testb", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
+	ter := CreateNewTermin("testab", "test", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik")
 	k = AddToCache(ter, k)
-	k = AddToCache(CreateNewTermin("testc", "tes", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k)
+	k = AddToCache(CreateNewTermin("testc", "tes", WEEKLY, time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), time.Date(2007, 3, 2, 15, 2, 5, 0, time.UTC), true, "mik"), k) //soll heraus gefiltert werden
 
 	fk := FilterByTitle(k, "testa")
-	assert.Equal(t, k[0], fk[0])
+	assert.Equal(t, k[:2], fk)
 
 	DeleteAll(k, "mik")
 }
