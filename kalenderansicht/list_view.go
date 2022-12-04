@@ -12,13 +12,24 @@ type ListView struct {
 	CurrentPage         int
 }
 
-// InitListView initTableView
+// InitListView
 // Rückgabewert: Pointer auf ein Objekt ListView
 // Dient zur Initialisierung der ListView zum Start des Programms.
 // Zu Begin wird diese auf das aktuelle Datum gesetzt, die Seitenanzahl Terminen wird die Seite mehrseitig.
 func InitListView(terminCache []ds.Termin) *ListView {
 	var lv = new(ListView)
-	lv.SelectedDate = time.Now()
+	today := time.Now()
+	//Uhrzeit des angezeigten Datums wird auf 0:00:00
+	lv.SelectedDate = time.Date(
+		today.Year(),
+		today.Month(),
+		today.Day(),
+		0,
+		0,
+		0,
+		0,
+		time.UTC,
+	)
 	lv.EntriesPerPage = 5
 	lv.CurrentPage = 1
 	lv.CreateTerminListEntries(terminCache)
@@ -65,7 +76,8 @@ func (lv *ListView) JumpPageBack() {
 }
 
 // GetEntries
-// Rückgabewert: Ein Slice mit den Terminen, die auf der aktuellen Seite angezeigt werden
+// Rückgabewert: Ein Slice mit den der entsprechenden Anzahl an Terminen, die auf der aktuellen Seite angezeigt werden
+// Funktion wird im template aufgerufen, um Termine anzuzeigen
 func (lv ListView) GetEntries() []ds.Termin {
 	entries := make([]ds.Termin, 0, lv.EntriesPerPage)
 	sliceStart := lv.EntriesPerPage * (lv.CurrentPage - 1)
@@ -79,7 +91,7 @@ func (lv ListView) GetEntries() []ds.Termin {
 }
 
 /**********************************************************************************************************************
-Ab hier Folgen Funktionen, die dem Filtern und Anzeigen der Termine in der Listenansicht dienen
+Ab hier Folgen Funktionen, die dem Filtern und Sortieren der Termine in der Listenansicht dienen
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 // CreateTerminListEntries
@@ -162,7 +174,7 @@ func (lv ListView) RequiredPages() int {
 
 // NextOccurrences
 // Parameter: ein Termin
-// Rückgabewert: drei Instanzen des Typs time.Time
+// Rückgabewert: ein Slice mit den nächsten drei Terminen ab dem gewählten Datum
 // berechnet je nach Wiederholung des Termins und des gewählten Datums, die nächsten drei Vorkommen des Termins.
 func (lv ListView) NextOccurrences(termin ds.Termin) []time.Time {
 	selDate := lv.SelectedDate

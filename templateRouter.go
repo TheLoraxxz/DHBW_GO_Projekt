@@ -2,6 +2,7 @@ package main
 
 import (
 	"DHBW_GO_Projekt/authentifizierung"
+	ka "DHBW_GO_Projekt/kalenderansicht"
 	"html/template"
 	"log"
 	"net/http"
@@ -41,7 +42,7 @@ func (h RootHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			}
 			http.SetCookie(writer, cookie)
 			//redirect to new site
-			http.Redirect(writer, request, "https://"+request.Host+"/user/view", http.StatusFound)
+			http.Redirect(writer, request, "https://"+request.Host+"/user/view/table", http.StatusFound)
 			return
 		} else {
 			// wenn nicht authentifiziert ist wird weiter geleitet oder bei problemen gibt es ein 500 status
@@ -160,92 +161,206 @@ func (user UserHandler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	}
 }
 
-// handleTableView
-// Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
-func (v *ViewmanagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		switch {
-		case r.RequestURI == "/user/view/table?suche=minusMonat":
-			v.vm.TvJumpMonthBack()
-		case r.RequestURI == "/user/view/table?suche=plusMonat":
-			v.vm.TvJumpMonthFor()
-		case strings.Contains(r.RequestURI, "/user/view/table?monat="):
-			monatStr := r.FormValue("monat")
-			monat, _ := strconv.Atoi(monatStr)
-			v.vm.TvSelectMonth(time.Month(monat))
-		case r.RequestURI == "/user/view/table?jahr=Zurueck":
-			v.vm.TvJumpYearForOrBack(-1)
-		case r.RequestURI == "/user/view/table?jahr=Vor":
-			v.vm.TvJumpYearForOrBack(1)
-		case r.RequestURI == "/user/view/table?datum=heute":
-			v.vm.TvJumpToToday()
-		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
-			terminToEdit := v.vm.GetTerminInfos(r)
-			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
-			if er != nil {
-				log.Fatalln(er)
+// ServeHTTP
+// Hier werden all http-Request anfragen geregelt, die im Kontext der Terminansichten anfallen.
+// Zunächst wird der Cookie geprüft und ggf. die Termine/Infos des Users geladen.
+// Nach erfolgreicher Prüfung, wird die Anfrage an entweder den ListViewHandler oder den TableViewHandler weitergeleitet.
+func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	//cookie-Check
+	isAllowed, username := checkIfIsAllowed(r)
+
+	//Falls kein Berechtigter-User: Errormeldung + Redirect
+	if !isAllowed {
+		urls := "https://" + r.Host + "/error?type=wrongAuthentication&link=" + url.QueryEscape("/")
+		http.Redirect(w, r, urls, http.StatusContinue)
+		return
+	}
+
+	//Falls vm noch nicht initialisiert
+	if v.vm == nil || v.vm.Username != username {
+		v.vm = ka.InitViewManager(username)
+	}
+
+	//Termin bearbeiten/erstellen/löschen ist überall identisch
+	edit := r.FormValue("edit")
+	create := r.FormValue("create")
+	deleteShared := r.FormValue("deleteSharedTermin")
+
+	//Filter current url (table or list?) wird benötigt für einen Redirect, falls ein Error aufritt
+	pathWithoutParameters := strings.Split(r.RequestURI, "?")[0]
+	pathView := strings.Split(pathWithoutParameters, "/")[3]
+
+	switch r.Method {
+	case "GET":
+		if edit == "true" {
+			terminToEdit, err := v.vm.GetTerminInfos(r)
+			if err != nil {
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
+			}
+			err = v.viewManagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
+			if err != nil {
+				urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/"+pathView)
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
 			}
 			return
 		}
-	}
-
-	if r.Method == "POST" {
-		switch {
-		case r.RequestURI == "/user/view/table?terminErstellen":
-			v.vm.CreateTermin(r, v.vm.Username)
-		case strings.Contains(r.RequestURI, "/user/view/table/editor"):
-			v.vm.EditTermin(r, v.vm.Username)
+		if deleteShared != "" {
+			terminToDeleteID := r.FormValue("deleteSharedTermin")
+			err := v.vm.DeleteSharedTermin(terminToDeleteID, v.vm.Username)
+			if err != nil {
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
+			}
+		}
+	case "POST":
+		if edit == "true" {
+			err := v.vm.EditTermin(r, v.vm.Username)
+			if err != nil {
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
+			}
+		}
+		if create == "true" {
+			err := v.vm.CreateTermin(r, v.vm.Username)
+			if err != nil {
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/"+pathView)
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
+			}
 		}
 	}
 
-	er := v.viewmanagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
-	if er != nil {
-		log.Fatalln(er)
+	// Anfrage entsprechend weiterleiten (Listen- Tabellen- oder Filteransicht)
+	switch {
+	case strings.Contains(r.URL.String(), "/user/view/table"):
+		v.handleTableView(w, r)
+	case strings.Contains(r.URL.String(), "/user/view/list"):
+		v.handleListView(w, r)
+	case strings.Contains(r.URL.String(), "/user/view/filterTermins"):
+		v.handleFilterView(w, r)
+	}
+
+}
+
+// handleTableView
+// Hier werden all http-Request anfragen geregelt, die im Kontext der TableView anfallen
+func (v ViewManagerHandler) handleTableView(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		queryValues := r.URL.RawQuery
+		switch {
+
+		case queryValues == "suche=minusMonat":
+			v.vm.TvJumpMonthBack()
+		case queryValues == "suche=plusMonat":
+			v.vm.TvJumpMonthFor()
+		case strings.Contains(queryValues, "monat="):
+			monatStr := r.FormValue("monat")
+			monat, err := strconv.Atoi(monatStr)
+			if err != nil || monat < 1 || monat > 12 {
+				urls := "https://" + r.Host + "/error?type=NowValidMonth&link=" + url.QueryEscape("/user/view/table")
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
+			}
+			v.vm.TvSelectMonth(time.Month(monat))
+		case queryValues == "jahr=Zurueck":
+			v.vm.TvJumpYearForOrBack(-1)
+		case queryValues == "jahr=Vor":
+			v.vm.TvJumpYearForOrBack(1)
+		case queryValues == "datum=heute":
+			v.vm.TvJumpToToday()
+		default:
+			//Angezeigte Datum wieder auf heute setzten, da Seite neu geladen
+			v.vm.TvJumpToToday()
+		}
+
+	}
+
+	err := v.viewManagerTpl.ExecuteTemplate(w, "tbl.html", v.vm.Tv)
+	if err != nil {
+		urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/table")
+		http.Redirect(w, r, urls, http.StatusContinue)
+		return
 	}
 }
 
 // ListHandler
 // Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
-func (v *ViewmanagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
+func (v *ViewManagerHandler) handleListView(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		queryValues := r.URL.RawQuery
 		switch {
-		case strings.Contains(r.RequestURI, "/user/view/list?selDate="):
+		case strings.Contains(queryValues, "selDate="):
 			dateStr := r.FormValue("selDate")
-			v.vm.LvSelectDate(dateStr)
-		case strings.Contains(r.RequestURI, "/user/view/list?Eintraege="):
-			amountStr := r.FormValue("Eintraege")
-			amount, _ := strconv.Atoi(amountStr)
-			v.vm.LvSelectEntriesPerPage(amount)
-		case r.RequestURI == "/user/view/list?Seite=Vor":
-			v.vm.LvJumpPageForward()
-		case r.RequestURI == "/user/view/list?Seite=Zurueck":
-			v.vm.LvJumpPageBack()
-		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
-			terminToEdit := v.vm.GetTerminInfos(r)
-			er := v.viewmanagerTpl.ExecuteTemplate(w, "editor.html", terminToEdit)
-			if er != nil {
-				log.Fatalln(er)
+			err := v.vm.LvSelectDate(dateStr)
+			if err != nil {
+				urls := "https://" + r.Host + "/error?type=" + err.Error() + "&link=" + url.QueryEscape("/user/view/list")
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
 			}
-			return
+		case strings.Contains(queryValues, "Eintraege="):
+			amountStr := r.FormValue("Eintraege")
+			amount, err := strconv.Atoi(amountStr)
+			if err != nil || !(amount == 5 || amount == 10 || amount == 15) {
+				urls := "https://" + r.Host + "/error?type=Unvalid_Entries_Per_Page&link=" + url.QueryEscape("/user/view/list")
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
+			}
+			v.vm.LvSelectEntriesPerPage(amount)
+		case queryValues == "Seite=Vor":
+			v.vm.LvJumpPageForward()
+		case queryValues == "Seite=Zurueck":
+			v.vm.LvJumpPageBack()
+		default:
+			//Angezeigte Datum wieder auf heute setzten, da Seite neu geladen
+			currentDate := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC)
+			v.vm.LvSelectDate(currentDate.Format("2006-01-02"))
+		}
+
+	}
+
+	err := v.viewManagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
+	if err != nil {
+		urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/list")
+		http.Redirect(w, r, urls, http.StatusContinue)
+		return
+	}
+}
+
+// filterTerminsHandler
+// Hier werden all http-Request-Anfragen geregelt, die im Kontext der Listenansicht anfallen
+func (v *ViewManagerHandler) handleFilterView(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		queryValues := r.URL.RawQuery
+		switch {
+		case strings.Contains(queryValues, "Eintraege"):
+			amountStr := r.FormValue("Eintraege")
+			amount, err := strconv.Atoi(amountStr)
+			if err != nil || !(amount == 5 || amount == 10 || amount == 15) {
+				urls := "https://" + r.Host + "/error?type=Unvalid_Entries_Per_Page&link=" + url.QueryEscape("/user/view/filterTermins")
+				http.Redirect(w, r, urls, http.StatusContinue)
+				return
+			}
+			v.vm.FvSelectEntriesPerPage(amount)
+		case queryValues == "Seite=Vor":
+			v.vm.FvJumpPageForward()
+		case queryValues == "Seite=Zurueck":
+			v.vm.FvJumpPageBack()
+		case strings.Contains(queryValues, "title=") || strings.Contains(queryValues, "description="):
+			v.vm.FvFilter(r)
 		}
 	}
 
-	if r.Method == "POST" {
-		switch {
-		case r.RequestURI == "/user/view/list?terminErstellen":
-			v.vm.CreateTermin(r, v.vm.Username)
-		case strings.Contains(r.RequestURI, "/user/view/list/editor"):
-			v.vm.EditTermin(r, v.vm.Username)
-		}
+	err := v.viewManagerTpl.ExecuteTemplate(w, "filterTermins.html", v.vm.Fv)
+	if err != nil {
+		urls := "https://" + r.Host + "/error?type=internal&link=" + url.QueryEscape("/user/view/filterTermins")
+		http.Redirect(w, r, urls, http.StatusContinue)
+		return
 	}
-	er := v.viewmanagerTpl.ExecuteTemplate(w, "liste.html", v.vm.Lv)
-	if er != nil {
-		log.Fatalln(er)
-	}
-}
-func (v *ViewmanagerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (l LogoutHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {

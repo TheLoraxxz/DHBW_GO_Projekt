@@ -19,10 +19,9 @@ type ChangeUserHandler struct{}
 type UserHandler struct{}
 type LogoutHandler struct{}
 type CreatUserHandler struct{}
-type ViewmanagerHandler struct {
+type ViewManagerHandler struct {
 	vm             *ka.ViewManager
-	cookie         string
-	viewmanagerTpl *template.Template
+	viewManagerTpl *template.Template
 }
 
 var errorconfigs = make(map[string]string)
@@ -70,12 +69,23 @@ func main() {
 	changeUser := ChangeUserHandler{}
 	user := UserHandler{}
 	logout := LogoutHandler{}
-	viewmanagerHandler := ViewmanagerHandler{}
+	viewManagerHdl := ViewManagerHandler{}
+
+	// Templates für die Tabellenansicht sowie die Listenansicht erstellen
+	path, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Couldn't get rooted path name corresponding to the current directory")
+	}
+	viewManagerHdl.viewManagerTpl = template.Must(template.New("tbl.html").ParseFiles(path+"/assets/sites/tbl.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html", path+"/assets/templates/listing.html"))
+	template.Must(viewManagerHdl.viewManagerTpl.New("liste.html").ParseFiles(path+"/assets/sites/liste.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/creator.html"))
+	template.Must(viewManagerHdl.viewManagerTpl.New("editor.html").ParseFiles(path+"/assets/sites/editor.html", path+"/assets/templates/header.html", path+"/assets/templates/footer.html", path+"/assets/templates/listing.html"))
+	template.Must(viewManagerHdl.viewManagerTpl.New("filterTermins.html").ParseFiles(path + "/assets/sites/filterTermins.html"))
+
 	http.Handle("/", &root)
 	http.Handle("/user/create", &createUser)
 	http.Handle("/user/change", &changeUser)
 	http.Handle("/user", &user)
-	http.Handle("/user/view", &viewmanagerHandler)
+	http.Handle("/user/view/", &viewManagerHdl)
 	http.Handle("/logout", &logout)
 	http.HandleFunc("/download", export.WrapperAuth(export.AuthenticatorFunc(export.CheckUserValid), export.DownloadHandler))
 	http.HandleFunc("/shared", AdminSiteServeHTTP)
@@ -100,6 +110,11 @@ func setErrorconfigs() {
 	errorconfigs["wrong_date_format"] = "Falsches Datenformat eingegeben"
 	errorconfigs["dateIsAfter"] = "Das Startdatum ist nach dem Enddatum - bitte ändern"
 	errorconfigs["wrongPassword"] = "Das alte Password ist dasselbe wie das neue oder das alte eingegebene Password war falsch"
+	errorconfigs["No_valid_repetition"] = "Die Termin-Wiederholung ist ungültig"
+	errorconfigs["Missing_title"] = "Es wurde kein Termin-Titel eingegeben."
+	errorconfigs["Missing_description"] = "Es wurde keine Termin-Beschreibung eingegeben."
+	errorconfigs["wrong_editing_mode"] = "Dieser Bearbeitungsmodus ist ungültig."
+	errorconfigs["Unvalid_Entries_Per_Page"] = "Ungültige Anzahl an Einträgen eingegeben."
 }
 
 // ErrorSite_ServeHttp

@@ -2,6 +2,8 @@ package kalenderansicht
 
 import (
 	ds "DHBW_GO_Projekt/dateisystem"
+	"DHBW_GO_Projekt/terminfindung"
+	"errors"
 	"net/http"
 	"time"
 )
@@ -9,6 +11,7 @@ import (
 type ViewManager struct {
 	Tv          TableView
 	Lv          ListView
+	Fv          FilterView
 	Username    string
 	TerminCache []ds.Termin
 }
@@ -19,6 +22,7 @@ func InitViewManager(username string) *ViewManager {
 	vm.TerminCache = ds.GetTermine(vm.Username)
 	vm.Tv = *InitTableView(vm.TerminCache)
 	vm.Lv = *InitListView(vm.TerminCache)
+	vm.Fv = *InitFilterView(vm.TerminCache)
 	return vm
 }
 
@@ -47,8 +51,7 @@ func getMaxDays(month, year int) int {
 // filterRepetition
 // Parameter: string, eine nummer als string
 // Rückgabewert: ein Typ von ds.Repeat, der der entsprechenden Nummer entspricht
-func filterRepetition(repStr string) ds.Repeat {
-	var rep ds.Repeat
+func filterRepetition(repStr string) (rep ds.Repeat, err error) {
 	switch repStr {
 	case "täglich", "0":
 		rep = ds.DAILY
@@ -60,52 +63,89 @@ func filterRepetition(repStr string) ds.Repeat {
 		rep = ds.YEARLY
 	case "niemals", "4":
 		rep = ds.Never
+	default:
+		err = errors.New("No_valid_repetition")
 	}
-	return rep
+	return rep, err
 }
 
 // CreateTermin
 // Parameter: eine Post-Request mit Informationen über einen Termin und den Usernamen des Nutzers, der diesen anlegen möchte
 // CreateTermin ruft die Funktion zum Erstellen des Termins auf
-func (vm *ViewManager) CreateTermin(r *http.Request, username string) {
+func (vm *ViewManager) CreateTermin(r *http.Request, username string) (err error) {
 
 	//Filtern der Termininfos
+	sharedStr := r.FormValue("shared")
+	var shared bool
+	if sharedStr == "true" {
+		shared = true
+	} else {
+		shared = false
+	}
 	title := r.FormValue("title")
+	if title == "" {
+		err = errors.New("Missing_title")
+		return
+	}
+
 	description := r.FormValue("description")
+	if description == "" {
+		err = errors.New("Missing_description")
+		return
+	}
 	repStr := r.FormValue("rep")
 
 	//Filter das Wiederholungsintervall aus der Antwort
-	rep := filterRepetition(repStr)
+	rep, err := filterRepetition(repStr)
+	if err != nil {
+		return err
+	}
 
 	//Daten in das richtige Format überführen mithilfe eines Layouts
 	layout := "2006-01-02"
-	date, _ := time.Parse(layout, r.FormValue("date"))
-	endDate, _ := time.Parse(layout, r.FormValue("endDate"))
+	date, err := time.Parse(layout, r.FormValue("date"))
+	if err != nil {
+		return errors.New("wrong_date_format")
+	}
+
+	endDate, err := time.Parse(layout, r.FormValue("endDate"))
+	if err != nil {
+		return errors.New("wrong_date_format")
+	}
 
 	//End Date Logik-check
 	if repStr == "niemals" || endDate.Before(date) {
 		endDate = date
 	}
+
 	//Erstelle neuen Termin und füge diesen dem Cache hinzu
-	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, false, username)
+	newTermin := ds.CreateNewTermin(title, description, rep, date, endDate, shared, username)
 	vm.TerminCache = ds.AddToCache(newTermin, vm.TerminCache)
 
+	//Falls es sich um einen Terminvorschlag handelt, muss dieser noch den Terminvorschlägen hinzugefügt werden
+	_, err = terminfindung.CreateSharedTermin(&newTermin, &username)
+	if err != nil {
+		return errors.New("shared_wrong_terminId")
+	}
 	//Anzuzeigende Einträge in den Ansichten aktualisieren
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+	return
 }
 
 // GetTerminInfos
 // Parameter: Request mit Termininfos
 // Rückgabewert: Termin, aus dem Cahce mit entsprechender ID
 // Die Funktion wird genutzt, um den Termin zu erhalten, der bearbeitet/gelöscht werden soll
-func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
-
+func (vm *ViewManager) GetTerminInfos(r *http.Request) (termin ds.Termin, err error) {
 	//Filtern der Termin-Id und des zu bearbeitenden Termins aus dem Cache
 	id := r.FormValue("ID")
-	termin := ds.FindInCacheByID(vm.TerminCache, id)
+	termin = ds.FindInCacheByID(vm.TerminCache, id)
+	if termin.ID == "" {
+		err = errors.New("shared_wrong_terminId")
+	}
 
-	return termin
+	return termin, err
 }
 
 // EditTermin
@@ -115,26 +155,56 @@ func (vm *ViewManager) GetTerminInfos(r *http.Request) ds.Termin {
 //
 //	-> Berbeiten: Dei neuen Termininfos werden ermittelt und ein neuer Termin erstellt. Der alte Termin wird gelöscht.
 //	-> Löschen: Der Termin wird gelöscht.
-func (vm *ViewManager) EditTermin(r *http.Request, username string) {
+func (vm *ViewManager) EditTermin(r *http.Request, username string) (err error) {
 
 	//Die ID zum Löschen ermitteln
 	id := r.FormValue("ID")
+	if id == "" {
+		return errors.New("shared_wrong_terminId")
+	}
 
 	//Filtern des gewünschten Modus: bearbeiten oder Löschen
 	mode := r.FormValue("editing")
+	if !(mode == "editing" || mode == "delete") {
+		return errors.New("wrong_editing_mode")
+	}
 
 	//egal ob löschen oder bearbeiten, der Termin muss zunächst gelöscht werden
 	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, id, vm.Username)
 
-	//Wenn der Modus 1 = Bearbeiten ist, muss der aktualisierte Termin noch erstellt werden
-	if mode == "1" {
-		vm.CreateTermin(r, username)
+	//Wenn der Modus editing ist, muss der aktualisierte Termin noch erstellt werden
+	if mode == "editing" {
+		err = vm.CreateTermin(r, username)
+		if err != nil {
+			return
+		}
 	} else {
 		//Anzuzeigende Einträge in den Ansichten aktualisieren (dies geschieht auch in vm.CreateTermin(r, username))
 		//entfällt deshalb im Bearbeitungsmodus, da sonst doppelter Funktionsaufruf
 		vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 		vm.Lv.CreateTerminListEntries(vm.TerminCache)
+		vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
 	}
+
+	return
+}
+
+// DeleteSharedTermin
+// Parameter: id des terminvorschlags, der gelöscht werden soll; username
+// Die Funktion löscht den Termin aus den Teminvorschlägen und aus dem Cache
+func (vm *ViewManager) DeleteSharedTermin(id, username string) (err error) {
+	//Termin vom Cache löschen
+	vm.TerminCache = ds.DeleteFromCache(vm.TerminCache, id, username)
+	//Termin aus den Vorschlägen entfernen
+	err = terminfindung.DeleteSharedTermin(&id, &username)
+	if err != nil {
+		return errors.New("shared_wrong_terminId")
+	}
+	//Anzuzeigende Einträge in den Ansichten aktualisieren
+	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
+	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+	vm.Fv.CreateTerminFilterEntries(vm.TerminCache)
+	return
 }
 
 /**********************************************************************************************************************
@@ -143,7 +213,7 @@ Nach jedem ändern der Ansicht der TableView, müssen die Einträge
 des Users dem neu angezeigten Monat entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-// JumpMonthBack
+// TvJumpMonthBack
 // Springt einen Monat in der Webseiten Ansicht zurück
 func (vm *ViewManager) TvJumpMonthBack() {
 	vm.Tv.JumpMonthBack()
@@ -157,8 +227,9 @@ func (vm *ViewManager) TvJumpMonthFor() {
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
 }
 
-// TvJumpToYear
-// Springt zu einem bestimmten Jahr
+// TvJumpYearForOrBack
+// Parameter: +1 oder -1
+// Springt zu ein Jahr vor oder zurück, je nachdem ob der Parameter +1 oder -1 ist
 func (vm *ViewManager) TvJumpYearForOrBack(summand int) {
 	vm.Tv.JumpYearForOrBack(summand)
 	vm.Tv.CreateTerminTableEntries(vm.TerminCache)
@@ -185,22 +256,69 @@ Nach jedem ändern der Ansicht der ListView, müssen die Einträge
 des Users ab dem neu angezeigten Datum entsprechend gefiltert werden.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-func (vm *ViewManager) LvSelectDate(dateStr string) {
+// LvSelectDate
+// Parameter: Datum in string-form
+// Funktion setzt das angezeigte Datum der Terminansicht
+func (vm *ViewManager) LvSelectDate(dateStr string) (err error) {
 	//Datum Filtern und in das richtige Format überführen mithilfe eines Layouts
 	layout := "2006-01-02"
-	date, _ := time.Parse(layout, dateStr)
+	date, err := time.Parse(layout, dateStr)
+	if err != nil {
+		return errors.New("wrong_date_format")
+	}
 	vm.Lv.SelectDate(date)
 	vm.Lv.CreateTerminListEntries(vm.TerminCache)
+	return
 }
 
+// LvSelectEntriesPerPage
+// Parameter: int Wert
+// Funktion setzt die angezeigte Einträge-Anzahl in der Terminansicht auf übergebenen int Wert
 func (vm *ViewManager) LvSelectEntriesPerPage(amount int) {
 	vm.Lv.SelectEntriesPerPage(amount)
+	return
 }
 
+// LvJumpPageForward
+// Funktion springt eine Seite vor in der Listenansicht
 func (vm *ViewManager) LvJumpPageForward() {
 	vm.Lv.JumpPageForward()
 }
 
+// LvJumpPageBack
+// Funktion springt eine Seite zurück in der Listenansicht
 func (vm *ViewManager) LvJumpPageBack() {
 	vm.Lv.JumpPageBack()
+}
+
+/**********************************************************************************************************************
+Hier Folgen Funktionen, die dem Handeln der Filteransicht/FilterView dienen.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+// FvSelectEntriesPerPage
+// Parameter: int Wert
+// Funktion setzt die angezeigte Einträge-Anzahl in der Filteransicht auf übergebenen int Wert
+func (vm *ViewManager) FvSelectEntriesPerPage(amount int) {
+	vm.Fv.SelectEntriesPerPage(amount)
+	return
+}
+
+// FvJumpPageForward
+// Funktion springt eine Seite vor in der Filteransicht
+func (vm *ViewManager) FvJumpPageForward() {
+	vm.Fv.JumpPageForward()
+}
+
+// FvJumpPageBack
+// Funktion springt eine Seite zurück in der Filteransicht
+func (vm *ViewManager) FvJumpPageBack() {
+	vm.Fv.JumpPageBack()
+}
+
+// FvFilter
+// Parameter: Request mit Strings des Termin-Titels/der Termin-Beschreibung nach der, gefiltert werden soll
+func (vm *ViewManager) FvFilter(r *http.Request) {
+	filterTitle := r.FormValue("title")
+	filterDescription := r.FormValue("description")
+	vm.Fv.FilterTermins(filterTitle, filterDescription, vm.TerminCache)
 }
