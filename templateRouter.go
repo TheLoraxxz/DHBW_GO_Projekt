@@ -174,7 +174,7 @@ func (v *ViewManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Falls vm noch nicht initialisiert
-	if v.vm == nil {
+	if v.vm == nil || v.vm.Username != username {
 		v.vm = ka.InitViewManager(username)
 	}
 
