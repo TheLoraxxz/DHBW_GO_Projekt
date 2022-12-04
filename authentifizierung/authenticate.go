@@ -104,12 +104,6 @@ func CheckCookie(cookie *string) (isAllowed bool, userName string) {
 	cookieString := (*cookie)[strings.Index(*cookie, "|")+1:]
 	// if the username is as key in the map then it checks whether key is the same as the cookie
 	if val, found := cookies.cookies[cookieString]; found == true && username == val.user && val.endTime.After(time.Now()) {
-		cookies.lock.Lock()
-		defer cookies.lock.Unlock()
-		cookies.cookies[cookieString] = authentication{
-			user:    userName,
-			endTime: time.Now().Add(15 * time.Minute),
-		}
 		return true, username
 
 	}
