@@ -278,7 +278,7 @@ func TestUserHandler_ServeHTTP_NoCookie(t *testing.T) {
 	//shouild redirect to newstatus
 	assert.Equal(t, http.StatusContinue, rec.Code)
 	url, _ := rec.Result().Location()
-	assert.Equal(t, "", url.Path)
+	assert.Equal(t, "/error", url.Path)
 }
 
 // TestUserHandler_ServeHTTP_wrongCookie
@@ -304,7 +304,7 @@ func TestUserHandler_ServeHTTP_wrongCookie(t *testing.T) {
 	//should redirect to home website
 	assert.Equal(t, http.StatusContinue, rec.Code)
 	url, _ := rec.Result().Location()
-	assert.Equal(t, "", url.Path)
+	assert.Equal(t, "/error", url.Path)
 }
 
 // TestChangeUserHandler_ServeHTTP_NoCookie
@@ -430,7 +430,7 @@ func TestChangeUserHandler_ServeHTTP_wronguser(t *testing.T) {
 	ChangeUserHandler{}.ServeHTTP(rec, req)
 	//it should be redirect to user website
 	url, _ := rec.Result().Location()
-	assert.Equal(t, "/user", url.Path)
+	assert.Equal(t, "/error", url.Path)
 	assert.Equal(t, http.StatusContinue, rec.Code)
 	//the user shoudn't have changed
 	password := "user"
